@@ -1,4 +1,4 @@
-# PAW-pipeline
+# PAW_pipeline
 A Comet-based, best practices proteomics pipeline.
 
 * [Background](#background)
@@ -54,4 +54,4 @@ Kessner, D., Chambers, M., Burke, R., Agus, D. and Mallick, P., 2008. ProteoWiza
 
 Chambers, M.C., Maclean, B., Burke, R., Amodei, D., Ruderman, D.L., Neumann, S., Gatto, L., Fischer, B., Pratt, B., Egertson, J. and Hoff, K., 2012. A cross-platform toolkit for mass spectrometry and proteomics. Nature biotechnology, 30(10), p.918.
 
-[to top](#paw-pipeline)
+[to top](#paw_pipeline)
