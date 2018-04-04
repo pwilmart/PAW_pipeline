@@ -1,4 +1,4 @@
-# PAW_pipeline
+# PAW-pipeline
 A Comet-based, best practices proteomics pipeline.
 
 * [Background](#background)
