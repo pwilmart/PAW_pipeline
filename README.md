@@ -2,7 +2,7 @@
 A Comet-based, best practices proteomics pipeline.
 
 * [Background](#background)
-* [References](#references:)
+* [References](#references)
 
 
 
@@ -20,8 +20,8 @@ With more robust statistical methods for controlling PSM errors, confident lists
 
 
 <br>
-## References:
 
+## References:
 [1] https://digitalcommons.ohsu.edu/etd/3855/
 
 [2] Deutsch, E.W., Sun, Z., Campbell, D.S., Binz, P.A., Farrah, T., Shteynberg, D., Mendoza, L., Omenn, G.S. and Moritz, R.L., 2016. Tiered human integrated sequence search databases for shotgun proteomics. Journal of proteome research, 15(11), pp.4091-4100.
@@ -54,4 +54,4 @@ Kessner, D., Chambers, M., Burke, R., Agus, D. and Mallick, P., 2008. ProteoWiza
 
 Chambers, M.C., Maclean, B., Burke, R., Amodei, D., Ruderman, D.L., Neumann, S., Gatto, L., Fischer, B., Pratt, B., Egertson, J. and Hoff, K., 2012. A cross-platform toolkit for mass spectrometry and proteomics. Nature biotechnology, 30(10), p.918.
 
-[to top](#paw-pipeline)
+[to top](#pawpipeline)
