@@ -67,6 +67,9 @@ These lists demonstrate that even a basic processing pipeline will involve sever
 ## Dependancies
 The programs to read the RAW instrument binary files and perform the database search have to be installed separately.
 
+Thermo RAW file conversions are done using ProteoWizard [15, 16] and its `MSConvert.exe` program. ProteoWizard installation instructions can be found [**here**](MSConvert.md).
+
+
 
 
 <br>
