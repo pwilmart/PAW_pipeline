@@ -2,6 +2,8 @@
 A Comet-based, best practices proteomics pipeline.
 
 * [Background](#background)
+* [Best practices](#best-practices)
+* [Dependancies](#dependancies)
 * [References](#references)
 
 
@@ -9,13 +11,61 @@ A Comet-based, best practices proteomics pipeline.
 ## Background
 Bottom-up (a.k.a. shotgun) proteomics data analysis can be a complicated, lengthy ordeal. The processing pipelines have many steps and each step can have several choices. There are few practical guidelines for making better choices to navigate this minefield. This results in far too great a diversity of pipelines in use, and many may have less than ideal performance.
 
-This state of affairs is perfectly illustrated by the first step of selecting a FASTA protein database file for use by the search engine. This is a more complicated topic than might be guessed [1]. There are several choices for many organisms and even some genomes that have not yet been sequenced. The protein database complexity and apparent size can vary considerably, although larger is probably not better [2]. Even single database sources like [UniProt](www.uniprot.org) offer several versions of protein databases and selecting among them can require [dedicated tools](https://github.com/Delan-Huang/Reference_Proteome_Manager.git) [3].  
+This state of affairs is illustrated by one of the first steps of selecting a FASTA protein database file for use by the search engine. This is a more complicated topic than might be guessed [1]. There are often several protein database choices for many commonly studied organisms (and even some genomes that have not yet been sequenced). The protein database complexity and apparent size can vary considerably among the choices, although larger is probably not better [2]. Even integrated database sources like [UniProt](http://www.uniprot.org/) offer several versions of protein databases (Swiss-Prot, TrEMBL, canonical, canonical with isoforms, etc.), and selecting among them requires some expertise and use of [dedicated tools](https://github.com/Delan-Huang/Reference_Proteome_Manager.git) [3].  
 
-Picking a search engine program to identify likely peptide sequences associated with tandem mass spectra, known as peptide spectrum matches (PSMs), can be even more challenging. There are commercial products like Mascot, Proteome Discoverer, and Byonic that can be quite expensive. Alternatively, there are widely used freely available options such as X!Tandem and MaxQuant. There are also many less commonly used open source options and opinions run high on the relative merits of the various search engines. Comet [4], written and maintained by Jimmy Eng, is an open source version of SEQUEST. Comet is free, fast, sensitive, and a little simpler to configure that other options; this is what the PAW pipeline [5] uses (PAW are my initials but you can make up something like Proteomic Analysis Workflow if you prefer).
+Picking a search engine program to identify likely peptide sequences associated with tandem mass spectra, known as peptide spectrum matches (PSMs), can be even more challenging. There are commercial products like Mascot, Proteome Discoverer, and Byonic that can be quite expensive. Alternatively, there are widely used freely available options such as X!Tandem and MaxQuant. There are also many less commonly used open source options and opinions run high on the relative merits of the various search engines. Comet [4], written and maintained by Jimmy Eng, is an open source version of SEQUEST. Comet is free, fast, sensitive, and a little simpler to configure that other options; this is what the PAW pipeline [5] uses. PAW are my initials, but you can make up something like Proteomic Analysis Workflow if you prefer.
 
-The basics of identifying peptides from tandem mass spectra (MS2 scans) has not really changed conceptually too much in 25 years [6]. It basically involves noise filtering and normalizing an MS2 scan, then comparing that to mass-filtered candidate peptide spectra from a theoretical digest of a protein database. Despite this clever leveraging of genomic sequencing (the protein sequences), the challenge has always been in deciding if a particular PSM is correct or not. Early heuristic approaches [7] led to basic classifiers [8], and even machine learning methods [9]. A key step forward was use of decoy databases to eavesdrop on random noise scores that was popularized by the Gygi group [10, 11]. More recent instrumental advances have added high-resolution and accurate mass to the equation [12].
+The basic method of identifying peptides from tandem mass spectra (MS2 scans) has not really changed too much in 25 years [6]. It basically involves noise filtering and normalizing an MS2 scan, then comparing that to mass-filtered candidate peptide spectra from a theoretical digest of a protein database. Despite this clever leveraging of genomic sequencing (the protein sequences), the challenge has always been in deciding if a particular PSM is correct or not. Early heuristic approaches [7] led to basic classifiers [8], and even machine learning methods [9]. A big step forward came when decoy databases were used to eavesdrop on random noise scores, as popularized by the Gygi lab [10, 11]. More recent instrumental advances have added high-resolution and accurate mass to the equation [12].
 
-With more robust statistical methods for controlling PSM errors, confident lists of identified **peptides** present in digests of complex protein mixtures can be reliably determined. The next issue is to determine a confident list of the **proteins** present in the samples from the identified peptides. This is known as the protein inference problem [13] and it persists despite significant advances in genomic sequencing (one could argue that the problem is even worse). Guidelines for parsimonious protein identifications [14] have been widely used for many years in response to many early inflated proteome claims. The basic parsimony rules are outlined in [13], but may need to be extended [1] in the context of the large datasets now routinely being generated.
+With more robust statistical methods for controlling PSM errors, confident lists of identified **peptides** present in digests of complex protein mixtures can be reliably determined. The next issue is to determine a confident list of the **proteins** present in the samples from the identified peptides. This is known as the protein inference problem [13] and it persists despite significant advances in genomic sequencing (maybe the problem is even worse now). Guidelines for parsimonious protein identifications [14] have been widely used for many years in response to many early inflated proteome claims. The basic parsimony rules are outlined in [13], but may need to be extended [1] for the large datasets now routinely being generated.
+
+## Best Practices
+As proteomics has matured, there have been many analysis ideas that have come and gone. Only a few have really passed the test of time. Here is a summary of a modern proteomics analysis pipeline as implemented in the PAW pipeline:
+
+1. Extract MS2 scan information from the RAW files (MSConvert [15, 16])
+  * Convert to a format the search engine can read
+1. Select an appropriate FASTA protein database
+  * Avoid excessive peptide redundancy
+  * Add decoys and/or contaminants if necessary
+1. Correctly configure the search engine (Comet [4])
+  * Choose parent and fragment ion tolerances wisely
+  * Avoid excessive post-translational modifications
+1. Transform search scores into more sensitive functions
+  * Combinations of scores can work better
+  * Use accurate mass wisely
+1. Filter out the confident PSMs
+  * Use target/decoy methods to control PSM false discovery rate (FDR)
+  * Use accurate mass wisely
+1. Use basic or extended parsimony logic to infer proteins from peptides
+  * Avoid single peptide per protein identifications
+  * Avoid using protein ranking functions
+    * Protein FDR is a consequence of peptide ID accuracy
+    * Protein error control is different than PSM error control
+1. Add protein/gene annotations (optional)
+
+Identification of the proteins present in a sample is almost never the goal of a modern proteomics experiment. Estimating the relative expression levels of the proteins is often required. The above discussion and list has not mentioned anything about quantification. Quantitative processing is really more of a parallel set of analysis steps. Quantitative information can take many forms. There are label free approaches and stable isotope labeling approaches. There is no need to survey quantitative proteomics as the PAW pipeline only does tandem mass tag (TMT) labeling. The support for TMT is even more limited to high resolution instruments and synchronous precursor selection (SPS) MS3 scan  reporter ions. In a similar inference process, protein expression values are inferred from quantitative data acquired in individual instrument scans.
+
+Here is the way TMT quantification is supported:
+
+1. Convert RAW files into a readable format (MSConvert [15, 16])
+  * Compressed text format
+1. Extract maximum intensity in narrow windows centered at reporter ion masses
+  * Extract mapping between MS2 and MS3 scan numbers
+  * Save extracted data in text files
+1. Read PAW results files to determine usable quantitative data
+  * Protein inference determines unique peptide status
+  * Peptide and PSM reports yield lists of scans for unique peptides
+1. Total protein reporter ion intensities are computed from the scan lists
+  * Minimum intensity level testing
+  * Optional replacement of missing reporter ion intensities
+1. Reporter ion intensities are added to the PAW results files
+1. Pipeline supports multiple TMT labeling experiments
+  * Internal reference scaling (IRS) normalization can be performed
+
+These lists demonstrate that even a basic processing pipeline will involve several steps. A robust pipeline will keep these step separate to allow greater flexibility and to allow inspection of the data in between steps to quality control. The PAW software was designed to **not** try and cram 10 pounds of pipeline into a 5 pound _black box_.
+
+## Dependancies
+The programs to read the RAW instrument binary files and perform the database search have to be installed separately.
 
 
 
@@ -50,8 +100,8 @@ With more robust statistical methods for controlling PSM errors, confident lists
 
 [14] Carr, S., Aebersold, R., Baldwin, M., Burlingame, A.L., Clauser, K. and Nesvizhskii, A., 2004. The need for guidelines in publication of peptide and protein identification data working group on publication guidelines for peptide and protein identification data.
 
-Kessner, D., Chambers, M., Burke, R., Agus, D. and Mallick, P., 2008. ProteoWizard: open source software for rapid proteomics tools development. Bioinformatics, 24(21), pp.2534-2536.
+[15] Kessner, D., Chambers, M., Burke, R., Agus, D. and Mallick, P., 2008. ProteoWizard: open source software for rapid proteomics tools development. Bioinformatics, 24(21), pp.2534-2536.
 
-Chambers, M.C., Maclean, B., Burke, R., Amodei, D., Ruderman, D.L., Neumann, S., Gatto, L., Fischer, B., Pratt, B., Egertson, J. and Hoff, K., 2012. A cross-platform toolkit for mass spectrometry and proteomics. Nature biotechnology, 30(10), p.918.
+[16] Chambers, M.C., Maclean, B., Burke, R., Amodei, D., Ruderman, D.L., Neumann, S., Gatto, L., Fischer, B., Pratt, B., Egertson, J. and Hoff, K., 2012. A cross-platform toolkit for mass spectrometry and proteomics. Nature biotechnology, 30(10), p.918.
 
 [to top](#paw_pipeline)
