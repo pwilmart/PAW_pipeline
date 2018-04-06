@@ -79,7 +79,7 @@ Comet installation instructions can be found [**_>> HERE <<_**](Comet.md). Comet
 
 The Python scripts require Python 3 and some packages that are not part of the standard distribution. Use of a scientific Python distribution is recommended and installation and use of Anaconda is described [**_>> HERE <<_**](Anaconda.md). After RAW files have been processed and searches completed, the Python scripts can be run on Windows or Mac. A little care has to be paid to hard disc formats, however. RAW files and Comet results files will need to be on an NTFS formatted drive (the Windows file system). NTFS drives can be read by Macs, but they cannot be written to. You will either have to copy files to Mac formatted volumes or use the [Paragon NTFS for Mac](https://www.paragon-software.com/ufsdhome/store/ntfs-mac/) utility software.
 
-## References:
+## References
 [1] Wilmarth, P.A., Riviere, M.A. and David, L.L., 2009. Techniques for accurate protein identification in shotgun proteomic studies of human, mouse, bovine, and chicken lenses. Journal of ocular biology, diseases, and informatics, 2(4), pp.223-234.
 
 [2] Kessner, D., Chambers, M., Burke, R., Agus, D. and Mallick, P., 2008. ProteoWizard: open source software for rapid proteomics tools development. Bioinformatics, 24(21), pp.2534-2536.
