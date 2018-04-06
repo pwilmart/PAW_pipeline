@@ -14,6 +14,7 @@ Comet undergoes occasional updates and bug fixes. One way to isolate the PAW Pyt
 ![Comet_batch](images/Comet_batch.png)
 
 <br>
+
 Here are the contents of the `Comet.bat` file:
 ```
 C:\Users\pwilmart\Proteomics_tools\Comet\comet_2017014\comet.2017014.win64.exe %*
@@ -27,6 +28,7 @@ When everything is in place, you can test the the `Comet.bat` file can be found 
 ![Comet_command](images/Comet_command.png)
 
 <br>
+
 ## References
 
 [1] Eng, J.K., Jahan, T.A. and Hoopmann, M.R., 2013. Comet: an open‐source MS/MS sequence database search tool. Proteomics, 13(1), pp.22-24
