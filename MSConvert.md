@@ -26,6 +26,7 @@ The path in the `MSConvert.bat` file should match the latest installed version o
 When everything is in place, you can test the the `MSConvert.bat` file can be found by Windows. Open a  Command or PowerShell window (SHIFT-RIGHT-CLICK on a folder to open a shell window with the default location set to the folder) and type `MSconvert` at the prompt. You will get a lengthy usage message if everything is working correctly.
 
 ![MSConvert_command](images/MSConvert_command.png)
+
 <br>
 
 ## References
