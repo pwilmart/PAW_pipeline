@@ -31,23 +31,23 @@ With more robust statistical methods for controlling PSM errors, confident lists
 As proteomics has matured, there have been many analysis ideas that have come and gone. Only a few have really passed the test of time. Here is a summary of a modern proteomics analysis pipeline as implemented in the PAW pipeline:
 
 1. Extract MS2 scan information from the RAW files (MSConvert [2, 3])
-  * Convert to a format the search engine can read
+   * Convert to a format the search engine can read
 1. Select an appropriate FASTA protein database
-  * Avoid excessive peptide redundancy
-  * Add decoys and/or contaminants if necessary
+   * Avoid excessive peptide redundancy
+   * Add decoys and/or contaminants if necessary
 1. Correctly configure the search engine (Comet [4])
-  * Choose parent and fragment ion tolerances wisely
-  * Avoid excessive post-translational modifications
+   * Choose parent and fragment ion tolerances wisely
+   * Avoid excessive post-translational modifications
 1. Transform search scores into more sensitive functions
-  * Combinations of scores can work better
-  * Use accurate mass wisely
+   * Combinations of scores can work better
+   * Use accurate mass wisely
 1. Filter out the confident PSMs
-  * Use target/decoy methods to control PSM false discovery rate (FDR)
+   * Use target/decoy methods to control PSM false discovery rate (FDR)
 1. Use basic or extended parsimony logic to infer proteins from peptides
-  * Avoid single peptide per protein identifications
-  * Avoid using protein ranking functions
-    * Protein FDR is a consequence of peptide ID accuracy
-    * Protein error control is different than PSM error control
+   * Avoid single peptide per protein identifications
+   * Avoid using protein ranking functions
+     * Protein FDR is a consequence of peptide ID accuracy
+     * Protein error control is different than PSM error control
 1. Add protein/gene annotations (optional)
 
 Identification of the proteins present in a sample is almost never the goal of a modern proteomics experiment. Estimating the relative expression levels of the proteins is often required. The above discussion and list has not mentioned anything about quantification. Quantitative processing is really more of a parallel set of analysis steps. Quantitative information can take many forms. There are label free approaches and stable isotope labeling approaches. There is no need to survey quantitative proteomics as the PAW pipeline only does tandem mass tag (TMT) labeling. The support for TMT is even more limited to high resolution instruments and synchronous precursor selection (SPS) MS3 scan  reporter ions. In a similar inference process, protein expression values are inferred from quantitative data acquired in individual instrument scans.
@@ -56,17 +56,17 @@ Here is the way TMT quantification is supported:
 
 1. Convert RAW files into compressed text format (MSConvert [2, 3])
 1. Extract maximum intensity in narrow windows centered at reporter ion masses
-  * Create mapping between MS2 and MS3 scan numbers
-  * Save extracted data in text files
+   * Create mapping between MS2 and MS3 scan numbers
+   * Save extracted data in text files
 1. Read PAW results files to determine usable quantitative data
-  * Protein inference determines unique peptide status
-  * Peptide and PSM reports yield lists of scans for unique peptides
+   * Protein inference determines unique peptide status
+   * Peptide and PSM reports yield lists of scans for unique peptides
 1. Total protein reporter ion intensities are computed from the scan lists
-  * Minimum intensity level testing
-  * Optional replacement of missing reporter ion intensities
+   * Minimum intensity level testing
+   * Optional replacement of missing reporter ion intensities
 1. Reporter ion intensities are added to the PAW results files
 1. Pipeline supports multiple TMT labeling experiments
-  * Internal reference scaling (IRS) normalization [18] can be performed
+   * Internal reference scaling (IRS) normalization [18] can be performed
 
 These lists demonstrate that even a basic processing pipeline will involve several steps. A robust pipeline will keep these step separate to allow greater flexibility and to allow inspection of the data in between steps to quality control. The PAW software was designed to **not** try and cram 10 pounds of pipeline into a 5 pound _black box_.
 
