@@ -77,22 +77,22 @@ These lists demonstrate that even a basic processing pipeline will involve sever
 ## Pipeline Steps
 The PAW pipeline is an actual pipeline. The steps are modular and separate by design. Each step is listed below by the name of the Python script. Each step has a link to dedicated documentation pages.
 
-* [`MSConvert_GUI.py`](MSConvert_GUI.md) - Conversion of RAW files
-* [`Comet_GUI.py`](Comet_GUI.md) - Setting Comet parameters and running Comet
-* [`histo_GUI.py`](histo_GUI.md) - Viewing score distributions and setting thresholds
-* [`PAW_results.py`](PAW_results.md) - Protein inference and results report generation
-* [`PAW_protein_grouper.py`](PAW_protein_grouper.md) - (optional) Extended parsimony protein grouping
-* [`add_TMT_intensities.py`](add_TMT_intensities.md) - (optional) Adding reporter ion intensities to reports
-* [`pandas_TMT_IRS_norm.py`](pandas_TMT_IRS_norm.md) - (optional) IRS normalization between TMT experiments
+* [`MSConvert_GUI.py`](docs/MSConvert_GUI.md) - Conversion of RAW files
+* [`Comet_GUI.py`](dosc/Comet_GUI.md) - Setting Comet parameters and running Comet
+* [`histo_GUI.py`](docs/histo_GUI.md) - Viewing score distributions and setting thresholds
+* [`PAW_results.py`](docs/PAW_results.md) - Protein inference and results report generation
+* [`PAW_protein_grouper.py`](docs/PAW_protein_grouper.md) - (optional) Extended parsimony protein grouping
+* [`add_TMT_intensities.py`](docs/add_TMT_intensities.md) - (optional) Adding reporter ion intensities to reports
+* [`pandas_TMT_IRS_norm.py`](docs/pandas_TMT_IRS_norm.md) - (optional) IRS normalization between TMT experiments
 
 ## Dependancies
 The programs to read the RAW instrument binary files and perform the database search have to be installed separately and only run on Windows systems.
 
-Thermo RAW file conversions are done using ProteoWizard [2, 3] and its `MSConvert.exe` program. ProteoWizard installation instructions can be found [**_>> HERE <<_**](MSConvert.md).
+Thermo RAW file conversions are done using ProteoWizard [2, 3] and its `MSConvert.exe` program. ProteoWizard installation instructions can be found [**_>> HERE <<_**](/docsMSConvert.md).
 
-Comet installation instructions can be found [**_>> HERE <<_**](Comet.md). Comet is not strictly a Windows only program (Linux and Mac are possible); however, installation can be more involved and is not covered here.
+Comet installation instructions can be found [**_>> HERE <<_**](docs/Comet.md). Comet is not strictly a Windows only program (Linux and Mac are possible); however, installation can be more involved and is not covered here.
 
-The Python scripts require Python 3 and some packages that are not part of the standard distribution. Use of a scientific Python distribution is recommended and installation and use of Anaconda is described [**_>> HERE <<_**](Anaconda.md).
+The Python scripts require Python 3 and some packages that are not part of the standard distribution. Use of a scientific Python distribution is recommended and installation and use of Anaconda is described [**_>> HERE <<_**](docs/Anaconda.md).
 
 After RAW files have been processed and searches completed, the Python scripts can be run on Windows or Mac. A little care has to be paid to hard disc formats, however. RAW files and Comet results files will need to be on an NTFS formatted drive (the Windows file system). NTFS drives can be read by Macs, but they cannot be written to. You will either have to copy files to Mac formatted volumes or use the [Paragon NTFS for Mac](https://www.paragon-software.com/ufsdhome/store/ntfs-mac/) utility software.
 
