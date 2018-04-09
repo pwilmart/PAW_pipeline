@@ -88,7 +88,7 @@ The PAW pipeline is an actual pipeline. The steps are modular and separate by de
 ## Dependancies
 The programs to read the RAW instrument binary files and perform the database search have to be installed separately and only run on Windows systems.
 
-Thermo RAW file conversions are done using ProteoWizard [2, 3] and its `MSConvert.exe` program. ProteoWizard installation instructions can be found [**_>> HERE <<_**](/docsMSConvert.md).
+Thermo RAW file conversions are done using ProteoWizard [2, 3] and its `MSConvert.exe` program. ProteoWizard installation instructions can be found [**_>> HERE <<_**](docs/MSConvert.md).
 
 Comet installation instructions can be found [**_>> HERE <<_**](docs/Comet.md). Comet is not strictly a Windows only program (Linux and Mac are possible); however, installation can be more involved and is not covered here.
 
