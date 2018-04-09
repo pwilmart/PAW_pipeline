@@ -1,6 +1,6 @@
 # Comet installation and setup
 
-Comet is an open source search engine written by Jimmy Eng at the University of Washington. The project is [hosted at SourceForge](http://comet-ms.sourceforge.net/) and the downloads page is located [**_>> HERE <<_**](https://sourceforge.net/projects/comet-ms/files/). Jimmy authored one of the first and arguably best search engines, SEQUEST [2], and is a principle scientist at the [UW Proteomics Resource](http://proteomicsresource.washington.edu/).
+Comet [1] is an open source search engine written by Jimmy Eng at the University of Washington. The project is [hosted at SourceForge](http://comet-ms.sourceforge.net/) and the downloads page is located [**_>> HERE <<_**](https://sourceforge.net/projects/comet-ms/files/). Jimmy authored one of the first and arguably best search engines, SEQUEST [2], and is a principle scientist at the [UW Proteomics Resource](http://proteomicsresource.washington.edu/).
 
 Comet binaries download as `.ZIP` archives and will need to be located in an appropriate folder and the `.ZIP` archive uncompressed:
 
