@@ -6,7 +6,7 @@ The first pipeline steps of converting RAW files and running Comet require Windo
 
 The Anaconda [download link](https://www.anaconda.com/download/#windows) has options for Windows, Mac, and Linux versions, and for Python 3.6 or Python 2.7 versions (as of 2018-04-06). You should get the Python 3.6 download:
 
-![Anaconda_download](images/Anaconda_download.png)
+![Anaconda_download](../images/Anaconda_download.png)
 
 <br>
 
@@ -14,22 +14,22 @@ Follow the installation instructions for your platform. On Windows, Anaconda pro
 
 I prefer an IDE called [IDLE](https://docs.python.org/3/library/idle.html) that is part of the Python standard distribution. IDLE has been around for years and does the basics in a clean way. Since Anaconda includes more modern IDE tools, figuring out how to launch IDLE is not so obvious in Anaconda. It is best to launch IDLE from a command line environment with some additional Python paths defined, called `Anaconda Prompt`:
 
-![Anaconda_start_menu](images/Anaconda_start_menu.png)
+![Anaconda_start_menu](../images/Anaconda_start_menu.png)
 
 In the console window that will launch, type `IDLE` and hit the RETURN key.
 
-![Ananda_console](images/Anaconda_console.png)
+![Ananda_console](../images/Anaconda_console.png)
 
 The IDLE console window should appear:
 
-![Idle_console](images/Idle_console.png)
+![Idle_console](../images/Idle_console.png)
 
 The Python version information should indicate an Anaconda distribution and a Python 3.x version number. See the [documentation](https://docs.python.org/3/library/idle.html) on IDLE for a rather dry description of features. There are other [tutorials](https://www.cs.uky.edu/~keen/help/python-tutorial/Lab0.html), and also [shorter](https://www.youtube.com/watch?v=lBkcDFRA958) and [longer](https://www.youtube.com/watch?v=2Thymdugfp4) YouTube videos available. Keep in mind that IDLE is a more integral part of the Python distributions from [python.org](https://www.python.org/) and is easier to launch with those distributions. IDLE opens with a single Python console window where you can execute Python statements. Existing Python programs can be opened from the `File` menu. The console window is where the standard input, output, and error messages go. The IDLE features that I like are that you can have multiple source code windows open. There is nice statement highlighting, indenting, and auto completion. The interactive debugger is also nice. An advantage over running from a Windows command shell is that console (program) output will persist.
 
 One of main the reasons to use a scientific Python distribution like Anaconda, is maintaining all of the installed packages. Anaconda includes the [Conda package manager](https://conda.io/docs/) and Anaconda should be updated occasionally. This is best done with two command line calls, the first updates Conda itself, then Anaconda is updated:
 
-![Conda_update](images/Conda_update_conda.png)
+![Conda_update](../images/Conda_update_conda.png)
 
-![Anaconda_update](images/Conda_update_anaconda.png)
+![Anaconda_update](../images/Conda_update_anaconda.png)
 
 If you get error messages about `conda` not being defined, make sure you are launching an `Anaconda Prompt` command window.  
