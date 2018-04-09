@@ -1,3 +1,6 @@
+# NOTE: this repo is under construction
+I am trying to get this code updated, tested, and added here as soon as I can. I am estimating a few weeks. I will be adding steps kind of in the same order as the pipeline. I started with some documentation since I fugured documentation without code is slightly better than code without documentation. (2018-04-09 -PW).
+
 # PAW_pipeline
 A Comet-based, best practices proteomics pipeline.
 
