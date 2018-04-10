@@ -199,35 +199,35 @@ def get_string(title, prompt='Enter a string', initial=''):
 
 def N_side_cleavage(prefix, prefix_pattern, nterm, nterm_pattern, suffix, suffix_pattern):
     """Computes number of termini constent with protease cleavage for N-terminal side cutters."""
-    nct = 0
+    net = 0
     if (prefix in prefix_pattern) or (nterm in nterm_pattern):
-        nct += 1
+        net += 1
     if suffix in suffix_pattern:
-        nct += 1
-    return nct
+        net += 1
+    return net
 
 def C_side_cleavage(prefix, prefix_pattern, cterm, cterm_pattern, suffix, suffix_pattern, noP=True):
     """Computes number of termini constent with protease cleavage for C-terminal side cutters."""
-    nct = 0
+    net = 0
     ct_okay = False
     if prefix in prefix_pattern:
-        nct += 1
+        net += 1
     if (cterm in cterm_pattern) or (suffix in suffix_pattern):
-        nct += 1
+        net += 1
         ct_okay = True
-    if noP and (suffix == 'P') and (nct > 0) and ct_okay:   # trypsin strict
-        nct -= 1
-    return nct
+    if noP and (suffix == 'P') and (net > 0) and ct_okay:   # trypsin strict
+        net -= 1
+    return net
     
 def amino_acid_count(sequence_string, enzyme='Trypsin', return_base_pep=False):
-    """Counts amino acids in peptides.  Returns (length, nct) tuple.
+    """Counts amino acids in peptides.  Returns (length, net) tuple.
     Supported enzymes are all Comet options.
 
-    Usage: (length, nct) = amino_acid_count(sequence_string),
+    Usage: (length, net) = amino_acid_count(sequence_string),
         where "sequence_string" is a peptide sequence with bounding residues,
         "enzyme" is a string for the specific protease used,
         "length" is the returned number of amino acids, and
-        "nct" is the Number of Consistent (with enzyme) Termini.
+        "net" is the Number of Consistent (with enzyme) Termini.
 
     Written by Phil Wilmarth, OHSU, 2008, rewritten 2017.
     """
@@ -239,10 +239,10 @@ def amino_acid_count(sequence_string, enzyme='Trypsin', return_base_pep=False):
     # Modifications are Comet/SEQUEST format: special characters, "n", and "c";
     #   and are within the bounding periods (if present).
     #
-    # Fixed bug in nct caclulation, 4/30/07 -PW
+    # Fixed bug in net caclulation, 4/30/07 -PW
     # Added support for different enzymes, 7/6/2010 -PW
     # Supports Comet PTM format ("n" and "c" for termini), 6/9/2015 -PW
-    # Simplified nct calculations
+    # Simplified net calculations
     # Supports 2017 Comet mods "[delatmass]" - PW 10/27/2017
 
     # remove the 2017 Comet style mod strings first (because they contain ".")
@@ -281,40 +281,40 @@ def amino_acid_count(sequence_string, enzyme='Trypsin', return_base_pep=False):
     nterm = base_seq[0]   # first amino acid in sequence
     suffix = full_suffix[0]
     
-    # determine number of enzymatic termini, nct
+    # determine number of enzymatic termini, net
     """need to support different enzymes and deal with proline.
     Seems Comet deals with premature stop codons as sequence breaks (* might be in prefix or suffix)."""
     if enzyme == 'Trypsin':         # cleaves at C-side of K, R (except if P)
-        nct = C_side_cleavage(prefix, 'KR-*', cterm, 'KR', suffix, '-*', noP=True)
+        net = C_side_cleavage(prefix, 'KR-*', cterm, 'KR', suffix, '-*', noP=True)
     elif enzyme == 'Trypsin/P':     # cleaves at C-side of K, R
-        nct = C_side_cleavage(prefix, 'KR-*', cterm, 'KR', suffix, '-*', noP=False)
+        net = C_side_cleavage(prefix, 'KR-*', cterm, 'KR', suffix, '-*', noP=False)
     elif enzyme == 'Lys_C':         # cleaves at C-side of K (except if P)
-        nct = C_side_cleavage(prefix, 'K-*', cterm, 'K', suffix, '-*', noP=True)
+        net = C_side_cleavage(prefix, 'K-*', cterm, 'K', suffix, '-*', noP=True)
     elif enzyme == 'Lys_N':         # cleaves at N-side of K
-        nct = N_side_cleavage(prefix, '-*', nterm, 'K', suffix, 'K-*')
+        net = N_side_cleavage(prefix, '-*', nterm, 'K', suffix, 'K-*')
     elif enzyme == 'Arg_C':         # cleaves at C-side of R (except if P)
-        nct = C_side_cleavage(prefix, 'R-*', cterm, 'R', suffix, '-*', noP=True)
+        net = C_side_cleavage(prefix, 'R-*', cterm, 'R', suffix, '-*', noP=True)
     elif enzyme == 'Asp_N':         # cleaves at N-side of D
-        nct = N_side_cleavage(prefix, '-*', nterm, 'D', suffix, 'D-*')
+        net = N_side_cleavage(prefix, '-*', nterm, 'D', suffix, 'D-*')
     elif enzyme == 'CNBr':          # cleaves at C-side of M
-        nct = C_side_cleavage(prefix, 'M-*', cterm, 'M', suffix, '-*', noP=False)
+        net = C_side_cleavage(prefix, 'M-*', cterm, 'M', suffix, '-*', noP=False)
     elif enzyme == 'Glu_C':         # cleaves at C-side of D, E (except if P)
-        nct = C_side_cleavage(prefix, 'DE-*', cterm, 'DE', suffix, '-*', noP=True)
+        net = C_side_cleavage(prefix, 'DE-*', cterm, 'DE', suffix, '-*', noP=True)
     elif enzyme == 'PepsinA':       # cleaves at C-side of F, L (except if P)
-        nct = C_side_cleavage(prefix, 'FL-*', cterm, 'FL', suffix, '-*', noP=True)
+        net = C_side_cleavage(prefix, 'FL-*', cterm, 'FL', suffix, '-*', noP=True)
     elif enzyme == 'Chymotrypsin':  # cleaves at C-side of FWYL (except if P)
-        nct = C_side_cleavage(prefix, 'FWYL-*', cterm, 'FWYL', suffix, '-*', noP=True)
+        net = C_side_cleavage(prefix, 'FWYL-*', cterm, 'FWYL', suffix, '-*', noP=True)
     elif enzyme == 'No_enzyme':
-        nct = 2
+        net = 2
     else:
         print('   amino_acid_count WARNING: unknown enzyme specified', enzyme)
-        nct = 0
+        net = 0
     
     # return length, number of tryptic termini, and (optional) base peptide sequence
     if return_base_pep:
-        return (len(base_seq), nct, base_seq)
+        return (len(base_seq), net, base_seq)
     else:
-        return (len(base_seq), nct)
+        return (len(base_seq), net)
 
 def get_base_peptide_sequence(sequence, mask=True):
     """Returns the peptide amino acid residues from SEQUEST peptide strings."""
@@ -1570,12 +1570,12 @@ class FileLoader:
 class Plot:
     ''' Plot is a class for individual histograms. It keeps histogram info (counts and bins) as well as
         running remainders, fdrs, etc. There are several plots for each FigureGenerator object. '''
-    def __init__(self, z, nct, data):
+    def __init__(self, z, net, data):
         self.mod = None
         self.dm = 0
         self.threshold = 0.0
         self.z = z
-        self.nct = nct
+        self.net = net
         self.data = data  
         self.histo = pd.DataFrame()    
         self.forward, self.reverse = self.make_histograms(data[data.ForR == 'F'].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']), 
@@ -1878,7 +1878,7 @@ class BRTxtInfo:
         self.min_length = 7             # minimum peptide length (should be passed in)
         self.maxMods = 3               # maximum number of mods per peptide (should be passed in)
  
-    def getStats(self, frame, dm_list, z_list, nct_list, mod_list, masses, scores):
+    def getStats(self, frame, dm_list, z_list, net_list, mod_list, masses, scores):
         """Computes several stats on numbers of target and decoy matches
         masses are the deltamass windows
         scores are the score thresholds
@@ -1901,24 +1901,24 @@ class BRTxtInfo:
                                 (len_frame.dmassDa <= masses[dm]['high'])]
             #mass_frame = len_frame
             for z in range(len(z_list)):    # z is one less than the charge state
-                for nct in range(len(nct_list)):
+                for net in range(len(net_list)):
                     for mod in range(len(mod_list)):
                         subclass_frame = mass_frame[(mass_frame.Z == z+1) &
-                                                    (mass_frame.NCT == nct) &
+                                                    (mass_frame.net == net) &
                                                     (mass_frame.ModsStr == mod_list[mod])]
                                  
-                        s = scores[dm][z][nct][mod]
+                        s = scores[dm][z][net][mod]
                         threshold = s.histo.DiscScore[s.threshold]
                             
-                        self.target_subclass[dm][z][nct][mod] = len(subclass_frame[(subclass_frame.ForR == 'F') &
+                        self.target_subclass[dm][z][net][mod] = len(subclass_frame[(subclass_frame.ForR == 'F') &
                                                                                 (subclass_frame.NewDisc >= threshold)])
                         self.target_filtered += len(subclass_frame[(subclass_frame.ForR == 'F') &
                                                                 (subclass_frame.NewDisc >= threshold)])
-                        self.decoy_subclass[dm][z][nct][mod] = len(subclass_frame[(subclass_frame.ForR == 'R') &
+                        self.decoy_subclass[dm][z][net][mod] = len(subclass_frame[(subclass_frame.ForR == 'R') &
                                                                                 (subclass_frame.NewDisc >= threshold)])
                         self.decoy_filtered += len(subclass_frame[(subclass_frame.ForR == 'R') &
                                                                 (subclass_frame.NewDisc >= threshold)])
-            #        print(self.target_subclass[dm][z][nct][mod], z, nct, mod)
+            #        print(self.target_subclass[dm][z][net][mod], z, net, mod)
             #print(self.target_filtered, self.decoy_filtered, self.target_filtered - self.decoy_filtered)
             
 class FigureGenerator:
@@ -1927,7 +1927,7 @@ class FigureGenerator:
         Plot objects corresponding to individual histograms. This list is passed to the GUI object for display.
         '''
     def __init__(self, folder, accurateMass=True, smoothed=True, dmList=['0 Da', '1 Da', 'out'], zList=[1, 2, 3, 4],
-                 nctList=[0, 1, 2], modString=' *', minLength=7, maxMods=2):
+                 netList=[0, 1, 2], modString=' *', minLength=7, maxMods=2):
         
         
         # Main containers
@@ -1948,7 +1948,7 @@ class FigureGenerator:
         self.order = [' ', '*', '#', '@', '^', '~', '$', '[', ']']
         
         # Main container dimensions
-        dmList, zList, nctList = self.getLists(self.accurateMass, self.f.enzyme)
+        dmList, zList, netList = self.getLists(self.accurateMass, self.f.enzyme)
         
         # setup mod list
         modList = [c for c in self.f.modStrings]
@@ -1971,23 +1971,23 @@ class FigureGenerator:
         print('enzyme check:', self.f.enzyme)
         print('\ndm list:', dmList)
         print('Z list:', zList)
-        print('NCT list:', nctList)
+        print('net list:', netList)
         print('Mod List:', modList)
         print('Special chars:', specialCharsList, '\n')
         
-        self.container = [[[[None for mod in modList] for nct in nctList] for z in zList] for dm in dmList]
+        self.container = [[[[None for mod in modList] for net in netList] for z in zList] for dm in dmList]
         self.dmContainer = [[None for z in zList] for dm in dmList]
         
         # Add calculated columns
         self.generateCalculatedColumns(x)
         
         # Make histograms
-        self.generatePlots(x, dmList, zList, nctList, modList)
+        self.generatePlots(x, dmList, zList, netList, modList)
         
         # Store these specifically for calculating stats later
         self.modList = modList
         self.specialCharsList = specialCharsList
-        self.nctList = nctList
+        self.netList = netList
         self.zList = zList
         self.dmList = dmList
         self.frame = x
@@ -1997,15 +1997,15 @@ class FigureGenerator:
         #self.get_stats_helper()
         self.getTXTFileObjectsHelper()
                 
-    def generatePlots(self, full_frame, dmList, zList, nctList, modList):
+    def generatePlots(self, full_frame, dmList, zList, netList, modList):
         """Generates the histogram plot data.
         full_frame => pandas dataframe of TXT file contents
         dmList => list of strings describing the delta mass windows
         zList => list of integers spanning the charge state range (continuous range)
-        nctList => list of integers spanning the nct range (continous range)
+        netList => list of integers spanning the net range (continous range)
         """
         z_offset = min([int(z) for z in zList])
-        nct_offset = min([int(nct) for nct in nctList])
+        net_offset = min([int(net) for net in netList])
         data = full_frame[(full_frame.Length >= self.minLength) & (full_frame.NumMods <= self.maxMods)]   # apply global constraints first
         for dm in range(len(dmList)):
             print('Loading: ', dmList[dm], '...')
@@ -2016,91 +2016,91 @@ class FigureGenerator:
                     dmPlot.thresholdLow = -self.peptideMassTol
                     dmPlot.thresholdHigh = self.peptideMassTol
                 self.dmContainer[dm][z-z_offset] = dmPlot
-                #for nct in nctList:
-                #    print('\t\t Loading nct =', nct, '...')
+                #for net in netList:
+                #    print('\t\t Loading net =', net, '...')
                 #    for mod in range(len(modList)):
                 #        if dm == 2:
                 #            dataToHist = data[((data.dmassDa >= dmPlot.thresholds[0][0]) & (data.dmassDa <= dmPlot.thresholds[0][1]) |
                 #                              (data.dmassDa >= dmPlot.thresholds[1][0]) & (data.dmassDa <= dmPlot.thresholds[1][1]) |
                 #                              (data.dmassDa >= dmPlot.thresholds[2][0]) & (data.dmassDa <= dmPlot.thresholds[2][1])) &
-                #                              (data.Z == z) & (data.nct == nct) & (data.ModsStr == self.order[mod])]
+                #                              (data.Z == z) & (data.net == net) & (data.ModsStr == self.order[mod])]
                 #        else:
                 #            dataToHist = data[(data.dmassDa >= dmPlot.thresholdLow) & (data.dmassDa <= dmPlot.thresholdHigh) &
-                #                              (data.Z == z) & (data.nct == nct) & (data.ModsStr == self.order[mod])]
+                #                              (data.Z == z) & (data.net == net) & (data.ModsStr == self.order[mod])]
                 #                                
-                #        self.container[dm][z-z_offset][nct-nct_offset][mod] = Plot(z, nct, dataToHist)
+                #        self.container[dm][z-z_offset][net-net_offset][mod] = Plot(z, net, dataToHist)
                 #                
-                #        self.container[dm][z-z_offset][nct-nct_offset][mod].dm = dmList[dm]
-                #        self.container[dm][z-z_offset][nct-nct_offset][mod].mod = modList[mod]
+                #        self.container[dm][z-z_offset][net-net_offset][mod].dm = dmList[dm]
+                #        self.container[dm][z-z_offset][net-net_offset][mod].mod = modList[mod]
                         
     def regenerateScorePlots(self):
         z_offset = min([int(z) for z in self.zList])
-        nct_offset = min([int(nct) for nct in self.nctList])
+        net_offset = min([int(net) for net in self.netList])
         
         data = self.frame[(self.frame.Length >= self.minLength) & (self.frame.NumMods <= self.maxMods)] 
         
         for dm in range(len(self.dmList)):
             for z in self.zList:
-                for nct in self.nctList:
+                for net in self.netList:
                     for imod, mod in enumerate(self.specialCharsList):
                         if dm == 2:
                             dataToHist = data[((data.dmassDa >= self.dmContainer[2][z-z_offset].thresholds[0][0]) & (data.dmassDa <= self.dmContainer[2][z-z_offset].thresholds[0][1]) |
                                               (data.dmassDa >= self.dmContainer[2][z-z_offset].thresholds[1][0]) & (data.dmassDa <= self.dmContainer[2][z-z_offset].thresholds[1][1]) |
                                               (data.dmassDa >= self.dmContainer[2][z-z_offset].thresholds[2][0]) & (data.dmassDa <= self.dmContainer[2][z-z_offset].thresholds[2][1])) &
-                                              (data.Z == z) & (data.NCT == nct) & (data.ModsStr == mod)]
+                                              (data.Z == z) & (data.net == net) & (data.ModsStr == mod)]
                         else:
                             dataToHist = data[(data.dmassDa >= self.dmContainer[dm][z-z_offset].thresholdLow) & (data.dmassDa <= self.dmContainer[dm][z-z_offset].thresholdHigh) &
-                                              (data.Z == z) & (data.NCT == nct) & (data.ModsStr == mod)]
+                                              (data.Z == z) & (data.net == net) & (data.ModsStr == mod)]
                                                 
-                        self.container[dm][z-z_offset][nct-nct_offset][imod] = Plot(z, nct, dataToHist)
+                        self.container[dm][z-z_offset][net-net_offset][imod] = Plot(z, net, dataToHist)
                                 
-                        self.container[dm][z-z_offset][nct-nct_offset][imod].dm = self.dmList[dm]
-                        self.container[dm][z-z_offset][nct-nct_offset][imod].mod = self.modList[imod]
+                        self.container[dm][z-z_offset][net-net_offset][imod].dm = self.dmList[dm]
+                        self.container[dm][z-z_offset][net-net_offset][imod].mod = self.modList[imod]
             
            
     def get_stats_helper(self): 
-        self.get_stats(self.frame, self.f.fileList, self.dmList, self.zList, self.nctList, self.modList,
+        self.get_stats(self.frame, self.f.fileList, self.dmList, self.zList, self.netList, self.modList,
                        [{'low':-2, 'high':2}, {'low':-2, 'high':2}, {'low':-2, 'high':2}], self.container)
     
     def getLists(self, accurateMass, enzyme):
-        # order:   dm, z. nct
-        nctList = []
+        # order:   dm, z. net
+        netList = []
         if enzyme:
             if self.f.params.num_enzyme_termini == 2:
-                nctList = [1, 2]
+                netList = [1, 2]
             else:
-                nctList = [1, 2]
+                netList = [1, 2]
         else:
-            nctList = [0, 1, 2]
+            netList = [0, 1, 2]
         if accurateMass:
-            return ['0 Da', '1 Da', 'out'], [2, 3, 4], nctList
+            return ['0 Da', '1 Da', 'out'], [2, 3, 4], netList
         else:
-            return ['All'], [1, 2, 3], nctList
+            return ['All'], [1, 2, 3], netList
     
     def getTXTFileObjectsHelper(self): 
-        self.getTXTFileObjects(self.frame, self.f.fileList, self.dmList, self.zList, self.nctList, self.modList, [{'low':-2, 'high':2}, {'low':-2, 'high':2}, {'low':-2, 'high':2}], self.container)
+        self.getTXTFileObjects(self.frame, self.f.fileList, self.dmList, self.zList, self.netList, self.modList, [{'low':-2, 'high':2}, {'low':-2, 'high':2}, {'low':-2, 'high':2}], self.container)
             
-    def getTXTFileObjects(self, frame, fileList, dmList, zList, nctList, modList, masses, container):
+    def getTXTFileObjects(self, frame, fileList, dmList, zList, netList, modList, masses, container):
         for i, filename in enumerate(fileList):
             fileFrame = frame[(frame['TxtIdx'] == i)]
             t = BRTxtInfo(filename.split('.txt')[0])              # object for global stats and stats by text file
             self.txtObjects.append(t)
       
-    def get_stats(self, frame, fileList, dmList, zList, nctList, modList, masses, container):
+    def get_stats(self, frame, fileList, dmList, zList, netList, modList, masses, container):
         # global stats
         self.globalStats = BRTxtInfo(self.f.folder)              # object for global stats and stats by text file
         # multidimensional containers
-        self.globalStats.target_subclass = [[[[None for mod in modList] for nct in nctList] for z in zList] for dm in dmList]
-        self.globalStats.decoy_subclass = [[[[None for mod in modList] for nct in nctList] for z in zList] for dm in dmList]
-        self.globalStats.getStats(frame, dmList, zList, nctList, modList, masses, container)
+        self.globalStats.target_subclass = [[[[None for mod in modList] for net in netList] for z in zList] for dm in dmList]
+        self.globalStats.decoy_subclass = [[[[None for mod in modList] for net in netList] for z in zList] for dm in dmList]
+        self.globalStats.getStats(frame, dmList, zList, netList, modList, masses, container)
 
         #for i, filename in enumerate(fileList):
         #    fileFrame = frame[(frame['TxtIdx'] == i)]
         #    t = BRTxtInfo(filename)              # object for global stats and stats by text file
         #    # multidimensional containers
-        #    t.target_subclass = [[[[None for mod in modList] for nct in nctList] for z in zList] for dm in dmList]
-        #    t.decoy_subclass = [[[[None for mod in modList] for nct in nctList] for z in zList] for dm in dmList]
-        #    self.globalStats.getStats(fileFrame, dmList, zList, nctList, modList, masses, container)
+        #    t.target_subclass = [[[[None for mod in modList] for net in netList] for z in zList] for dm in dmList]
+        #    t.decoy_subclass = [[[[None for mod in modList] for net in netList] for z in zList] for dm in dmList]
+        #    self.globalStats.getStats(fileFrame, dmList, zList, netList, modList, masses, container)
         #    self.txtStats.append(t)
                         
     def debugPlot(self):
@@ -2112,7 +2112,7 @@ class FigureGenerator:
                 center = (mybins[:-1] + mybins[1:]) / 2
                 pyplot.fill(center, fig.forward, color='b')
                 pyplot.fill(center, fig.reverse, color='r')
-                pyplot.title(str(fig.z) + "+ charge state and " + str(fig.nct) + " tryptic termini.")
+                pyplot.title(str(fig.z) + "+ charge state and " + str(fig.net) + " tryptic termini.")
                 pyplot.figure()
         pyplot.show()   
     
@@ -2161,7 +2161,7 @@ class DataInfoAndFilter:
     Has aggregate counters and totaling method. Counters
     track both before filtering and post filtering counts.
     """    
-    def __init__(self, folder, frame, txt_info_list, dm_list, z_list, nct_list, mod_list, 
+    def __init__(self, folder, frame, txt_info_list, dm_list, z_list, net_list, mod_list, 
                   min_length=7, max_mods=2, parent_tol=2.5):
         import copy
         
@@ -2172,7 +2172,7 @@ class DataInfoAndFilter:
         self.post_filter = [copy.deepcopy(x) for x in txt_info_list] # list of TxtInfo objects for post-filter stats
         self.dm_list = dm_list      # list of delta mass window names
         self.z_list = z_list        # list of allowed charge states (contiguous range)
-        self.nct_list = nct_list    # list of number of tryptic termini (o, 1, 2)
+        self.net_list = net_list    # list of number of tryptic termini (o, 1, 2)
         self.mod_list = mod_list    # full, ordered list of variable modification symbols starting with a space for unmodified residues
 
         # some restrictions and limits        
@@ -2180,8 +2180,8 @@ class DataInfoAndFilter:
         self.max_mods = max_mods            # maximum number of mods per peptide (should be passed in)
         self.z_offset = min([int(z) for z in z_list]) # to map peptide charge to z-axis index
         self.z_max = max([int(z) for z in z_list])    # maximum peptide charge
-        self.nct_offset = min([int(nct) for nct in nct_list]) # to map nct range to index range
-        self.nct_max = max([int(nct) for nct in nct_list])    # maximum nct value
+        self.net_offset = min([int(net) for net in net_list]) # to map net range to index range
+        self.net_max = max([int(net) for net in net_list])    # maximum net value
         self.parent_tol = parent_tol        # parent ion tolerance (should be passed in)
         
         # data structures for counting statistics
@@ -2225,10 +2225,10 @@ class DataInfoAndFilter:
         self.pre_decoy_top_hits = 0
         self.pre_target_scans = 0
         self.pre_decoy_scans = 0
-        self.pre_target_matches_top = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in dm_list])
-        self.pre_decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in dm_list])
-        self.pre_target_matches_scan = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in dm_list])
-        self.pre_decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in dm_list])
+        self.pre_target_matches_top = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in dm_list])
+        self.pre_decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in dm_list])
+        self.pre_target_matches_scan = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in dm_list])
+        self.pre_decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in dm_list])
         
         # sum over the individual TXT file data
         for txt_info in self.pre_filter:
@@ -2252,10 +2252,10 @@ class DataInfoAndFilter:
         self.post_decoy_top_hits = 0
         self.post_target_scans = 0
         self.post_decoy_scans = 0
-        self.post_target_matches_top = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in self.dm_list])
-        self.post_decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in self.dm_list])
-        self.post_target_matches_scan = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in self.dm_list])
-        self.post_decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in self.dm_list])
+        self.post_target_matches_top = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in self.dm_list])
+        self.post_decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in self.dm_list])
+        self.post_target_matches_scan = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in self.dm_list])
+        self.post_decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in self.dm_list])
 
         # sum across the filtered TXT file data
         for txt_info in self.post_filter:
@@ -2285,20 +2285,20 @@ class DataInfoAndFilter:
             print('...short peptide top hits: %s (%s)' % (self.short_target_top_hits, self.short_decoy_top_hits), file=obj)
             print('...short peptide scans: %s (%s)\n' % (self.short_target_scans, self.short_decoy_scans), file=obj)
         
-        # restrict by minimum peptide length, maximum number of mods, charge state range and nct range first
+        # restrict by minimum peptide length, maximum number of mods, charge state range and net range first
         frame = self.frame[(self.frame.Length >= self.min_length) & (self.frame.NumMods <= self.max_mods) &
                            ((self.frame.Z >= self.z_offset) & (self.frame.Z <= self.z_max)) &
-                           ((self.frame.NCT >= self.nct_offset) & (self.frame.NCT <= self.nct_max))]
+                           ((self.frame.net >= self.net_offset) & (self.frame.net <= self.net_max))]
         
         dm_list = ['all']
         for i, txt_info_obj in enumerate(self.pre_filter):
             # create multidimensional counters for each TXT file
-            self.pre_filter[i].target_matches_top = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in dm_list])
-            self.pre_filter[i].decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in dm_list])  
-            self.pre_filter[i].target_matches_scan = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in dm_list])
-            self.pre_filter[i].decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in dm_list])  
+            self.pre_filter[i].target_matches_top = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in dm_list])
+            self.pre_filter[i].decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in dm_list])  
+            self.pre_filter[i].target_matches_scan = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in dm_list])
+            self.pre_filter[i].decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in dm_list])  
 
-            # get the global stats first (this prevents scans from being overcounted; top hit ties can have different nct or mods)
+            # get the global stats first (this prevents scans from being overcounted; top hit ties can have different net or mods)
             self.pre_filter[i].target_top_hits = len(frame[(frame.TxtIdx == i) & (frame.ForR == 'F')])
             self.pre_filter[i].decoy_top_hits = len(frame[(frame.TxtIdx == i) & (frame.ForR == 'R')])
             self.pre_filter[i].target_scans = len(frame[(frame.TxtIdx == i) & (frame.ForR == 'F')].drop_duplicates(['start', 'end', 'Z']))
@@ -2314,15 +2314,15 @@ class DataInfoAndFilter:
                 for charge in self.z_list:    # different thresholds for each charge, z is one less than the charge state
                     z = int(charge) - self.z_offset
                     mass_frame = frame[(frame.dmassDa >= (-1)*self.parent_tol) & (frame.dmassDa <= self.parent_tol)]
-                    for nct in self.nct_list: # different thresholds for each number of tryptic termini
-                        nct_idx = int(nct) - self.nct_offset
+                    for net in self.net_list: # different thresholds for each number of tryptic termini
+                        net_idx = int(net) - self.net_offset
                         for mod in range(len(self.mod_list)):    # and different thresholds for each homogeneous modification state
-                            subclass_frame = mass_frame[(mass_frame.TxtIdx == i) & (mass_frame.Z == int(charge)) & (mass_frame.NCT == int(nct)) &
+                            subclass_frame = mass_frame[(mass_frame.TxtIdx == i) & (mass_frame.Z == int(charge)) & (mass_frame.net == int(net)) &
                                                         (mass_frame.ModsStr.map(lambda s: s[0]) == self.mod_list[mod])] # first get basic data subclass (need first char of ModsStr to get all)
-                            self.pre_filter[i].target_matches_top[dm][z][nct_idx][mod] = len(subclass_frame[(subclass_frame.ForR == 'F')]) 
-                            self.pre_filter[i].decoy_matches_top[dm][z][nct_idx][mod] = len(subclass_frame[(subclass_frame.ForR == 'R')])  
-                            self.pre_filter[i].target_matches_scan[dm][z][nct_idx][mod] += len(subclass_frame[(subclass_frame.ForR == 'F')].drop_duplicates(['start', 'end', 'Z']))
-                            self.pre_filter[i].decoy_matches_scan[dm][z][nct_idx][mod] += len(subclass_frame[(subclass_frame.ForR == 'R')].drop_duplicates(['start', 'end', 'Z']))
+                            self.pre_filter[i].target_matches_top[dm][z][net_idx][mod] = len(subclass_frame[(subclass_frame.ForR == 'F')]) 
+                            self.pre_filter[i].decoy_matches_top[dm][z][net_idx][mod] = len(subclass_frame[(subclass_frame.ForR == 'R')])  
+                            self.pre_filter[i].target_matches_scan[dm][z][net_idx][mod] += len(subclass_frame[(subclass_frame.ForR == 'F')].drop_duplicates(['start', 'end', 'Z']))
+                            self.pre_filter[i].decoy_matches_scan[dm][z][net_idx][mod] += len(subclass_frame[(subclass_frame.ForR == 'R')].drop_duplicates(['start', 'end', 'Z']))
  
         # get aggregate stats
         self.aggregate_pre_global_stats()
@@ -2352,15 +2352,15 @@ class DataInfoAndFilter:
             print('All net subclass matches (scans):', file=obj)
             pprint.pprint(self.pre_target_matches_scan - self.pre_decoy_matches_scan, stream=obj)
 
-    def return_threshold(self, index_tuple, z_offset, nct_offset, mod_list, dm_scores):
+    def return_threshold(self, index_tuple, z_offset, net_offset, mod_list, dm_scores):
         """Returns the largest threshold associated with any modifications.
-        (index_tuple) => (Z, nct, mods_str);
+        (index_tuple) => (Z, net, mods_str);
             Z -> charge state; nnt -> number of tryptic termini; mods_str -> list of modification symbols in peptide
         z_offset => maps charge state to z-index,
         mod_list => full, ordered list of variable modifications specified in search
         dm_scores => subset of thresholds for respective deltamass window.
         """
-        thresholds = [dm_scores[index_tuple[0]-z_offset][index_tuple[1]-nct_offset][mod_list.index(mod)] for mod in index_tuple[2]]
+        thresholds = [dm_scores[index_tuple[0]-z_offset][index_tuple[1]-net_offset][mod_list.index(mod)] for mod in index_tuple[2]]
         return max(thresholds)
 
     def copy_params_files(self):
@@ -2391,7 +2391,7 @@ class DataInfoAndFilter:
             print('...Maximum number of mods per peptide:', self.max_mods, file=obj)
             print('...DeltaMass list:', self.dm_list, file=obj)
             print('...Charge state list:', self.z_list, file=obj)
-            print('...NCT list:', self.nct_list, file=obj)
+            print('...net list:', self.net_list, file=obj)
             print('...Modifications list:', self.mod_list, file=obj)
             print('...Delta mass windows:', file=obj)
             for i, z in enumerate(self.z_list):
@@ -2410,16 +2410,16 @@ class DataInfoAndFilter:
         # restrict by minimum peptide length first
         frame = self.frame[(self.frame.Length >= self.min_length) & (self.frame.NumMods <= self.max_mods) &
                            ((self.frame.Z >= self.z_offset) & (self.frame.Z <= self.z_max)) &
-                           ((self.frame.NCT >= self.nct_offset) & (self.frame.NCT <= self.nct_max))].copy()
+                           ((self.frame.net >= self.net_offset) & (self.frame.net <= self.net_max))].copy()
         
         for i, txt_info_obj in enumerate(self.pre_filter):  # loop over all TXT file data
             filter_frame = pd.DataFrame()
             
             # create multidimensional counters for each TXT file
-            self.post_filter[i].target_matches_top = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in self.dm_list])
-            self.post_filter[i].decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in self.dm_list])  
-            self.post_filter[i].target_matches_scan = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in self.dm_list])
-            self.post_filter[i].decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for nct in self.nct_list] for z in self.z_list] for dm in self.dm_list])  
+            self.post_filter[i].target_matches_top = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in self.dm_list])
+            self.post_filter[i].decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in self.dm_list])  
+            self.post_filter[i].target_matches_scan = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in self.dm_list])
+            self.post_filter[i].decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for net in self.net_list] for z in self.z_list] for dm in self.dm_list])  
     
             # get the peptide subclass stats
             for dm in range(len(self.dm_list)): # different thresholds for each mass window
@@ -2436,22 +2436,22 @@ class DataInfoAndFilter:
                                            (frame.TxtIdx == i) & (frame.Z == int(charge))].copy()
 
                     # this finds the most stringent threshold to test heterogeneously modified peptides against
-                    mass_frame['IndexTuple'] = list(zip(mass_frame.Z, mass_frame.NCT, mass_frame.ModsStr))
-                    mass_frame['TestValue'] = mass_frame.IndexTuple.map(lambda index_tuple: self.return_threshold(index_tuple, self.z_offset, self.nct_offset, self.mod_list, scores[dm]))
+                    mass_frame['IndexTuple'] = list(zip(mass_frame.Z, mass_frame.net, mass_frame.ModsStr))
+                    mass_frame['TestValue'] = mass_frame.IndexTuple.map(lambda index_tuple: self.return_threshold(index_tuple, self.z_offset, self.net_offset, self.mod_list, scores[dm]))
 
-                    for nct in self.nct_list: # different thresholds for each number of tryptic termini
-                        nct_idx = int(nct) - self.nct_offset
+                    for net in self.net_list: # different thresholds for each number of tryptic termini
+                        net_idx = int(net) - self.net_offset
                         for mod in range(len(self.mod_list)):    # and different thresholds for each modification state
-                            subclass_frame = mass_frame[(mass_frame.NCT == int(nct)) & (mass_frame.ModsStr == self.mod_list[mod]) &
+                            subclass_frame = mass_frame[(mass_frame.net == int(net)) & (mass_frame.ModsStr == self.mod_list[mod]) &
                                                         (mass_frame.NewDisc >= mass_frame.TestValue)] # get any data subclass hits above threshold
                             filter_frame = pd.concat([filter_frame, subclass_frame])    # save the filtered peptide subclass frame
 
                             # save some stats on the filtered subclass hits
-                            self.post_filter[i].target_matches_top[dm][z][nct_idx][mod] = len(subclass_frame[subclass_frame.ForR == 'F']) 
-                            self.post_filter[i].decoy_matches_top[dm][z][nct_idx][mod] = len(subclass_frame[subclass_frame.ForR == 'R'])
-                            self.post_filter[i].target_matches_scan[dm][z][nct_idx][mod] += len(subclass_frame[subclass_frame.ForR == 'F'
+                            self.post_filter[i].target_matches_top[dm][z][net_idx][mod] = len(subclass_frame[subclass_frame.ForR == 'F']) 
+                            self.post_filter[i].decoy_matches_top[dm][z][net_idx][mod] = len(subclass_frame[subclass_frame.ForR == 'R'])
+                            self.post_filter[i].target_matches_scan[dm][z][net_idx][mod] += len(subclass_frame[subclass_frame.ForR == 'F'
                                                                                                           ].drop_duplicates(['start', 'end', 'Z']))
-                            self.post_filter[i].decoy_matches_scan[dm][z][nct_idx][mod] += len(subclass_frame[subclass_frame.ForR == 'R'
+                            self.post_filter[i].decoy_matches_scan[dm][z][net_idx][mod] += len(subclass_frame[subclass_frame.ForR == 'R'
                                                                                                          ].drop_duplicates(['start', 'end', 'Z']))
                             
             # get the global stats last from the filtered frame
@@ -2505,7 +2505,7 @@ class DataInfoAndFilter:
             os.mkdir(os.path.join(self.filtered_folder))
         file_name = os.path.join(self.filtered_folder, basename + '_filtered.paw.txt')
 ##        cols = ['start', 'end', 'Z', 'expM', 'SpRank', 'theoM', 'deltaCN', 'Xcorr', 'Sequence', 'Loci',
-##                'NewDeltaCN', 'NewDisc', 'nct', 'ForR', 'dmassDa', 'dmassPPM', 'Length',
+##                'NewDeltaCN', 'NewDisc', 'net', 'ForR', 'dmassDa', 'dmassPPM', 'Length',
 ##                'NumMods', 'ModsStr', 'IndexTuple', 'TestValue']
 ##        frame.to_csv(file_name, sep='\t', index=False, columns=cols)
         frame.to_csv(file_name, sep='\t', index=False)
