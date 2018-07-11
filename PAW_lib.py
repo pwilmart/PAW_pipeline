@@ -296,7 +296,7 @@ class Peptide:
         nterm = self.base_seq[0]   # first amino acid in sequence
         print(prefix, nterm, cterm, suffix)
         
-        # determine number of enzymatic termini, nct
+        # determine number of enzymatic termini, net
         """need to support different enzymes and deal with proline.
         Seems Comet deals with premature stop codons as sequence breaks (* might be in prefix or suffix)."""
         if enzyme == 'Trypsin':         # cleaves at C-side of K, R (except if P)
@@ -709,10 +709,6 @@ class Protein:
         __init_:standard constructor, no parameters.
         readProtein: returns next protein from "fasta_reader"
         printProtein: prints sequence in FASTA format
-        parseIPI: cleans up IPI entries
-        parseNCBI: cleans up nr entries
-        parseUniProt: cleans up Sprot/Trembl entries
-        parseCONT: cleans up Contaminant entries
         reverseProtein: reverses sequences and modifies accession/descriptions
         molwtProtein: computes average MW of sequence
         frequencyProtein: returns aa composition dictionary
@@ -724,15 +720,14 @@ class Protein:
     Written by Phil Wilmarth, OHSU, 2009, 2016.
     
     Updated for new Comet mod formats -PW 10/27/2017
+    Removed any parsing of accessions and descriptions methods and attributes -PW 20180711
     """
     def __init__(self):
         """Basic constructor, no parameters.
         """
         # bare bones __init__ function
         self.accession = 'blank'
-        self.new_acc = 'blank'
         self.description = 'blank'
-        self.new_desc = 'blank'
         self.sequence = ''
         self.sequence_padded = None
         self.sequence_masked = None
@@ -750,8 +745,6 @@ class Protein:
             Return value is "False" when EOF encountered.
         """
         status = fasta_reader.readNextProtein(self)
-        self.new_acc = self.accession
-        self.new_desc = self.description
         return status
     
     def printProtein(self, file_obj=None, length=80):
@@ -767,10 +760,10 @@ class Protein:
             file_obj = sys.stdout
         
         # print new accession and new descriptor on first line
-        if self.new_desc == '':
-            print('>'+self.new_acc, file=file_obj)
+        if self.description == '':
+            print('>'+self.accession, file=file_obj)
         else:
-            print('>'+self.new_acc, self.new_desc, file=file_obj)
+            print('>'+self.accession, self.description, file=file_obj)
         
         # initialize some things
         char_count = 0
@@ -812,11 +805,9 @@ class Protein:
         else:
             new_acc = decoy_string + self.accession.replace('|', '&') # best to remove "|"        
         rev_prot.accession = new_acc
-        rev_prot.new_acc = rev_prot.accession
         
         # change the desciptions, too.
         rev_prot.description = 'REVERSED'
-        rev_prot.new_desc = 'REVERSED'
         
         # reversed the protein sequence and return new protein object
         rev_prot.sequence = self.sequence[::-1]
@@ -1169,10 +1160,8 @@ class FastaReader:
         # get next protein's info from _last_line
         if self._last_line.startswith('>'):
             next_protein.accession = self._last_line.split()[0][1:]
-            next_protein.new_acc = next_protein.accession
             start = len(next_protein.accession)+2
             next_protein.description = self._last_line[start:]
-            next_protein.new_desc = next_protein.description
         
         # return if empty line (EOF) or non-description line
         else:
