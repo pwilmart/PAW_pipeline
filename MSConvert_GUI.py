@@ -252,12 +252,12 @@ class Spectrum:
 
     # end Spectrum class
 
-class MS3Result:
-    """Data container for TMT peak areas."""
+class Reporter_ion:
+    """Data container for TMT peak centroids, areas, and heights."""
     def __init__(self, lc_name, ms2_scan, ms3_scan, centroids, areas, heights):
         self.lc_name = lc_name      # LC run name
         self.ms2_scan = ms2_scan    # MS2 scan number
-        self.ms3_scan = ms3_scan    # MS3 scan number
+        self.ms3_scan = ms3_scan    # MS3 scan number (if applicable)
         self.centroids = centroids  # list of peak centroid positions
         self.areas = areas          # list of trapezoidal peak integrations
         self.heights = heights      # list of peak heights (intensities)
@@ -284,7 +284,7 @@ class MS3Result:
         fout.write('\t'.join([str(x) for x in row]) + '\n')
         return
         
-    # end MS3Result class
+    # end Reporter_ions class
 
 class MSConvertGUI:
     """Main GUI for running MSConvert in batch mode to create MSn files."""
@@ -328,9 +328,8 @@ class MSConvertGUI:
         Button(self.root, text='Start conversion', command=self.start_processing).pack(pady=2)
         Button(self.root, text='Quit', command=self.quit_gui).pack(pady=2)
 
-        # set up stuff for TMT reporter ions
+        # set up m/z windows for TMT reporter ions
         self.set_windows()
-        self.results = []
         
         # enter mainloop
         self.root.mainloop()
@@ -393,10 +392,11 @@ class MSConvertGUI:
                     [' --filter "peakPicking true 3"', '']]
         level = [' --filter "msLevel 2"',
                  ' --filter "msLevel 3"',
+                 ' --filter "msLevel 2"',
                  ' --filter "msLevel 2-3"']
         idx = self.ms2_centroid.get()
         idy = self.ms3_centroid.get()
-        if self.msn_level.get() == 0: # if ms2 only, can't centroid ms3
+        if self.msn_level.get() == 0 or self.msn_level.get() == 2: # if ms2 only, can't centroid ms3
             idy = 1
         elif self.msn_level.get() == 1: # if ms3 only, can't centroid ms2
             idx = 1
@@ -416,6 +416,9 @@ class MSConvertGUI:
             # update status bar
             self.progresstext.configure(text='Converting RAW to Text: %s' % (os.path.basename(raw_name),))
             self.progressbar.update()
+
+            # clear any data structures that reset with each RAW file
+            self.tmt_data = []
             lc_name = os.path.splitext(os.path.basename(raw_name))[0]
             if raw_name.endswith('.raw'):
                 msconvert_name = raw_name[:-4] + '.txt.gz'
@@ -444,18 +447,22 @@ class MSConvertGUI:
                     msn_level = 3
                 else:
                     msn_level = 2
-                self.process_msn_level(lc_name, msn_level, self.ion_count.get(), self.min_intensity.get())
-                if self.msn_level.get() == 2:
-                    self.process_reporter_ions(lc_name)
+                if self.msn_level.get() == 2:   # MS2 TMT experiment
+                    reporter_ions = True
+                else:
+                    reporter_ions = False 
+                self.process_msn_level(lc_name, msn_level, self.ion_count.get(), self.min_intensity.get(), reporter_ions)
+                if self.msn_level.get() == 3:
+                    self.process_ms3_reporter_ions(lc_name)
                     self.progresstext.configure(text='Processing reporter ions')
                 self.progressbar.step(step)
                 self.progressbar.update()
                 
-                # save the MS3 results (one file for each RAW file)
-                if self.msn_level.get() == 2:
+                # save the TMT results (one quant file for each RAW file)
+                if self.tmt_data:
                     fout = open(os.path.join(os.path.dirname(self.raw_name_list[0]), lc_name + '.PAW_tmt.txt'), 'w', newline=None)
-                    self.results[0].write_header(self.tmt_labels, fout) # header line
-                    for result in self.results:
+                    self.tmt_data[0].write_header(self.tmt_labels, fout) # header line
+                    for result in self.tmt_data:
                         result.write_row(fout) # data line
                     fout.close()
             else:
@@ -466,12 +473,11 @@ class MSConvertGUI:
         self.progressbar.update()
         self.progressbar.step(step)
         self.progressbar.update()
-        
-    def process_reporter_ions(self, lc_name):
+
+    def process_ms3_reporter_ions(self, lc_name):
         """Parses ms2 and ms3 spectrum blocks; gets scan numbers, and reporter ion data.
         """
         self.ms2_count, self.ms3_count = 0, 0 # scan counters
-        self.results = []   # reset MS3 information for each RAW file scan
             
         # parse files to get ms2 scan numbers, ms3 scan numbers, and data        
         ms_dict = {}            # used to link MS3 scan numbers to ms2 scan numbers 
@@ -480,22 +486,23 @@ class MSConvertGUI:
         mz_arr_flag = False     # True if data array is m/z values
         ms1_prev = 0            # previous (maybe current?) MS1 scan number
         cid_key = ''            # relevant string from scan header line to link MS2 and MS3
+        # read lines in MSConvert file
         for line in gzip.open(self.txt_name, 'rt'):
-            line = line.strip()    # remove leading, trailing WS 
-            if line.startswith('spectrum:'):
+            line = line.strip()    # remove leading, trailing white space
+            if line.startswith('spectrum:'):    # look for each spectrum block
                 spectrum_flag = True
-            if spectrum_flag:   # only look for lines to parse if inside spectrum blocks
-                if line.startswith('id:'):
+            if spectrum_flag:   # only parse lines when inside spectrum blocks
+                if line.startswith('id:'):  # get scan number
                     scan_num = int(line.split()[-1].split('=')[-1])
-                if line.startswith('cvParam: ms level,'):
+                if line.startswith('cvParam: ms level,'):   # get MSn level (2 or 3)
                     msn_level = int(line.split()[-1])
                     if msn_level == 2:
-                        self.ms2_count += 1
+                        self.ms2_count += 1 # MS2 scan counter
                     elif msn_level == 3:
-                        self.ms3_count += 1
+                        self.ms3_count += 1     # MS3 scan counter
                         if (self.ms3_count % 1000) == 0:
                             print('......%d MS3 scans processed...' % self.ms3_count)
-                if line.startswith('cvParam: filter string'):
+                if line.startswith('cvParam: filter string'):   # line with info linking MS2 scan to MS3 scan
                     if '@cid3' in line:
                         moverz_key = line.split('@cid3')[0].split()[-1]
                     elif '@hcd3' in line:
@@ -522,12 +529,13 @@ class MSConvertGUI:
                         mz_arr_flag = False
                     elif line.startswith('binary: ') and not mz_arr_flag:
                         int_list = [float(x) for x in line.split()[2:]]
-                        centroids, areas, heights = self.process_ms3_data(mz_list, int_list)
-                        self.results.append(MS3Result(lc_name, ms2_scan, scan_num, centroids, areas, heights))
+                        centroids, areas, heights = self.process_tmt_data(mz_list, int_list)
+                        self.tmt_data.append(Reporter_ion(lc_name, ms2_scan, scan_num, centroids, areas, heights))
                         spectrum_flag = False
 
-    def process_ms3_data(self, mz_list, int_list):
-        """Computes peak centroid and integral within each TMT window."""
+    def process_tmt_data(self, mz_list, int_list):
+        """Computes peak centroid and integral within each TMT window.
+        This will work for either MS2 reporter ions or MS3 reporter ions."""
         # initialize variables
         df = pd.DataFrame({'m/z': mz_list, 'intensity': int_list})
         centroids = []
@@ -559,10 +567,11 @@ class MSConvertGUI:
         self.windows = np.array([[x-0.003, x, x+0.0025] for x in self.tmt_masses])
         return 
         
-    def process_msn_level(self, lc_name, msn_level=2, ion_count=15, min_intensity=100.0):
+    def process_msn_level(self, lc_name, msn_level=2, ion_count=15, min_intensity=100.0, reporter_ions = False):
         """Converts one Proteowizard TEXT formatted file to MSn format.
         Includes RT, etc. in MSn Information (I) lines. -PW June 2014
-        Added test statistics, handling of missing charge state or m/z values - 6/15/2014 PW
+        Added summary statistics: missing charge states and m/z values -PW 6/15/2014
+        Added extraction of reporter ions (if applicable) -PW 20180711
         """
         # get stuff for filenames
         if msn_level == 2:
@@ -592,6 +601,9 @@ class MSConvertGUI:
                 if block:   # process previous spectrum block
                     spectrum = Spectrum(spectra, block)
                     spectra.add(spectrum)
+                    if reporter_ions:
+                        centroids, areas, heights = self.process_tmt_data(spectrum.mz_array, spectrum.int_array)
+                        self.tmt_data.append(Reporter_ion(lc_name, spectrum.scan, spectrum.scan, centroids, areas, heights))
                     block = []  # reset block
             if in_spec:
                 block.append(line)
@@ -600,6 +612,9 @@ class MSConvertGUI:
         if block:
             spectrum = Spectrum(spectra, block)
             spectra.add(spectrum)
+            if reporter_ions:
+                centroids, areas, heights = self.process_tmt_data(spectrum.mz_array, spectrum.int_array)
+                self.tmt_data.append(Reporter_ion(lc_name, spectrum.scan, spectrum.scan, centroids, areas, heights))
     
         # write diagnostic stats from conversion
         print('...Diagnostics for:', lc_name)
@@ -608,10 +623,7 @@ class MSConvertGUI:
         # write data in desired formats
         print('...writing MS%s file: %d scans passed cutoffs' % (msn_level, len(spectra.spectra)))
         msn_name = os.path.join(folder, lc_name + msn_extension)
-        if self.msn_level.get() == 3 and msn_level == 3:
-            spectra.write_msn(msn_name, 100.0, 150.0)   # mass range cutoffs for MS3 TMT
-        else:
-            spectra.write_msn(msn_name)
+        spectra.write_msn(msn_name)
         spectra = None
     
         # move file to MSn_folder
@@ -668,7 +680,7 @@ class MSConvertGUI:
         self.create_entry(defaults_frame, 'Minimum ion count: ', self.ion_count).pack(fill=X, expand=YES)
         self.create_entry(defaults_frame, 'Minimum Intensity: ', self.min_intensity).pack(fill=X, expand=YES)
         self.create_radiobuttons(defaults_frame, 'Data to extract: ',
-                                 [('MS2 only', 0), ('MS3 only', 1), ('MS2 and reporter ions (TMT)', 2)],
+                                 [('MS2', 0), ('MS3', 1), ('MS2 TMT', 2), ('MS3 TMT', 3)],
                                  self.msn_level).pack(fill=X, expand=YES)
         self.create_radiobuttons(defaults_frame, 'Centroid MS2 data: ',
                                  [('Yes', 0), ('No', 1)], self.ms2_centroid).pack(fill=X, expand=YES)
