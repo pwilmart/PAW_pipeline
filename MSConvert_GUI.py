@@ -49,6 +49,7 @@ version 1.06:
     separate reporter ion files (one for each RAW) -PW 3/2018
 version 1.07:
     support for MS2 or MS3 reporter ions -PW 20180711
+    PAW_tmt.txt files are moved to location with MSn files -PW 20180816
 
 """
 # global imports
@@ -60,7 +61,7 @@ import os
 import sys
 import gzip
 import time
-import io
+import glob
 import shutil
 
 import numpy as np
@@ -115,7 +116,7 @@ class Spectra:
             if spectrum.charge == [] or spectrum.charge[0] == 0:
                 self.determine_charge(spectrum)
             self.spectra.append(spectrum)
-            
+
     def determine_charge(self, spectrum):
         """Tests unknown charge state scans for 1+ or 2+/3+."""
         total_int = sum(spectrum.int_array)
@@ -132,7 +133,7 @@ class Spectra:
         """Sometimes the m/z value in userParam: line is zero so get value from scan header string."""
         m_over_z = spectrum.filter_string.split('string,')[-1]
         spectrum.m_over_z = float(m_over_z.split('@')[0].split()[-1])
-                    
+
     def check_spectrum(self, spectrum):
         """Checks spectrum for missing charge state, missing m/z, and checks accuracy of m/z."""
         if spectrum.m_over_z == 0.0:
@@ -168,7 +169,7 @@ class Spectra:
             spectrum.write_msn_block(msn, low, high)
 
         msn.close()
-        
+
     # end Spectra class
 
 class Spectrum:
@@ -221,7 +222,7 @@ class Spectrum:
                 else:
                     self.int_array = [float(x) for x in line.split(']')[1].split()]
 
-        # check that array lengths match    
+        # check that array lengths match
         if len(self.mz_array) != self.count or len(self.int_array) != self.count \
            or len(self.mz_array) != len(self.int_array):
             print('...WARNING: non-equal ion and intensity counts!')
@@ -230,8 +231,8 @@ class Spectrum:
 
     def console_dump(self):
         """Prints parsed values to console."""
-        print('\nScan: %d, MSn: %d, Int: %0.0f, Title: %s, RT: %0.2f, Inj: %0.2f, M/Z: %0.2f, Charge: %s' % 
-              (self.scan, self.msn, self.intensity, self.title, self.rt_min, 
+        print('\nScan: %d, MSn: %d, Int: %0.0f, Title: %s, RT: %0.2f, Inj: %0.2f, M/Z: %0.2f, Charge: %s' %
+              (self.scan, self.msn, self.intensity, self.title, self.rt_min,
                self.inj_time_ms, self.m_over_z, self.charge))
         print('number of data points:', len(self.mz_array), len(self.int_array))
 
@@ -267,28 +268,28 @@ class Reporter_ion:
     # these are set by the caller
     def write_header(self, channels, fout):
         """Writes a tab-delimited header line to 'fout'."""
-        headers = (['lc_name', 'ms2_scan', 'ms3_scan'] + 
-                   [('cent_' + x) for x in channels] + 
+        headers = (['lc_name', 'ms2_scan', 'ms3_scan'] +
+                   [('cent_' + x) for x in channels] +
                    [('area_' + x) for x in channels] +
                    [('height_' + x) for x in channels])
         fout.write('\t'.join(headers) + '\n')
         return
-        
+
     def write_row(self, fout):
         """Writes a tab-delimited data row to 'fout'.
         """
-        row = ([self.lc_name, self.ms2_scan, self.ms3_scan] + 
+        row = ([self.lc_name, self.ms2_scan, self.ms3_scan] +
                [round(x, 6) for x in self.centroids] +
                [round(x, 6) for x in self.areas] +
                [round(x, 6) for x in self.heights])
         fout.write('\t'.join([str(x) for x in row]) + '\n')
         return
-        
+
     # end Reporter_ions class
 
 class MSConvertGUI:
     """Main GUI for running MSConvert in batch mode to create MSn files."""
-    
+
     def __init__(self):
         """Constructor. Uses a collection of frames for related parameters."""
         self.root = Tk()
@@ -319,7 +320,7 @@ class MSConvertGUI:
         self.tmt_labels = [x[0] for x in self.tmt_tuples]
         self.tmt_masses = [x[1] for x in self.tmt_tuples]
         self.zeroes = [0.0 for x in self.tmt_tuples]
-        
+
         # create GUI
         self.create_files_frame()
         self.create_defaults_frame()
@@ -330,12 +331,12 @@ class MSConvertGUI:
 
         # set up m/z windows for TMT reporter ions
         self.set_windows()
-        
+
         # enter mainloop
         self.root.mainloop()
         return
-        
-    # functions to help create widgets             
+
+    # functions to help create widgets
     def create_entry(self, parent, label, variable):
         """Creates a text entry widget."""
         frame = Frame(parent)
@@ -350,7 +351,7 @@ class MSConvertGUI:
         for button, variable in ions_list:
             Checkbutton(frame, text=button, variable=variable).pack(side=LEFT)
         return frame
-                
+
     def create_radiobuttons(self, parent, label, buttons, variable):
         """Creates a radiobutton widget."""
         frame = Frame(parent)
@@ -367,7 +368,7 @@ class MSConvertGUI:
         self.progresstext.pack()
         self.progressbar.update()
         return
-        
+
     # main button methods
     def load_raw_files(self):
         """Allows user to select one or more RAW files. Sets folder path attribute and populates the
@@ -379,14 +380,14 @@ class MSConvertGUI:
         self.raw_path = os.path.dirname(self.raw_name_list[0])
         self.raw_path_view.set(' %s   (%i RAW files selected)' % (self.raw_path, len(self.raw_name_list)))
         return
-                                                                              
+
     def start_processing(self):
         """This executes MSConvert using the user-specified options. Then creates the MSn files
         from the gzipped text files.
         """
         if not self.raw_name_list:
             self.load_raw_files()
-            
+
         # build the MSConvert command options
         centroid = [[' --filter "peakPicking true 2-3"', ' --filter "peakPicking true 2"'],
                     [' --filter "peakPicking true 3"', '']]
@@ -411,8 +412,8 @@ class MSConvertGUI:
         # set current dir to raw file folder
         dir_loc = self.raw_path
         os.chdir(dir_loc)
-        
-        for raw_name in self.raw_name_list:            
+
+        for raw_name in self.raw_name_list:
             # update status bar
             self.progresstext.configure(text='Converting RAW to Text: %s' % (os.path.basename(raw_name),))
             self.progressbar.update()
@@ -422,7 +423,7 @@ class MSConvertGUI:
             lc_name = os.path.splitext(os.path.basename(raw_name))[0]
             if raw_name.endswith('.raw'):
                 msconvert_name = raw_name[:-4] + '.txt.gz'
-            
+
             # call MSConvert
             command_line = raw_name + centroid_picked + level_picked + ' --text --gzip'
             if not os.path.exists(msconvert_name):
@@ -432,7 +433,7 @@ class MSConvertGUI:
                 print('...Skipping conversion of:', lc_name)
             self.progressbar.step(step)
             self.progressbar.update()
-            
+
             # compute the expected MSConvert filename from RAW name
             txt_name_short = os.path.splitext(os.path.basename(raw_name))[0] + '.txt.gz'
             self.txt_name = os.path.join(os.path.dirname(raw_name), txt_name_short) # add full path
@@ -441,7 +442,7 @@ class MSConvertGUI:
             if os.path.exists(self.txt_name):
                 self.progresstext.configure(text='Converting %s to MSn file' % (txt_name_short,))
                 self.progressbar.update()
-                
+
                 # create the MSn file first
                 if self.msn_level.get() == 1:
                     msn_level = 3
@@ -450,14 +451,14 @@ class MSConvertGUI:
                 if self.msn_level.get() == 2:   # MS2 TMT experiment
                     reporter_ions = True
                 else:
-                    reporter_ions = False 
+                    reporter_ions = False
                 self.process_msn_level(lc_name, msn_level, self.ion_count.get(), self.min_intensity.get(), reporter_ions)
                 if self.msn_level.get() == 3:
                     self.process_ms3_reporter_ions(lc_name)
                     self.progresstext.configure(text='Processing reporter ions')
                 self.progressbar.step(step)
                 self.progressbar.update()
-                
+
                 # save the TMT results (one quant file for each RAW file)
                 if self.tmt_data:
                     fout = open(os.path.join(os.path.dirname(self.raw_name_list[0]), lc_name + '.PAW_tmt.txt'), 'w', newline=None)
@@ -467,6 +468,11 @@ class MSConvertGUI:
                     fout.close()
             else:
                 print('...WARNING: possible corrupt file:', lc_name)
+
+        # move the MSn and PAW_tmt files into separate folder
+        self.progresstext.configure(text='Moving search and quant files')
+        self.progressbar.update()
+        self.move_files()
 
         # update status line when done
         self.progresstext.configure(text='Conversions completed. Quit when ready...')
@@ -478,9 +484,9 @@ class MSConvertGUI:
         """Parses ms2 and ms3 spectrum blocks; gets scan numbers, and reporter ion data.
         """
         self.ms2_count, self.ms3_count = 0, 0 # scan counters
-            
-        # parse files to get ms2 scan numbers, ms3 scan numbers, and data        
-        ms_dict = {}            # used to link MS3 scan numbers to ms2 scan numbers 
+
+        # parse files to get ms2 scan numbers, ms3 scan numbers, and data
+        ms_dict = {}            # used to link MS3 scan numbers to ms2 scan numbers
         spectrum_flag = False   # limits parsing to spectrum blocks
         msn_level = None        # the MSn level of the scan
         mz_arr_flag = False     # True if data array is m/z values
@@ -561,12 +567,12 @@ class MSConvertGUI:
             h = h if h is not np.nan else 0.0 # replace NAN with zero
             heights.append(h)
         return centroids, areas, heights
-        
+
     def set_windows(self):
         """Sets narrow integration windows around each reporter ion's predicted m/z position."""
         self.windows = np.array([[x-0.003, x, x+0.0025] for x in self.tmt_masses])
-        return 
-        
+        return
+
     def process_msn_level(self, lc_name, msn_level=2, ion_count=15, min_intensity=100.0, reporter_ions = False):
         """Converts one Proteowizard TEXT formatted file to MSn format.
         Includes RT, etc. in MSn Information (I) lines. -PW June 2014
@@ -578,8 +584,7 @@ class MSConvertGUI:
             msn_extension = '.ms2'
         else:
             msn_extension = '.ms3'
-        folder = os.path.dirname(self.raw_name_list[0])
-        
+
         # get the header lines for Spectra setup
         header_block = []
         block = []
@@ -592,12 +597,12 @@ class MSConvertGUI:
                 break   # towards end of file after spectrum info
             if spectra is None:
                 header_block.append(line)
-            if line.startswith('spectrum:'):                
+            if line.startswith('spectrum:'):
                 # create container for all spectra when at first "spectrum" line
                 if spectra is None:
                     spectra = Spectra(ion_count, min_intensity, msn_level, header_block)
                 # regular spectrum block processing
-                in_spec = True                
+                in_spec = True
                 if block:   # process previous spectrum block
                     spectrum = Spectrum(spectra, block)
                     spectra.add(spectrum)
@@ -607,7 +612,7 @@ class MSConvertGUI:
                     block = []  # reset block
             if in_spec:
                 block.append(line)
-            
+
         # need to parse last block
         if block:
             spectrum = Spectrum(spectra, block)
@@ -615,27 +620,38 @@ class MSConvertGUI:
             if reporter_ions:
                 centroids, areas, heights = self.process_tmt_data(spectrum.mz_array, spectrum.int_array)
                 self.tmt_data.append(Reporter_ion(lc_name, spectrum.scan, spectrum.scan, centroids, areas, heights))
-    
+
         # write diagnostic stats from conversion
         print('...Diagnostics for:', lc_name)
         spectra.report()
-    
+
         # write data in desired formats
         print('...writing MS%s file: %d scans passed cutoffs' % (msn_level, len(spectra.spectra)))
-        msn_name = os.path.join(folder, lc_name + msn_extension)
+        msn_name = os.path.join(self.raw_path, lc_name + msn_extension)
         spectra.write_msn(msn_name)
         spectra = None
-    
-        # move file to MSn_folder
-        container = os.path.dirname(folder)
-        dest = os.path.join(container, 'msn_files', os.path.basename(msn_name))
-        if not os.path.exists(os.path.join(container, 'msn_files')):
-            os.mkdir(os.path.join(container, 'msn_files'))
-            
-        # may need to remove a file if it already exists in destination...
-        if os.path.exists(dest):
-            os.remove(dest)
-        shutil.move(msn_name, dest)    
+        return
+
+    def move_files(self):
+        """Moves .ms2 and PAW_tmt.txt file into msn_files folder"""
+        # get paths for source and destination folders
+        source_folder = self.raw_path
+        destination_folder = os.path.join(os.path.dirname(source_folder), 'msn_files')
+        if not os.path.exists(destination_folder):
+            os.mkdir(destination_folder)
+
+        # get a list of all files to move
+        files_to_move = []
+        for pattern in ['*.ms2', '*.ms3', '*.PAW_tmt.txt']:
+            files_to_move += glob.glob(pattern)
+
+        # move the files (checks and deletes any files with the same names)
+        for file in files_to_move:
+            source = os.path.join(source_folder, file)
+            dest = os.path.join(destination_folder, file)
+            if os.path.exists(dest):
+                os.remove(dest)
+            shutil.move(source, dest)
         return
 
     def quit_gui(self):
@@ -644,7 +660,7 @@ class MSConvertGUI:
         self.root.update_idletasks()
         self.root.quit()
         return
-                                                                                                                                                                                                       
+
     # methods to create sections of GUI
     def create_files_frame(self):
         """Lets the user select the RAW files."""
@@ -655,27 +671,27 @@ class MSConvertGUI:
         self.raw_path_view = StringVar()
         self.def_location = r'C:\\'
         self.extension_list = [('RAW File(s)','*.RAW')]
-        
+
         # defaults
-        self.raw_path_view.set(r' Load RAW files (click the button on the left)')        
+        self.raw_path_view.set(r' Load RAW files (click the button on the left)')
 
         # creation
         Button(dir_frame, text=' Load files ', command=self.load_raw_files).pack(side=LEFT)
         Entry(dir_frame, textvariable=self.raw_path_view).pack(side=LEFT, fill=X, expand=YES)
         return
-        
+
     def create_defaults_frame(self):
         """Lets the user change minimum on count, intensity, etc."""
         defaults_frame = ttk.Labelframe(self.root, text='MSConvert parameters:')
         defaults_frame.pack(fill=X, expand=YES, padx=5, pady=5)
-        
+
         # variables
         self.ion_count = IntVar()
         self.min_intensity = DoubleVar()
         self.msn_level = IntVar()
         self.ms2_centroid = IntVar()
         self.ms3_centroid = IntVar()
-        
+
         # creation
         self.create_entry(defaults_frame, 'Minimum ion count: ', self.ion_count).pack(fill=X, expand=YES)
         self.create_entry(defaults_frame, 'Minimum Intensity: ', self.min_intensity).pack(fill=X, expand=YES)
@@ -686,7 +702,7 @@ class MSConvertGUI:
                                  [('Yes', 0), ('No', 1)], self.ms2_centroid).pack(fill=X, expand=YES)
         self.create_radiobuttons(defaults_frame, 'Centroid MS3 data: ',
                                  [('Yes', 0), ('No', 1)], self.ms3_centroid).pack(fill=X, expand=YES)
-        
+
         # set defaults
         self.ion_count.set(15)
         self.min_intensity.set(100)
@@ -694,6 +710,6 @@ class MSConvertGUI:
         self.ms2_centroid.set(1)
         self.ms3_centroid.set(1)
         return
-        
+
 if __name__ == '__main__':
     convert = MSConvertGUI()
