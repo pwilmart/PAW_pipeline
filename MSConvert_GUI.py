@@ -491,7 +491,7 @@ class MSConvertGUI:
         msn_level = None        # the MSn level of the scan
         mz_arr_flag = False     # True if data array is m/z values
         ms1_prev = 0            # previous (maybe current?) MS1 scan number
-        cid_key = ''            # relevant string from scan header line to link MS2 and MS3
+        moverz_key = ''            # relevant string from scan header line to link MS2 and MS3
         # read lines in MSConvert file
         for line in gzip.open(self.txt_name, 'rt'):
             line = line.strip()    # remove leading, trailing white space
@@ -520,11 +520,11 @@ class MSConvertGUI:
                     if ms1_scan != ms1_prev:  # this covers first scan and when MS1 cycle changes
                         ms_dict = {}
                         ms1_prev = ms1_scan
-                    ms_dict[cid_key] = scan_num     # map CID strings to MS2 scans in each MS1 cycle
+                    ms_dict[moverz_key] = scan_num     # map CID strings to MS2 scans in each MS1 cycle
                     spectrum_flag = False   # done with info for MS2 scans
                 if msn_level == 3:
                     try:
-                        ms2_scan = ms_dict[cid_key]
+                        ms2_scan = ms_dict[moverz_key]
                     except KeyError:
                         print(scan_num, lc_name)
                         raise
