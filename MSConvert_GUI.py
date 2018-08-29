@@ -707,8 +707,8 @@ class MSConvertGUI:
         self.ion_count.set(15)
         self.min_intensity.set(100)
         self.msn_level.set(0)
-        self.ms2_centroid.set(1)
-        self.ms3_centroid.set(1)
+        self.ms2_centroid.set(0)
+        self.ms3_centroid.set(0)
         return
 
 if __name__ == '__main__':
