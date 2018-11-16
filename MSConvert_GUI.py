@@ -498,7 +498,7 @@ class MSConvertGUI:
             if line.startswith('spectrum:'):    # look for each spectrum block
                 spectrum_flag = True
             if spectrum_flag:   # only parse lines when inside spectrum blocks
-                if line.startswith('id:'):  # get scan number
+                if line.startswith('id:') and 'scan=' in line:  # get scan number
                     scan_num = int(line.split()[-1].split('=')[-1])
                 if line.startswith('cvParam: ms level,'):   # get MSn level (2 or 3)
                     msn_level = int(line.split()[-1])
@@ -509,6 +509,7 @@ class MSConvertGUI:
                         if (self.ms3_count % 1000) == 0:
                             print('......%d MS3 scans processed...' % self.ms3_count)
                 if line.startswith('cvParam: filter string'):   # line with info linking MS2 scan to MS3 scan
+                    ## had @cid3 and @hcd3 strings - we need to exclude higher energy HCD
                     if '@cid3' in line:
                         moverz_key = line.split('@cid3')[0].split()[-1]
                     elif '@hcd3' in line:
