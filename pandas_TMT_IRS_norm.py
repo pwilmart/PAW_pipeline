@@ -35,6 +35,19 @@ Direct questions to:
 Technology & Research Collaborations, Oregon Health & Science University,
 Ph: 503-494-8200, FAX: 503-494-4729, Email: techmgmt@ohsu.edu.
 """
+# modification history:
+
+# 12/4/2018 -PW
+# added support for unused channels (also any channel where SL norm is not right)
+#    the unused channels gets adjustments to match experiments; otherwise passed through
+
+# 12/4/2018 -PW
+# checks for duplicate sample names and suffixes with capital letters per plex
+
+# 12/4/2018 -PW
+# added a log file for console output
+
+
 import os
 import sys
 import re
@@ -109,13 +122,32 @@ class PAW_TMT_results(object):
             else:
                 self.suffix_lines.append(' ')
         return
+    
+    def label_duplicates(self, samples):
+        """Make TMT samples unique per plex."""
+        # make list of suffixes
+        suffixes = ['-A', '-B', '-C', '-D', '-E', '-F', '-G', '-H', '-I', '-J', '-K']   # up to 11 duplicate times
         
+        # find set of duplicate values
+        values = list(samples.values())
+        dupes = set([item for idx, item in enumerate(values) if item in values[idx+1:]])
+
+        # replace duplicated values with incremental suffixed values
+        for dupe in dupes:
+            replace = 0
+            for key in samples:
+                if samples[key] == dupe:
+                    samples[key] += suffixes[replace]
+                    replace += 1
+        return
+    
     def get_sample_keys(self):
         """Makes TMT channel to sample key dictionary."""
         # get the indexes for each experiment
         for exp in self.TMT_exps:            
             exp.all_channels = [head for head in self.headers if ('TotInt_' in head) and (exp.label in head)]
             exp.sample_key = {head: self.pre_headers[j] for (j, head) in enumerate(self.headers) if head in exp.all_channels}
+            self.label_duplicates(exp.sample_key)
             exp.channels = [x for x in exp.all_channels if 'UNUSED' not in exp.sample_key[x].upper()]
             exp.plex = len(exp.channels)
         return
@@ -183,14 +215,17 @@ class PAW_TMT_results(object):
         self.frame = DataFrame(table_dict, columns=self.headers)
         return
 
-    def find_study_intersection(self):
+    def find_study_intersection(self, write):
         """Finds the intersection of protein identifications."""
-        # compute average columns for each TMT experiment and for all
-        print('proteins in results file:', len(self.frame))
+        
         total_proteins = len(self.frame['Filter'][self.frame['Filter'] == ' '])
-        print('total number of non-contaminant proteins:', total_proteins)
         contams = len(self.frame) - total_proteins
-        print('contamaminant and decoy count:', contams)
+        for obj in write:
+            print('proteins in results file:', len(self.frame), file=obj)
+            print('total number of non-contaminant proteins:', total_proteins, file=obj)
+            print('contamaminant and decoy count:', contams, file=obj)
+
+        # compute plex-average columns for each TMT experiment and for all
         self.exp_frames = []
         self.frame['Average_all'] = 0.0
         for exp in self.TMT_exps:
@@ -230,8 +265,10 @@ class PAW_TMT_results(object):
         # individual experiment averages of zero are missing in that experiment
         for exp in self.TMT_exps:
             not_quant = len(self.frame.loc[self.frame['Average_'+exp.label] == 0.0])
-            print('..%s proteins were not quantifiable in %s' % (not_quant, exp.label))
-        print('..proteins with no intensities experiment-wide: %s' % self.all)
+            for obj in write:
+                print('..%s proteins were not quantifiable in %s' % (not_quant, exp.label), file=obj)
+        for obj in write:
+            print('..proteins with no intensities experiment-wide: %s' % self.all, file=obj)
         return
 
     def move_rows_to_bottom(self):
@@ -247,42 +284,55 @@ class PAW_TMT_results(object):
         self.num_prot = len(self.frame[self.frame['Filter'] == ' ']) - 1     # dataframe indexing is inclusive
         return
 
-    def compute_loading_norm_factors(self):
+    def compute_loading_norm_factors(self, write):
         """Compute reporter ion columns totals and loading correction factors."""
         tmt_exps = [x for x in self.TMT_exps if x.channels]
         # column totals per TMT
         for exp in tmt_exps:
-            exp.grand_totals = self.frame.loc[:self.num_prot, exp.channels].sum(axis=0)
-            exp.average_total = exp.grand_totals.mean()
+            exp.grand_totals = self.frame.loc[:self.num_prot, exp.all_channels].sum(axis=0)
+            total, number = 0.0, 0
+            for label, colsum in exp.grand_totals.iteritems(): # clunky way to skip unused channels
+                if label in exp.channels:
+                    total += colsum
+                    number += 1
+            exp.average_total = total / number
 
-        # experiment-wide average and adjustment factora            
-        target_total = np.mean([x.average_total for x in self.TMT_exps if x.channels])
+        # experiment-wide average and adjustment factors            
+        target_total = np.mean([x.average_total for x in tmt_exps])
         for exp in tmt_exps:
             exp.target_total = target_total
             exp.loading_factors = exp.target_total / exp.grand_totals
 
-        # print out factors            
-        print()
+        # print out factors
+        for obj in write:
+            print(file=obj)
         for exp in tmt_exps:
-            print('%s SL Norm Factors:' % exp.label)
-            for ch, fac in zip(exp.channels, exp.loading_factors):
-                print('  %s: %0.6f' % (ch, fac))
+            for obj in write:
+                print('%s SL Norm Factors:' % exp.label, file=obj)
+            for ch, fac in zip(exp.all_channels, exp.loading_factors):
+                for obj in write:
+                    print('  %s: %0.6f' % (ch, fac), file=obj)
         return
 
     def add_loading_normalized_columns(self):
         """Add new columns with sample loading corrected intensities."""
-        all_int_cols = [x.channels for x in self.TMT_exps]
+        all_int_cols = [x.all_channels for x in self.TMT_exps]
         self.all_int_cols = [item for sublist in all_int_cols for item in sublist]   # get list of all reporter ion columns
         self.work_frame = self.frame.loc[:self.num_prot, self.all_int_cols].copy()    # get sub-frame of just the data
+
+        # adjust unused channel column sums to 
         
 
         # loop over TMT experiments and correct each channel by single factor
-        for exp in [x for x in self.TMT_exps if x.channels]:     # j is an experiment number, not an index
+        for exp in [x for x in self.TMT_exps if x.channels]:
             exp.SLNorm_cols = []
-            for i, channel in enumerate(exp.channels):
-                SLNorm_col = 'SLNorm_' + exp.sample_key[channel] + '_' + str(exp.number)
+            for label, factor in exp.loading_factors.iteritems():
+                SLNorm_col = 'SLNorm_' + exp.sample_key[label] + '_' + str(exp.number)
                 exp.SLNorm_cols.append(SLNorm_col)
-                self.work_frame[SLNorm_col] = self.work_frame[channel] * exp.loading_factors[i]
+                if label in exp.channels:
+                    self.work_frame[SLNorm_col] = self.work_frame[label] * factor
+                else:
+                    self.work_frame[SLNorm_col] = self.work_frame[label] * (exp.target_total / exp.average_total)
 
             # compute the average of the pool(s) in each TMT experiment
             pool_list = [x for x in exp.SLNorm_cols if 'POOL' in x.upper()]
@@ -324,7 +374,7 @@ class PAW_TMT_results(object):
         # loop over TMT experiments and correct each protein by IRS factors
         for j, exp in enumerate([x for x in self.TMT_exps if x.channels]):
             exp.IRSNorm_cols = []
-            for i, channel in enumerate(exp.channels):
+            for i, channel in enumerate(exp.all_channels):
                 IRSNorm_col = 'IRSNorm_' + exp.sample_key[channel] + '_' + str(exp.number)
                 exp.IRSNorm_cols.append(IRSNorm_col)
                 self.work_frame[IRSNorm_col] = self.work_frame[exp.SLNorm_cols[i]] * self.work_frame[self.IRSFactors[j]]                
@@ -343,16 +393,27 @@ results_file = PAW_lib.get_file(default_location,
 if not results_file:
     sys.exit()
 
+# set up a log file in location where results file is located
+log_obj = open(os.path.join(os.path.dirname(results_file), 'PAW_IRS_log.txt'), 'a')
+
+print('\n=================================================================', file=log_obj)
+print(' pandas_TMT_IRS_norm.py, %s, written by Phil Wilmarth 2017-8 ' % VERSION, file=log_obj)    
+print('=================================================================', file=log_obj)
+print('select a protein results file with TMT intensities and sample key:', file=log_obj)
+
+write = [None, log_obj]
+
 # load the results file
-print('processing:', os.path.split(results_file)[1])
+for obj in write:
+    print('processing:', os.path.split(results_file)[1], file=obj)
 frame = PAW_TMT_results()               # create a container for results
 frame.load_table(results_file)          # load the results file into container
 
 frame.here = os.path.split(results_file)[0]
 
-frame.find_study_intersection()         # flag proteins not seen in all TMT experiments
+frame.find_study_intersection(write)         # flag proteins not seen in all TMT experiments
 frame.move_rows_to_bottom()             # move contaminants and excluded proteins to botton of table
-frame.compute_loading_norm_factors()    # compute the sample loading correction factors
+frame.compute_loading_norm_factors(write)    # compute the sample loading correction factors
 frame.add_loading_normalized_columns()  # add the sample-loading-normalized columns
 frame.compute_IRS_norm_factors()        # add the IRS normalized column factors
 frame.add_IRS_normalized_columns()      # finally add the IRS normalized columns
@@ -369,9 +430,12 @@ path, ext = os.path.splitext(results_file)
 new_path = path + '_IRS_normalized' + ext
 final.to_csv(new_path, sep='\t', quoting=csv.QUOTE_NONE, index=False)
 
-print('\nnumber of non-contaminant/decoy proteins:', frame.num_prot + 1)
-print('number of proteins with full intensity sets:', len(final[(final['Missing'] == ' ') & (final['Filter'] == ' ')]))
+for obj in write:
+    print('\nnumber of non-contaminant/decoy proteins:', frame.num_prot + 1, file=obj)
+    print('number of proteins with full intensity sets:',
+          len(final[(final['Missing'] == ' ') & (final['Filter'] == ' ')]), file=obj)
 
+log_obj.close()
 # end
     
 
