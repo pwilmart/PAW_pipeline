@@ -18,6 +18,10 @@
 
 #### See "PAW_pipeline_for_TMT_data.pptx" for help with processing PD exports.
 
+### Support scripts:
+- **PAW_lib.py** - main library of classes and functions
+- **PAW_protein_grouper.py** - protein grouping script (called by PAW_results.py)
+
 ### Bird's eye overview
 The full pipeline uses MSConvert (part of Protewizard) and Comet (up to 2016.03 version before change in PTM notation) to do basic peptide and protein identification with extensive support for TMT labeling. The target/decoy method is used for setting score thresholds and controlling PSM FDR. Parsimony rules are used during protein inference and shared/unique peptide status is updated from the protein database context to the final protein list context. There is an additional protein grouping algorithm to refine the protein list and further improve shared/unique peptide status for quantitative work.
 
