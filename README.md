@@ -1,5 +1,33 @@
-# NOTE: this repo is under construction
-I am trying to get this code updated, tested, and added here as soon as I can. I was trying to get his done before the ASMS annual meeting but that is not happening. A friend once said, "multiple all estimates of time and money by Pi". I will be adding steps kind of in the same order as the pipeline. I started with some documentation since I figured documentation without code is slightly better than code without documentation. (2018-05-20 <-PW).
+# Update 12/12/2018
+## List of scripts
+### Full Comet-based pipeline scripts (in general order):
+- **MSConvert_GUI.py** - Converts Thermo RAW files into MS2 format files
+- **comet_GUI.py** - Configures Comet params files
+- **sqt_converter.py** - Creates top-hit summaries
+- **histo_GUI.py** - Interactive score threshold setting tool
+- **PAW_results.py** - parsimonious protein inference and grouping
+
+### If the data was a TMT experiment:
+- **add_TMT_intensities.py** - aggregates PSM reporter ions into protein totals
+- [optional] **pandas_TMT_IRS_norm.py** - performs IRS normalization for multi-TMT experiments
+
+### If processing Proteome Discoverer exports:
+- **make_PAW_TXT_from_PD1.4.py** - makes PAW files from PD 1.4 exports
+- **make_PAW_TXT_from_PD2.x.py** - makes PAW files from PD 2.x exports
+- **PD1.4_TMT_phospho_processer.py** - phosphopeptide TMT summarization
+
+#### See "PAW_pipeline_for_TMT_data.pptx" for help with processing PD exports.
+
+### Bird's eye overview
+The full pipeline uses MSConvert (part of Protewizard) and Comet (up to 2016.03 version before change in PTM notation) to do basic peptide and protein identification with extensive support for TMT labeling. The target/decoy method is used for setting score thresholds and controlling PSM FDR. Parsimony rules are used during protein inference and shared/unique peptide status is updated from the protein database context to the final protein list context. There is an additional protein grouping algorithm to refine the protein list and further improve shared/unique peptide status for quantitative work.
+
+Search results will have many scored hits per PSM. Top-hit summaries (tab-delimited text files) are created, and they may include TMT reporter ion intensities. The score threshold setting step produces filtered results files (SQT, TXT, and MS2 files) that only contain the accepted PSM data. These filtered files are read by the protein inference step. The PI step create a protein summary file, a peptide summary file, and one or more biological sample PSM summary file(s). The results files are used to determine what PSMs are unique and should be combined into protein total TMT intensities by the add_TMT_intensities.py script. The TMT values are fetched from the filtered TXT files.
+
+
+# NOTE: this repo is still under construction
+A friend once said, "multiple all estimates of time and money by Pi". The scripts should be working well. The pipeline currently only supports Comet up through the 2016 versions. The way PTMs are represented in peptide strings changed when support for PEFF files was added in 2017.
+
+The documentation is incomplete at this date. There is a PowerPoint file (PAW_pipeline_for_TMT_data.pptx) that describes some of the later pipeline steps. The scripts that convert PD exports into PAW files create similar files as the histo_GUI.py script. At that point, the remaining processing is the same.  
 
 # PAW_pipeline
 A Comet-based, best practices proteomics pipeline.
