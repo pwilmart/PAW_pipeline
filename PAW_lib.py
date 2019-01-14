@@ -1549,31 +1549,26 @@ class FileLoader:
     Written by Phil Wilmarth, OHSU, 2014. Extended by Billy Rathje, 2014.
     Added support for TXT file without PSR Core instrument designations 7/21/14 -PW
     """
-    def __init__(self, folder):
-        self.folder = folder        # full path to folder with TXT files
-        self.accurateMass = True    # accurate mass default value (True for Orbitraps)
+    def __init__(self, file_list, mass_type='High'):
+        self.accurateMass = False   # accurate mass default value (True for Orbitraps)
         self.peptideMassTol = 1.25  # search parent ion tolerance default (plus/minus in Da)
         self.modStrings = []        # list of variable modification symbols specified in search
         self.enzyme = True          # False if a no enzyme search was used (default=True)
 
         # get the list of TXT files and figure out instrument type
-        file_list, gz_flag, mass_type = self.find_instrument(self.folder)
+        folder = os.path.dirname(file_list[0])
         if mass_type == 'High':
             self.accurateMass = True
 
         # parse the params file and get relevant settings
-        self.params = self.parse_params(folder)
-        self.peptideMassTol = float(self.params['peptide_mass_tolerance'])
+        self.params = CometParams()
+        self.params.load_from_folder(folder)
+        self.peptideMassTol = self.params.peptide_mass_tolerance
         
         # Construct list of differential mods
-        self.modStrings = self.generateModStrings(self.params['diff_search_options'])
-        # Add terminal mods, if there are any
-        termMods = self.parseTerminalMods(self.params['term_diff_search_options'])
-        if termMods:
-            for x in termMods:
-                self.modStrings.append(x)
+        self.modStrings = self.generateModStrings()
         
-        self.enzyme = self.parseEnzymeInfo(self.params['enzyme_info'])
+        self.enzyme = self.parseEnzymeInfo()
         
         self.fileList = file_list
     
@@ -1590,12 +1585,8 @@ class FileLoader:
         self.frame = pd.DataFrame()
         print('\nProcessing all TXT files in:', os.path.basename(folder), time.asctime())
         for i, file_name in enumerate(file_list):
-            if gz_flag:
-                file_obj = gzip.open(file_name)
-                name = os.path.basename(file_name)[:-7]
-            else:
-                file_obj = open(file_name, 'rU')
-                name = os.path.basename(file_name)[:-4]
+            file_obj = open(file_name, 'rU')
+            name = os.path.basename(file_name)[:-4]
 ##            frame = pd.read_table(file_obj, usecols=use_cols, dtype=col_types)
             frame = pd.read_table(file_obj)
             info = TxtInfo(name)
@@ -1605,7 +1596,6 @@ class FileLoader:
             # save the frame's contents
             self.frame = pd.concat([self.frame, frame])
             print('...%s had %s lines' % (info.basename, len(frame)))
-            ##break           # Add to test just one file for debugging - runs faster...
 
         print('...%s total lines read in' % len(self.frame))
 
@@ -1613,126 +1603,28 @@ class FileLoader:
         return self.frame
         
     def getParams(self):
-        return self.params        
-        
+        return self.params
+
     def getPeptideMassTol(self):
         return self.peptideMassTol
-    
-    def find_instrument(self, folder):
-        """Determines mass spec instrument type and gets list of files.
-        Also figures out whether files are compressed or not. Returns
-        list of full file paths, a compression flag (True if *.gz files),
-        and mass type ('Low' or 'High').
-        """
-        from tkinter.messagebox import askyesno
-        
-        current = os.getcwd()
-        os.chdir(folder)
-        """
-        Thermo time stamps get added as "_stamp(12 numbers:YYMMDDHHMMSS) between instrument code and .txt
-        would need regular expressions to catch both formats
-        start with list of TXT files (glob call or user browsing to select multiple files)
-        loop over instrument types
-            loop over TXT files
-                add matches to respective lists
-        process lists
-            can have high-res only
-            can have union of low-res instruments
-            cannot have both (could ask whether high or low)
-        empty list triggers browser for TXT files (add mixed list situations) [do not need if user browsing above
-            could default to low-res setting or ask]
-        """
-        instruments = ['_LT.txt', '_VE.txt', '_VE2.txt', '_OT.txt', '_QE.txt']
-        counts = [0 for x in instruments]
-        for i, pattern in enumerate(instruments):
-            counts[i] = len(glob.glob('*' + pattern + '*'))
-            
-        max_val = max(counts)
-        mass_type = 'Low'
-        gz_flag = False
-        if max_val == 0:
-            print('...WARNING: no PSR_Core mass spec txt files found')
-            file_list = get_files(folder, [('GZipped files', '*.gz'), ('Text files', '*.txt')],
-                                'Select the TXT files')   # returns full paths
-            if not file_list: sys.exit() # cancel button response
-            if (len([x for x in file_list if x.endswith('.txt')]) <
-                len([x for x in file_list if x.endswith('.gz')])):
-                gz_flag = True
-            if askyesno('Mass resolution', 'Is this high-resolution data?'):
-                mass_type = 'High'
-        else:
-            instrument = instruments[counts.index(max_val)]
-            if instrument == '_OT.txt' or instrument == '_QE.txt':
-                mass_type = 'High'
-            txt = glob.glob('*' + instrument)
-            gz = glob.glob('*' + instrument + '.gz')
-            if len(txt) > len(gz):
-                file_list = [os.path.join(folder, x) for x in sorted(txt)]
-            else:
-                file_list = [os.path.join(folder, x) for x in sorted(gz)]
-                gz_flag = True
-        
-        os.chdir(current)
-        return file_list, gz_flag, mass_type
-        
-    def generateModStrings(self, diff_search_options):
+                
+    def generateModStrings(self):
         mod_list = []
         last_deltamass_seen = 0
-        for i, piece in enumerate(diff_search_options.split(" ")):
-            if piece.upper() == 'X':    # done at first non-amino acid character
-                return mod_list
-            elif i % 2 == 0:              # Based on the order, this is the deltamass value
-                if float(piece) == 0.0:     # also done if deltamass equals zero
-                    return mod_list
-                last_deltamass_seen = '%+0.4f' % (float(piece),)
-            else:                             # Based on order, this is the residue name
-                mod_list.append(piece + last_deltamass_seen)
-                
-    def parseTerminalMods(self, term_diff_search_options):
-        mods = term_diff_search_options.split(" ")
-        if float(mods[0]) == 0 and float(mods[1]) == 0:
-            return []
-        else:
-            mod_list = []
-            label = ['ct', 'nt']
-            for i, m in enumerate(mods):
-                if float(m) != 0.0:
-                    if not m.startswith('-'):
-                        m = '+' + m             # Add the sign if +
-                    mod_list.append('%s%+0.4f' % (label[i], float(m)))
-            return mod_list
+        for k, v in self.params.variable_mods.items():
+            if v[1] == 'X':    # skip invalid residues
+                continue
+            elif float(v[0]) == 0.0:     # skip if deltamass equals zero
+                continue
+            last_deltamass_seen = '%+0.4f' % float(v[0])
+            mod_list.append(v[1] + last_deltamass_seen)
+        return mod_list
             
-    def parseEnzymeInfo(self, enzyme_info):
-        try:
-            e = int(enzyme_info)
-            return bool(e)
-        except ValueError:    
-            if 'No' and 'Enzyme' in enzyme_info:
-                return False
-            else:
-                return True
-        
-    def parse_params(self, params_path):
-        """parses comet.params or sequest.params file into a dictionary.   
-        """
-        # open params file and parse into dictionary
-        params = {"params_path":params_path}
-        with open(os.path.join(params_path, 'sequest.params'), 'r') as fin:
-            for line in fin.readlines():
-                line = line.strip()
-                if line == '' or line.startswith('#'):
-                    continue
-                if line.startswith('[SEQUEST]'):
-                    continue
-                if line.startswith('[SEQUEST_ENZYME_INFO]'):
-                    break
-                temp = line.split('=')
-                if len(temp) < 2:
-                    print('line did not have two parts:', line)
-                key = temp[0].strip()
-                value = temp[1].split(';')[0].strip()
-                params[key] = value
-            return params
+    def parseEnzymeInfo(self):
+        if self.params.search_enzyme_number == 0:
+            return False
+        else:
+            return True
                                                            
 class Plot:
     ''' Plot is a class for individual histograms. It keeps histogram info (counts and bins) as well as
@@ -2093,7 +1985,7 @@ class FigureGenerator:
         based on instrument type and user parameters. Each FigureGenerator object should keep a list (figures) of several
         Plot objects corresponding to individual histograms. This list is passed to the GUI object for display.
         '''
-    def __init__(self, folder, accurateMass=True, smoothed=True, dmList=['0 Da', '1 Da', 'out'], zList=[1, 2, 3, 4],
+    def __init__(self, files, accurateMass=True, smoothed=True, dmList=['0 Da', '1 Da', 'out'], zList=[1, 2, 3, 4],
                  nttList=[0, 1, 2], modString=' *', minLength=7, maxMods=2):
         
         
@@ -2105,7 +1997,7 @@ class FigureGenerator:
         self.txtObjects = []
 
         # Loading in file attributes
-        f = FileLoader(folder)                   # load files
+        f = FileLoader(files)                   # load files
         self.f = f                               # pointer to initial file object
         x = self.f.getFrame()
         self.accurateMass = self.f.accurateMass   # determine if there's accurate mass data

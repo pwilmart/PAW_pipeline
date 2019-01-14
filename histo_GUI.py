@@ -18,6 +18,8 @@ from PAW_lib import FigureGenerator
 from PAW_lib import DataInfoAndFilter
 from PAW_lib import Threshold
 
+import PAW_lib
+
 import pickle    
 
 class Histogram:
@@ -796,44 +798,38 @@ class GUI:
     ''' Manages the main GUI window. 
     Also starts parsing in files, loading pandas structures'''
     
-    def __init__(self):
+    def __init__(self, folder=None):
 
         self.root = Tk()
         self.root.title('PAW Histogram GUI')
-        self.fname = None
-        os.chdir(os.getcwd())
-         
+        if not folder:
+            folder = os.getcwd()
+        self.folder = folder
+
+        # this is the starter window         
         self.modal = Toplevel(self.root)
         self.modal.geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
         self.modal.title('PAW Set Up Dialog')
-        ttk.Button(self.modal, text="Select Folder of MS2/SQT Files", command=self.select_folder).pack(pady=5)
+        ttk.Button(self.modal, text="Select Top Hit Summary Files", command=self.select_files).pack(pady=5)
         variable = StringVar(self.modal)
         variable.set("Plot") # default value
         ttk.OptionMenu(self.modal, variable, "Standard Plots", "Smoothed Plots").pack(pady=5)
         self.massAccuracy = StringVar(self.modal)
         self.massAccuracy.set("High") # default value (gets over-written during file loading)
         ttk.OptionMenu(self.modal, self.massAccuracy, "High Resolution", "Low Resolution").pack(pady=5)
-        ttk.Button(self.modal, text="Load and Plot Scores", command=self.exit_modal).pack(pady=5)
+        ttk.Button(self.modal, text="Load and Plot Histograms", command=self.exit_modal).pack(pady=5)
                 
         self.root.protocol('WM_DELETE_WINDOW', self.onExit) # handle exit
         self.modal.protocol('WM_DELETE_WINDOW', self.exit_modal) # cannot get setup window to delete on mac
         self.root.withdraw()
         self.modal.attributes('-topmost', 1)
 #        self.modal.attributes('-topmost', 0)   
-        self.root.wait_window(self.modal)
+        self.root.wait_window(self.modal)   # this waits for the user to set the files, resolution, etc.
         self.root.deiconify()
 
-        # check folder path. Set to default if invalid path
-        if not self.fname:
-            self.fname = r'C:\Users\PSR_Core\Dropbox\python_progs\Billy_2014\Test_Scripts\for_Billy\sqt_files'
-        if not os.path.exists(self.fname):
-            self.fname = r'\\psf\Dropbox\python_progs\Billy_2014\Test_Scripts\for_Billy\sqt_files'
-        os.chdir(self.fname)    # move to SQT folder
-        # Plot in tkinter
-        
+        # when we get here, we are starting the histogramming        
         # Setup flags
-        self.sparseDiscScore = 100.0
-        
+        self.sparseDiscScore = 100.0        
         self.ACCURATE_MASS = True
         self.SMOOTHED = True
         if self.massAccuracy.get() == 'Low':
@@ -841,13 +837,8 @@ class GUI:
         if variable.get() == 'Plot':
             self.SMOOTHED = False
             
-        # loads data into container
-        if os.path.exists(os.path.join(os.getcwd(), 'output.pkl')):
-            with open('output.pkl', 'rb') as fin:
-                self.container = pickle.load(fin)
-        else:
-            self.container = FigureGenerator(folder=self.fname, accurateMass=self.ACCURATE_MASS, smoothed=self.SMOOTHED)
-#            self.pickleDeltaMass()
+        # Make histograms
+        self.container = FigureGenerator(files=self.txt_files, accurateMass=self.ACCURATE_MASS, smoothed=self.SMOOTHED)
         
         print('Generating GUI...')
         
@@ -883,37 +874,17 @@ class GUI:
         with open("output_scores.pkl", "wb") as fout:
             pickle.dump(self.container, fout)
     
-    def find_instrument(self, folder):
-        """Determines mass spec instrument type from list of txt files.
-        """
-        import glob
-        current = os.getcwd()
-        os.chdir(folder)
-        counts = [0, 0, 0, 0]
-        instruments = ['_LT.txt', '_VE.txt', '_VE2.txt', '_OT.txt']
-        for i, pattern in enumerate(instruments):
-            counts[i] = len(glob.glob('*' + pattern + '*'))
-            
-        max_val = max(counts)
-        if max_val == 0:
-            print('...WARNING: no mass spec txt files found')
-        else:
-            instrument = instruments[counts.index(max_val)]
-            if instrument == '_OT.txt':
-                self.massAccuracy = 'High'
-            else:
-                self.massAccuracy = 'Low'
-        os.chdir(current)
-                
     def exit_modal(self):
         self.modal.withdraw()
         self.modal.update_idletasks()
         self.modal.destroy()
     
-    def select_folder(self):
-        default = r'F:\PSR_Core_Analysis'
-        self.fname = filedialog.askdirectory(initialdir=default)
-        #self.find_instrument(self.fname)
+    def select_files(self):
+        self.txt_files = PAW_lib.get_files(self.folder, [('Text files', '*.txt'), ('PAW Text files', '*.PAW.txt')],
+                                           'Select the Top-hit TXT files')   # returns full paths
+        if not self.txt_files: sys.exit() # cancel button response
+        self.folder = os.path.dirname(self.txt_files[0])
+        os.chdir(self.folder)
     
     def get_scores(self):
         s = ''
@@ -962,7 +933,7 @@ class GUI:
     def exportToFilterer(self):
         import time
         
-        filterer = DataInfoAndFilter(self.fname, self.container.f.getFrame(), self.container.txtObjects,
+        filterer = DataInfoAndFilter(self.folder, self.container.f.getFrame(), self.container.txtObjects,
             self.container.dmList, self.container.zList, self.container.nttList, self.container.specialCharsList,
             self.container.minLength, self.container.maxMods, self.container.peptideMassTol)
        
@@ -1004,5 +975,9 @@ class GUI:
         root.quit()     # stops mainloop
         root.destroy()  # this is necessary on Windows to prevent
                     # Fatal Python Error: PyEval_RestoreThread: NULL tstate
-
-gui = GUI()
+#########################
+# default folder location
+folder = os.getcwd()   # this is a safe default
+folder = "E:"   # or set to something useful for your system
+#########################
+gui = GUI(folder)
