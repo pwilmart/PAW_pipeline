@@ -1546,7 +1546,10 @@ def main(prot_file=None):
 
 # created main function so grouping can be run from the results script
 if __name__ == '__main__':
-    if os.path.exists(sys.argv[1]):
-        main(sys.argv[1])
+    try:
+        if os.path.exists(sys.argv[1]):
+            main(sys.argv[1])
+    except IndexError:
+        main()
     else:
         main()
