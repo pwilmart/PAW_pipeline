@@ -6,7 +6,7 @@ The `MSConvert.exe` program of the Proteowizard package (**[Ref-1](#ref1), [Ref-
 
 ## Downloading
 
-The ProteoWizard package is available for Windows systems only (due to use of manufacturer's DLLs [dynamic link libraries]) and can be downloaded [**FROM HERE**](http://proteowizard.sourceforge.net/downloads.shtml).
+The ProteoWizard package is available for Windows systems only (due to use of manufacturer's DLLs [dynamic link libraries]) and can be downloaded [**FROM HERE**](http://proteowizard.sourceforge.net/download.html).
 
 These days the 64-bit version is typically used and the software installs on the `C:` drive in the `Program Files` folder, in a `ProteoWizard` subfolder.
 
