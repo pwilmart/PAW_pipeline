@@ -21,13 +21,13 @@ Here are the contents of the uncompressed folder:
 
 ---
 
-## Define a `Comet` command
+## Define a `Comet2016` command
 
 Comet undergoes occasional updates and bug fixes. One way to isolate the PAW Python scripts from the desired Comet version, is to have a BATCH file point to the desired Comet executable file. If a `.BAT` file is in a folder located in the system search path, then the base name of the `.BAT` file can be called by the script (and stay the same), and execution of the current version of the software can be maintained by editing the program path in the `.BAT` file.
 
 ![Comet_batch](../images/Comet/03_batch.png)
 
-Here are the contents of the `Comet.bat` file:
+Here are the contents of the `Comet2016.bat` file:
 ```
 C:\Users\pwilmart\Proteomics_tools\Comet\comet_2016013\comet.2016013.win64.exe %*
 ```
