@@ -105,7 +105,7 @@ These lists demonstrate that even a basic processing pipeline will involve sever
 The PAW pipeline is an actual pipeline. The steps are modular and separate by design. Each step is listed below by the name of the Python script. Each step has a link to dedicated documentation pages.
 
 * [`msconvert_GUI.py`](docs/msconvert_GUI.md) - Conversion of RAW files
-* [`comet_GUI.py`](dosc/comet_GUI.md) - Setting Comet parameters and running Comet
+* [`comet_GUI.py`](docs/comet_GUI.md) - Setting Comet parameters and running Comet
 * [`histo_GUI.py`](docs/histo_GUI.md) - Viewing score distributions and setting thresholds
 * [`PAW_results.py`](docs/PAW_results.md) - Protein inference and results report generation
 * [`PAW_protein_grouper.py`](docs/PAW_protein_grouper.md) - (optional) Extended parsimony protein grouping
