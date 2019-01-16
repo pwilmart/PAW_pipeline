@@ -1,39 +1,34 @@
-# Update 12/12/2018
+# Update 1/15/2019
+
 ## List of scripts
-### Full Comet-based pipeline scripts (in general order):
-- **MSConvert_GUI.py** - Converts Thermo RAW files into MS2 format files
+
+### Comet-based pipeline scripts (in general order):
+
+- **msconvert_GUI.py** - Converts Thermo RAW files into MS2 format files
 - **comet_GUI.py** - Configures Comet params files
-- **sqt_converter.py** - Creates top-hit summaries
 - **histo_GUI.py** - Interactive score threshold setting tool
 - **PAW_results.py** - parsimonious protein inference and grouping
 
 ### If the data was a TMT experiment:
+
 - **add_TMT_intensities.py** - aggregates PSM reporter ions into protein totals
 - [optional] **pandas_TMT_IRS_norm.py** - performs IRS normalization for multi-TMT experiments
 
 ### If processing Proteome Discoverer exports:
+
 - **make_PAW_TXT_from_PD1.4.py** - makes PAW files from PD 1.4 exports
 - **make_PAW_TXT_from_PD2.x.py** - makes PAW files from PD 2.x exports
 - **PD1.4_TMT_phospho_processer.py** - phosphopeptide TMT summarization
 
-#### See "PAW_pipeline_for_TMT_data.pptx" for help with processing PD exports.
+> **See "PAW_pipeline_for_PD_exports.pptx" for help with processing PD exports.**
 
 ### Support scripts:
+
 - **PAW_lib.py** - main library of classes and functions
 - **PAW_protein_grouper.py** - protein grouping script (called by PAW_results.py)
 
-### Bird's eye overview
-The full pipeline uses MSConvert (part of Protewizard) and Comet (up to 2016.03 version before change in PTM notation) to do basic peptide and protein identification with extensive support for TMT labeling. The target/decoy method is used for setting score thresholds and controlling PSM FDR. Parsimony rules are used during protein inference and shared/unique peptide status is updated from the protein database context to the final protein list context. There is an additional protein grouping algorithm to refine the protein list and further improve shared/unique peptide status for quantitative work.
-
-Search results will have many scored hits per PSM. Top-hit summaries (tab-delimited text files) are created, and they may include TMT reporter ion intensities. The score threshold setting step produces filtered results files (SQT, TXT, and MS2 files) that only contain the accepted PSM data. These filtered files are read by the protein inference step. The PI step create a protein summary file, a peptide summary file, and one or more biological sample PSM summary file(s). The results files are used to determine what PSMs are unique and should be combined into protein total TMT intensities by the add_TMT_intensities.py script. The TMT values are fetched from the filtered TXT files.
-
-
-# NOTE: this repo is still under construction
-A friend once said, "multiple all estimates of time and money by Pi". The scripts should be working well. The pipeline currently only supports Comet up through the 2016 versions. The way PTMs are represented in peptide strings changed when support for PEFF files was added in 2017.
-
-The documentation is incomplete at this date. There is a PowerPoint file (PAW_pipeline_for_TMT_data.pptx) that describes some of the later pipeline steps. The scripts that convert PD exports into PAW files create similar files as the histo_GUI.py script. At that point, the remaining processing is the same.  
-
 # PAW_pipeline
+
 A Comet-based, best practices proteomics pipeline.
 
 * [Introduction](#introduction)
@@ -61,7 +56,7 @@ Picking a search engine program to identify likely peptide sequences associated 
 
 The basic method of identifying peptides from tandem mass spectra (MS2 scans) has not really changed too much in 25 years [14]. It basically involves noise filtering and normalizing an MS2 scan, then comparing that to mass-filtered candidate peptide spectra from a theoretical digest of a protein database. Despite this clever leveraging of genomic sequencing (the protein sequences), the challenge has always been in deciding if a particular PSM is correct or not. Early heuristic approaches [15] led to basic classifiers [9], and even machine learning methods [16]. A big step forward came when decoy databases were used to eavesdrop on random noise scores, as popularized by the Gygi lab [6, 7]. More recent instrumental advances have added high-resolution and accurate mass to the equation [8].
 
-With more robust statistical methods for controlling PSM errors, confident lists of identified **peptides** present in digests of complex protein mixtures can be reliably determined. The next issue is to determine a confident list of the **proteins** present in the samples from the identified peptides. This is known as the protein inference problem [11] and it persists despite significant advances in genomic sequencing (maybe that has made the problem even worse). Guidelines for parsimonious protein identifications [17] have been widely used for many years in response to many early inflated proteome claims. The basic parsimony rules are outlined in [11], but may need to be extended [12] for the large datasets now routinely being generated.
+With more robust statistical methods for controlling PSM errors, confident lists of identified **peptides** present in digests of complex protein mixtures can be reliably determined. The next issue is to determine a confident list of the **proteins** present in the samples from the identified peptides. This is known as the protein inference problem [11] and it persists despite significant advances in genomic sequencing (maybe that has made the problem even worse). Guidelines for parsimonious protein identifications [17] have now been widely used for many years. The basic parsimony rules are outlined in [11], but may need to be extended [12] for large datasets now routinely acquired.
 
 ## Best Practices
 As proteomics has matured, there have been many analysis ideas that have come and gone. Only a few have really passed the test of time. Here is a summary of a modern proteomics analysis pipeline as implemented in the PAW pipeline:
@@ -72,21 +67,21 @@ As proteomics has matured, there have been many analysis ideas that have come an
    * Avoid excessive peptide redundancy
    * Add decoys and/or contaminants if necessary
 1. Correctly configure the search engine (Comet [4])
-   * Choose parent and fragment ion tolerances wisely
+   * Choose appropriate parent and fragment ion tolerances
    * Avoid excessive post-translational modifications
 1. Transform search scores into more sensitive functions
    * Combinations of scores can work better
-   * Use accurate mass wisely
+   * Use accurate mass
 1. Filter out the confident PSMs
    * Use target/decoy methods to control PSM false discovery rate (FDR)
 1. Use basic or extended parsimony logic to infer proteins from peptides
    * Avoid single peptide per protein identifications
-   * Avoid using protein ranking functions
+   * Avoid protein ranking functions
      * Protein FDR is a consequence of peptide ID accuracy
      * Protein error control is different than PSM error control
 1. Add protein/gene annotations (optional)
 
-Identification of the proteins present in a sample is almost never the goal of a modern proteomics experiment. Estimating the relative expression levels of the proteins is often required. The above discussion and list has not mentioned anything about quantification. Quantitative processing is really more of a parallel set of analysis steps. Quantitative information can take many forms. There are label free approaches and stable isotope labeling approaches. There is no need to survey quantitative proteomics as the PAW pipeline only does tandem mass tag (TMT) labeling. The support for TMT is even more limited to high resolution instruments and synchronous precursor selection (SPS) MS3 scan  reporter ions. In a similar inference process, protein expression values are inferred from quantitative data acquired in individual instrument scans.
+Identification of the proteins present in a sample is almost never the end goal of a modern proteomics experiment. Estimating the relative expression levels of the proteins is often required. The above discussion and list has not mentioned anything about quantification. Quantitative processing is really more of a parallel set of analysis steps. Quantitative information can take many forms. There are label free approaches and stable isotope labeling approaches. There is no need to survey quantitative proteomics as the PAW pipeline only does tandem mass tag (TMT) labeling. The support for TMT is even more limited to high resolution instruments. In a similar inference process, protein expression values are inferred from quantitative data acquired in individual instrument scans.
 
 Here is the way TMT quantification is supported:
 
@@ -104,13 +99,13 @@ Here is the way TMT quantification is supported:
 1. Pipeline supports multiple TMT labeling experiments
    * Internal reference scaling (IRS) normalization [18] can be performed
 
-These lists demonstrate that even a basic processing pipeline will involve several steps. A robust pipeline will keep these step separate to allow greater flexibility and to allow inspection of the data in between steps for quality control. The PAW software was designed to **not** try and cram 10 pounds of pipeline into a 5 pound _black box_.
+These lists demonstrate that even a basic processing pipeline will involve several steps. A robust pipeline will keep these step separate to allow greater flexibility and to allow inspection of the data in between steps for quality control.
 
 ## Pipeline Steps
 The PAW pipeline is an actual pipeline. The steps are modular and separate by design. Each step is listed below by the name of the Python script. Each step has a link to dedicated documentation pages.
 
-* [`MSConvert_GUI.py`](docs/MSConvert_GUI.md) - Conversion of RAW files
-* [`Comet_GUI.py`](dosc/Comet_GUI.md) - Setting Comet parameters and running Comet
+* [`msconvert_GUI.py`](docs/MSConvert_GUI.md) - Conversion of RAW files
+* [`comet_GUI.py`](dosc/Comet_GUI.md) - Setting Comet parameters and running Comet
 * [`histo_GUI.py`](docs/histo_GUI.md) - Viewing score distributions and setting thresholds
 * [`PAW_results.py`](docs/PAW_results.md) - Protein inference and results report generation
 * [`PAW_protein_grouper.py`](docs/PAW_protein_grouper.md) - (optional) Extended parsimony protein grouping
@@ -118,17 +113,20 @@ The PAW pipeline is an actual pipeline. The steps are modular and separate by de
 * [`pandas_TMT_IRS_norm.py`](docs/pandas_TMT_IRS_norm.md) - (optional) IRS normalization between TMT experiments
 
 ## Dependancies
-The programs to read the RAW instrument binary files and perform the database search have to be installed separately and only run on Windows systems.
+The programs to (1) read the RAW instrument binary files and (2) perform the database search have to be installed separately and only run on Windows systems.
 
+#### MSConvert
 Thermo RAW file conversions are done using ProteoWizard [2, 3] and its `MSConvert.exe` program. ProteoWizard installation instructions can be found [**_>> HERE <<_**](docs/MSConvert.md).
 
+#### Comet
 Comet installation instructions can be found [**_>> HERE <<_**](docs/Comet.md). Comet is not strictly a Windows only program (Linux and Mac are possible); however, installation can be more involved and is not covered here.
 
+#### Python 3
 The Python scripts require Python 3 and some packages that are not part of the standard distribution. Use of a scientific Python distribution is recommended and installation and use of Anaconda is described [**_>> HERE <<_**](docs/Anaconda.md).
 
 After RAW files have been processed and searches completed, the Python scripts can be run on Windows or Mac. A little care has to be paid to hard disc formats, however. RAW files and Comet results files will need to be on an NTFS formatted drive (the Windows file system). NTFS drives can be read by Macs, but they cannot be written to. You will either have to copy files to Mac formatted volumes or use the [Paragon NTFS for Mac](https://www.paragon-software.com/ufsdhome/store/ntfs-mac/) utility software.
 
-<br>
+---
 
 ## References
 [1] Wilmarth, P.A., Riviere, M.A. and David, L.L., 2009. Techniques for accurate protein identification in shotgun proteomic studies of human, mouse, bovine, and chicken lenses. Journal of ocular biology, diseases, and informatics, 2(4), pp.223-234.
