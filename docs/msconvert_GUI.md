@@ -1,4 +1,4 @@
-# MSConvert_GUI.py script
+# msconvert_GUI.py script
 
 ![project folder](../images/msconvert_GUI/01_project-folder.png)
 
