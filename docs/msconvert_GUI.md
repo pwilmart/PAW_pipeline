@@ -1,6 +1,6 @@
 # msconvert_GUI.py script
 
-This script uses the open source instrument file reading software [MSConvert](MSConvert.md) from the [Proteowizard](http://proteowizard.sourceforge.net/) suite. Installation instructions and documentation can be found [here](MSConvert.md).
+This script uses the open source instrument file reading software [MSConvert](http://proteowizard.sourceforge.net/tools/msconvert.html) from the [Proteowizard](http://proteowizard.sourceforge.net/) suite. Installation instructions and documentation can be found [here](MSConvert.md).
 
 The software uses the graphical user interface (GUI) bundle [tkinter](https://docs.python.org/3/library/tk.html) included in the Python standard library to allow the user to select the RAW files to convert, set some noise filters, and specify the type of data. File organization and naming are done automatically.
 
