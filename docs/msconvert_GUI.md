@@ -35,7 +35,7 @@ The PAW pipeline uses a subfolder organization scheme to keep track of files and
 
 ## Step-by-step Example
 
-This is analysis of a public dataset (PRIDE PXD002875) from Paulo, O'Connell, Gaun, and Gygi:
+This is analysis of a public dataset (PRIDE [PXD002875](https://www.ebi.ac.uk/pride/archive/projects/PXD002875)) from Paulo, O'Connell, Gaun, and Gygi:
 
 > Paulo, J.A., O’Connell, J.D., Gaun, A. and Gygi, S.P., 2015. Proteome-wide quantitative multiplexed profiling of protein expression: carbon-source dependency in Saccharomyces cerevisiae. Molecular biology of the cell, 26(22), pp.4063-4074.
 
