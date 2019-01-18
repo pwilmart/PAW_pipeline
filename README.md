@@ -105,15 +105,18 @@ These lists demonstrate that even a basic processing pipeline will involve sever
 The PAW pipeline is an actual pipeline. The steps are modular and separate by design. Each step is listed below by the name of the Python script. Each step has a link to dedicated documentation pages.
 
 * [`msconvert_GUI.py`](docs/msconvert_GUI.md) - Conversion of RAW files
+  - also `MSConvert_GUI_guide.pptx`
 * [`comet_GUI.py`](docs/comet_GUI.md) - Setting Comet parameters and running Comet
+  - also `comet_GUI_guide.pptx`
 * [`histo_GUI.py`](docs/histo_GUI.md) - Viewing score distributions and setting thresholds
+  - also `histo_GUI_guide.pptx`
 * [`PAW_results.py`](docs/PAW_results.md) - Protein inference and results report generation
 * [`PAW_protein_grouper.py`](docs/PAW_protein_grouper.md) - (optional) Extended parsimony protein grouping
 * [`add_TMT_intensities.py`](docs/add_TMT_intensities.md) - (optional) Adding reporter ion intensities to reports
 * [`pandas_TMT_IRS_norm.py`](docs/pandas_TMT_IRS_norm.md) - (optional) IRS normalization between TMT experiments
 
 ## Dependancies
-The programs to (1) read the RAW instrument binary files and (2) perform the database search have to be installed separately and only run on Windows systems.
+The programs to (1) read the RAW instrument binary files and (2) perform the database search have to be installed separately and they only run on Windows (7 or 10) systems.
 
 #### MSConvert
 Thermo RAW file conversions are done using ProteoWizard [2, 3] and its `MSConvert.exe` program. ProteoWizard installation instructions can be found [**_>> HERE <<_**](docs/MSConvert.md).
