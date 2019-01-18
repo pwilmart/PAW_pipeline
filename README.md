@@ -50,7 +50,7 @@ Protein inference follows basic parsimony rules [11]. Multiple fractions per bio
 ## Background
 Analyzing bottom-up (a.k.a. shotgun) proteomics data can be a complicated, lengthy ordeal. The processing pipelines have many steps and each step can have several choices. There are few practical guidelines for making better choices to navigate this minefield. This results in far too great a diversity of pipelines in use, and most will have less-than-ideal performance.
 
-This state of affairs is illustrated by one of the first steps of selecting a FASTA protein database file for use by the search engine. This is a more complicated topic than might be guessed [12]. There are often several protein database choices for many commonly studied organisms (and even some genomes that have not yet been sequenced). The protein database complexity and apparent size can vary considerably among the choices, although larger is probably not better [13]. Even integrated database sources like [UniProt](http://www.uniprot.org/) offer several versions of protein databases (Swiss-Prot, TrEMBL, canonical, canonical with isoforms, etc.), and selecting among them requires some expertise and use of [dedicated tools](https://github.com/Delan-Huang/Reference_Proteome_Manager.git) [5].  
+This state of affairs is illustrated by one of the first steps of selecting a FASTA protein database file for use by the search engine. This is a more complicated topic than might be guessed [12]. There are often several protein database choices for many commonly studied organisms (and even some genomes that have not yet been sequenced). The protein database complexity and apparent size can vary considerably among the choices, although larger is probably not better [13]. Even integrated database sources like [UniProt](http://www.uniprot.org/) offer several versions of protein databases (Swiss-Prot, TrEMBL, canonical, canonical with isoforms, etc.), and selecting among them requires some expertise and use of [dedicated tools](https://github.com/pwilmart/fasta_utilities.git) [5].  
 
 Picking a search engine program to identify likely peptide sequences associated with tandem mass spectra, known as peptide spectrum matches (PSMs), can be even more challenging. There are commercial products like Mascot, Proteome Discoverer, and Byonic that can be quite expensive. Alternatively, there are widely used freely available options such as X!Tandem and MaxQuant. There are also many less commonly used open source options, and opinions run high on the relative merits of the various search engines. Comet [4], written and maintained by Jimmy Eng, is an open source version of SEQUEST [14]. Comet is free, fast, sensitive, and a little simpler to configure than other options; this is what the PAW pipeline [1] uses. PAW are my initials, but you can make up something like Proteomic Analysis Workflow if you prefer.
 
@@ -140,7 +140,7 @@ After RAW files have been processed and searches completed, the Python scripts c
 
 [4] Eng, J.K., Jahan, T.A. and Hoopmann, M.R., 2013. Comet: an open‐source MS/MS sequence database search tool. Proteomics, 13(1), pp.22-24
 
-[5] https://github.com/Delan-Huang/Reference_Proteome_Manager.git
+[5] https://github.com/pwilmart/fasta_utilities.git
 
 [6] Elias, J.E. and Gygi, S.P., 2007. Target-decoy search strategy for increased confidence in large-scale protein identifications by mass spectrometry. Nature methods, 4(3), p.207.
 
