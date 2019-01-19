@@ -6,6 +6,14 @@ This script takes the filtered top hit files and makes a parsimonious list of id
 
 Multiple fractions per biological sample and multiple biological samples per experiment are supported. Protein inference is performed experiment-wide to provide robust results. Optional [extended parsimony logic](https://digitalcommons.ohsu.edu/etd/3855/) is also implemented to group highly homologous proteins and maximize the quantitative information content of peptides. Final protein and peptide reports are complete, carefully curated tab-delimited text files.
 
+### Step-by-step Example, continued
+
+This is analysis of a public dataset (PRIDE [PXD002875](https://www.ebi.ac.uk/pride/archive/projects/PXD002875)) from Paulo, O'Connell, Gaun, and Gygi:
+
+> Paulo, J.A., O’Connell, J.D., Gaun, A. and Gygi, S.P., 2015. Proteome-wide quantitative multiplexed profiling of protein expression: carbon-source dependency in Saccharomyces cerevisiae. Molecular biology of the cell, 26(22), pp.4063-4074.
+
+There were 24 RAW files of yeast grown in three different carbon sources. It was a 3x3 (9-plex) TMT experiment done with the SPS MS3 (MultiNotch) method.
+
 **Processing flow:**
 - read filtered top-hit summary results_files
 - define file names to samples mapping

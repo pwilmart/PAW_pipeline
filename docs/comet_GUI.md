@@ -8,6 +8,14 @@ This script calls the open source search engine [Comet](http://comet-ms.sourcefo
 
 The software makes use of the [tkinter](https://docs.python.org/3/library/tk.html) graphical user interface (GUI) included in the Python standard library to allow the user to set some common Comet parameters and launch the searches.
 
+### Step-by-step Example, continued
+
+This is analysis of a public dataset (PRIDE [PXD002875](https://www.ebi.ac.uk/pride/archive/projects/PXD002875)) from Paulo, O'Connell, Gaun, and Gygi:
+
+> Paulo, J.A., O’Connell, J.D., Gaun, A. and Gygi, S.P., 2015. Proteome-wide quantitative multiplexed profiling of protein expression: carbon-source dependency in Saccharomyces cerevisiae. Molecular biology of the cell, 26(22), pp.4063-4074.
+
+There were 24 RAW files of yeast grown in three different carbon sources. It was a 3x3 (9-plex) TMT experiment done with the SPS MS3 (MultiNotch) method.
+
 **The script's workflow is:**
 - select the protein database FASTA file
 - set parameters

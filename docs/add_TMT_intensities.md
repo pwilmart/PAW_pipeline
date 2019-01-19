@@ -1,6 +1,16 @@
 # add_TMT_intensities.py script
 
-This script adds reporter ions to the PAW results files. It does peptide and protein level aggregations.
+This script adds reporter ions to the PAW results files. It reads PAW protein summary files and associated peptide files to determine which PSMs are unique to the final list of proteins as reported in the summary file. Only unique PSMs are used for quantification. There is some minimum average intensity level filtering applied at the PSM level. There is also replacement of zero intensity values at the final protein level with a user set value. The script does peptide and protein level aggregations, and writes new protein and peptide summary files with reporter ion intensities.
+
+### Step-by-step Example, continued
+
+This is analysis of a public dataset (PRIDE [PXD002875](https://www.ebi.ac.uk/pride/archive/projects/PXD002875)) from Paulo, O'Connell, Gaun, and Gygi:
+
+> Paulo, J.A., O’Connell, J.D., Gaun, A. and Gygi, S.P., 2015. Proteome-wide quantitative multiplexed profiling of protein expression: carbon-source dependency in Saccharomyces cerevisiae. Molecular biology of the cell, 26(22), pp.4063-4074.
+
+There were 24 RAW files of yeast grown in three different carbon sources. It was a 3x3 (9-plex) TMT experiment done with the SPS MS3 (MultiNotch) method.
+
+---
 
 ![open script](../images/add_TMT_intensities/01_open-script.png)
 
