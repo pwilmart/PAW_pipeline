@@ -114,6 +114,7 @@ The PAW pipeline is an actual pipeline. The steps are modular and separate by de
   - `PAW_protein_grouper.py` - Extended parsimony protein grouping is run by above script
   - also `PAW_results_guide.pptx`
 * [`add_TMT_intensities.py`](docs/add_TMT_intensities.md) - (optional) Adding reporter ion intensities to reports
+  - also `add_TMT_intensities.pptx`
 * [`pandas_TMT_IRS_norm.py`](docs/pandas_TMT_IRS_norm.md) - (optional) IRS normalization between TMT experiments
 
 ## Dependancies
