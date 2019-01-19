@@ -152,4 +152,6 @@ We have a new `results_files` folder added to our project folder.
 
 That folder has our tab-delimited text summary files. There will be a detailed peptide file for each biological sample (we have only one here: `CarbonSource_peptide_resuls_8.txt`). We have the redundant protein and peptide reports generated before protein grouping. We have the non-redundant reports produced by the protein grouping step, and we have log files that duplicate most of the console output.
 
+> There is a `CarbonSources_results_files` folder inside the `docs` folder in the repository that has the results files created during this example. Your results may not be 100% identical because your thresholds set during the histo_GUI step may not have been exactly the same as mine. Results should be very similar, however.
+
 Optional next step: [Add the TMT reporter ions to the reports](add_TMT_intensities.md)

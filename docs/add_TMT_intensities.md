@@ -51,3 +51,5 @@ The script will read the protein and peptide files, determine the usable peptide
 ![output files](../images/add_TMT_intensities/08_new-files.png)
 
 New results files (`grouped_protein_summary_TMT_8.txt` and `grouped_protein_summary_TMT_8.txt`) with additional TMT reporter ion intensity columns have been created.
+
+> There is a `CarbonSources_results_files` folder inside the `docs` folder in the repository that has the results files created during this example. Your results may not be 100% identical because your thresholds set during the histo_GUI step may not have been exactly the same as mine. Results should be very similar, however.
