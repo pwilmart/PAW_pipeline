@@ -1,4 +1,20 @@
+# PAW_results.py script
 
+This script takes the filtered top hit files and makes a parsimonious list of identified proteins following the basic logic outlined here:
+
+> Nesvizhskii, A.I. and Aebersold, R., 2005. Interpretation of shotgun proteomic data the protein inference problem. Molecular & cellular proteomics, 4(10), pp.1419-1440.
+
+Multiple fractions per biological sample and multiple biological samples per experiment are supported. Protein inference is performed experiment-wide to provide robust results. Optional [extended parsimony logic](https://digitalcommons.ohsu.edu/etd/3855/) is also implemented to group highly homologous proteins and maximize the quantitative information content of peptides. Final protein and peptide reports are complete, carefully curated tab-delimited text files.
+
+**Processing flow:**
+- read filtered top-hit summary results_files
+- define file names to samples mapping
+- perform basic parsimonious protein inference
+- write results files
+- perform extended parsimony protein grouping
+- write grouped protein results files
+
+---
 
 ![start anaconda prompt](../images/PAW_results/01_anaconda.png)
 
@@ -26,7 +42,7 @@ Select the `PAW_results.py` script from the location where you have the PAW pipe
 
 ![parameters](../images/PAW_results/05_parameters.png)
 
-There are a couple of parameters that you might want to occasionally change. Two peptides per protein is a **HIGHLY recommended** setting. Sometimes you may need single peptide per protein IDs. The PAW pipeline does not have any explicit protein FDR algorithms. There is a one-to-one relationship between incorrect PSMs and incorrect proteins when using a one peptide per protein setting. Sometimes semi-tryptic or non-tryptic peptides are important. The “minimum_ntt_per_peptide” parameter would need adjustment in those cases.
+There are a couple of parameters that you might want to occasionally change. Two peptides per protein is a **HIGHLY recommended** setting. Sometimes you may need single peptide per protein IDs. The PAW pipeline does not have any explicit **protein** FDR algorithms. There is a one-to-one relationship between incorrect PSMs and incorrect proteins when using a one peptide per protein setting. Sometimes semi-tryptic or non-tryptic peptides are important. The `minimum_ntt_per_peptide` parameter would need adjustment in those cases.
 
 ---
 
@@ -38,7 +54,7 @@ Run the script (`Run Module` command from the `Run` menu).
 
 ![select folder](../images/PAW_results/07_select-folder.png)
 
-The IDLE console windows indicates that a folder dialog box has been popped up for “filtered_files” folder selection.
+The IDLE console windows indicates that a folder dialog box has been popped up for `filtered_files` folder selection.
 
 ---
 
@@ -50,84 +66,90 @@ Browse to the `filtered_files` folder inside your project folder. Select the fol
 
 ![CLI help](../images/PAW_results/09_CLI-help.png)
 
-All of the filtered top hit summary files are parsed and a simple command interpreter is started. This allows assigning the RAW files to the biological samples. Many experiment have multiple biological samples. Shotgun analysis of biological samples often requires multiple dimensions of separation, so several RAW files might correspond to single biological samples. We have the “Help” information on this slide. The pattern matching is like most file system [glob pattern](https://en.wikipedia.org/wiki/Glob_(programming)) matching.
-
+All of the filtered top hit summary files are parsed and a simple command line interpreter (CLI) is started. This allows assigning the RAW files to the biological samples. Many experiment have multiple biological samples. Shotgun analysis of biological samples often requires multiple dimensions of separation, so several RAW files might correspond to single biological samples. We have the “Help” information in red above. The pattern matching is like most file system [glob pattern](https://en.wikipedia.org/wiki/Glob_(programming)) matching.
 
 ---
 
 ![CLI list](../images/PAW_results/10_CLI-list.png)
 
+A good command to do first is to `List` the files. We have the 24 fractions for this sample. Since this is a 9-plex TMT experiment, the 9 biological samples are hidden. The 24 fractions are really just one effective biological sample.
+
 ---
 
 ![CLI pattern](../images/PAW_results/11_CLI-pattern.png)
+
+We will use the `Pattern` command to select all of the files so we can give them a nice name. The pattern `m*` will select all files starting with an “m” character.
 
 ---
 
 ![pattern matches](../images/PAW_results/12_pattern-matches.png)
 
+The 24 matching files are echoed and a sample name is asked for. We will use “CarbonSources” for the effective sample name.
+
 ---
 
 ![CLI show](../images/PAW_results/13_CLI-show.png)
+
+If we want to double check what has been assigned to samples so far, we can type the `Show` command. It tells us that we have one sample with 24 files. Collecting files to assign to samples is usually an iterative process.
 
 ---
 
 ![CLI done](../images/PAW_results/14_CLI-done.png)
 
+We  can make sure that we have no leftover files (files not yet assigned to samples) by typing the `List` command again. It shows that we do not have any remaining files. We type the `Done` command to exit the command processor and get back to the protein inference algorithm.
+
 ---
 
 ![load results](../images/PAW_results/15_load-results.png)
+
+The files to samples mapping(s) have been defined, so we can read in the filtered results files. After the files have been read in, we get a PSM FDR report. It is broken down by charge state and by modification state.
 
 ---
 
 ![redundant proteins](../images/PAW_results/16_redundants.png)
 
+After the FDR report, the protein inference starts by making peptide sets for each protein that had any PSMs that passed the thresholds. Any proteins having peptide sets with fewer distinct peptides than the minimum cutoff of 2 are removed. The next step is to group proteins having indistinguishable peptide sets (also called redundant proteins).
+
 ---
 
 ![subset proteins](../images/PAW_results/17_subsets.png)
+
+Grouping redundant proteins decreased the number of proteins from 5150 to 5028. Next, we do the main parsimony step and remove proteins whose peptide sets are subsets of proteins having larger peptide sets.
 
 ---
 
 ![half done](../images/PAW_results/18_half-done.png)
 
+After subset removal, we have 4945 protein groups. Yeast has a simple genome, so protein grouping does not alter the protein numbers as much as we see for species like human and mouse. The protein grouping algorithm runs automatically.
+
 ---
 
 ![protein grouping](../images/PAW_results/19_protein-grouping.png)
+
+The protein grouping algorithm is an extension of the basic parsimony concepts. If two proteins have nearly identical peptides sets, they will be grouped. If one protein has a peptide set that is almost a subset of a protein with a larger peptide set, the subset protein will be absorbed. The test conditions are weight tests. The weights are the total spectral counts. When the **weight** of one protein’s unique and shared peptides are much larger than another protein’s unique **weight**, protein grouping will happen. The grouping is iterative and continues until the final number of groups is no longer changing. Grouped proteins get their peptide’s shared and unique status redefined after grouping. This can have some effects on quantitative results for highly homologous protein families.
 
 ---
 
 ![protein families](../images/PAW_results/20_protein-families.png)
 
+The protein grouping console output is usually really interesting to look at. All details during the iterative steps are logged. After the final set of protein families has been determined, the family memberships are logged. The protein descriptions for the grouped proteins indicated similar proteins. Housekeeping genes are frequently grouped.
+
 ---
 
 ![final summary](../images/PAW_results/21_final-summary.png)
+
+Summary statistics are logged at the end.
 
 ---
 
 ![results folder](../images/PAW_results/22_results-folder.png)
 
+We have a new `results_files` folder added to our project folder.
+
 ---
 
 ![results files](../images/PAW_results/23_results-files.png)
 
----
+That folder has our tab-delimited text summary files. There will be a detailed peptide file for each biological sample (we have only one here: `CarbonSource_peptide_resuls_8.txt`). We have the redundant protein and peptide reports generated before protein grouping. We have the non-redundant reports produced by the protein grouping step, and we have log files that duplicate most of the console output.
 
-
-```
-(Auto Each Help List Pattern Reset Show Done) ? help
-
-Commands: Auto, Each, Help, List, Pattern, Reset, Show, Quit.
-(commands are not case sensitive and first letter is sufficient.)
-
-...Auto: automatically parse the sample names from the filenames,
-...Each: treat each filename as a separate sample,
-...Help: prints this message,
-...List: lists all of the (remaining) filename(s),
-...Pattern pattern: glob-style search pattern to get a subset of filenames
-      ("*" or "*.*" is all files,
-       "*.txt" is all files that have a "txt" extension,
-       "a*" is all files that start with the letter "a",
-       "*string*" is all files that contain "string", etc.),
-...Reset: start over,
-...Show: print the current samples and associated files [verbose],
-...Done: exit from the command loop and return to processing.
-```
+Optional next step: [Add the TMT reporter ions to the reports](add_TMT_intensities.md)
