@@ -79,6 +79,8 @@ There are many FASTA files available for thousands of species at UniProt. For ea
 
 Select the canonical yeast database with decoys. We need decoy sequences for the FDR analysis in the next pipeline step. Comet has support for internally created decoys. We are not using that feature. Reversed decoys work well for wider tolerance searches.
 
+> A copy of the FASTA file is available in the copy of the `results_files` folder located in the [`docs` folder](https://github.com/pwilmart/PAW_pipeline/tree/master/docs/CarbonSources_results_files) of the main repository.
+
 ---
 
 ![set parameters](../images/comet_GUI/10_set-parameters.png)
