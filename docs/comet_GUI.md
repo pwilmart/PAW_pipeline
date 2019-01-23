@@ -147,7 +147,7 @@ The console window also lets you know that conversions have finished.
 
 ![command line](../images/comet_GUI/20_command-line.png)
 
-There are times when it is nice to be able to run the Comet searches without using the GUI application. Like when you set a parameter incorrectly, then fix the comet.params file, and want to redo the searches. We need a Windows OS command shell window. It can be a CMD window, a PowerShell window, or the Anaconda prompt window. It is easier to navigate to the folder with the `.ms2` files using `cd` commands (remember Windows supports tab completion). When you are in the correct folder, type the `comet2016 *.ms2` command and press return. That should execute Comet searches for all of the `.ms2` files. There will be some console output as the Comet searches run.
+There are times when it is nice to be able to run the Comet searches without using the GUI application. Like when you set a parameter incorrectly, then fix the comet.params file, and want to redo the searches. We need a Windows OS command shell window. It can be a CMD window, a PowerShell window, or the Anaconda prompt window. Navigate to the folder with the `.ms2` files using `cd` commands (remember Windows supports tab completion). When you are in the correct folder, type the `comet2016 *.ms2` command and press return. That should execute Comet searches for all of the `.ms2` files. There will be some console output as the Comet searches run.
 
 ### Aside: setting up the `comet2016` command
 
