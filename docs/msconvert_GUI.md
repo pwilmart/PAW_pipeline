@@ -85,7 +85,7 @@ You need to open the script file in order to run it from IDLE. Select the `Open.
 
 ![open dialog](../images/msconvert_GUI/07_open-dialog.png)
 
-Select the `msconvert_GUI.py` script using the file dialog box, then click the `Open` button in the lower right corner.
+Browse to the location where the PAW pipeline scripts are located on your system. I created a subfolder called `PAW_pipeline' inside a `python_programs` subfolder located inside of my Box Sync folder. Select the `msconvert_GUI.py` script using the file dialog box, then click the `Open` button in the lower right corner.
 
 ---
 
