@@ -66,7 +66,7 @@ Do a multi-file selection of all (24 files) of the top hit summary `.txt` files.
 
 ![settings and load data](../images/histo_GUI/07_settings-load.png)
 
-The focus will return to the setup dialog. The two middle widgets are pull down menus. The histograms can be unsmoothed (Standard Plots) or smoothed. The instrument can be High Resolution (Orbitraps) or Low Resolution (regular ion traps). High resolution instruments are assumed to have data with 2+, 3+, and 4+ peptide charge states. Low Resolution instruments have 1+, 2+ and 3+ charge states. The default settings are usually correct. When the data has been selected and the settings are correct, click the `Load and Plot Histograms` button.
+The focus will return to the setup dialog. The two middle widgets are pull down menus. The histograms can be unsmoothed (Standard Plots) or smoothed. The instrument can be High Resolution (Orbitraps) or Low Resolution (regular ion traps). High resolution instruments are assumed to have data with 2+, 3+, and 4+ peptide charge states. Low Resolution instruments have 1+, 2+ and 3+ charge states. The default settings are usually okay. When the data has been selected and the settings are correct, click the `Load and Plot Histograms` button.
 
 ---
 
@@ -177,7 +177,7 @@ On to the 3+ unmodified peptides. Everything looks good and we do not have to ch
 
 ![3+ 0-Da modified](../images/histo_GUI/20_3plus-0Da-mod.png)
 
-These are the oxidized Met 3+ peptides. There are more of them compared to 2+ because 3+ peptides are longer on average and more likely to contain a Met residue. The default threshold location is higher than for the 3+ unmodified peptides.
+These are the oxidized Met 3+ peptides. There are more of them compared to 2+, because 3+ peptides are longer on average and more likely to contain a Met residue. The default threshold location is higher than for the 3+ unmodified peptides.
 
 ---
 
