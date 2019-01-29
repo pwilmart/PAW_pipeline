@@ -215,7 +215,7 @@ class Histogram:
         should be inserted. It should have already been constructed by the BRNotebook instance.
         '''
         canvas = BRCanvas(self.plot, master=frcanvas, gui=self.notebook.gui)
-        canvas.show()
+        canvas.draw()
         canvas.get_tk_widget().pack(side=LEFT, fill=BOTH, expand=YES)
         canvas.get_tk_widget().bind('<Button-1>', canvas.focusCanvas)   # These callbacks need to be set here because
         canvas.get_tk_widget().bind('<Return>', self.setThresh)         # they are handled differently for deltamass plots.
@@ -375,7 +375,7 @@ class DeltaMassHistogram(Histogram):
         Build the actual tkinter widget and assign callbacks
         '''
         canvas = BRCanvas(self.plot, master=frcanvas, gui=self.notebook.gui)
-        canvas.show()
+        canvas.draw()
         canvas.get_tk_widget().pack(side=LEFT, fill=BOTH, expand=YES)
         canvas.get_tk_widget().bind('<Button-1>', canvas.focusCanvas)
         canvas.histogram = self    # Retain reference to self

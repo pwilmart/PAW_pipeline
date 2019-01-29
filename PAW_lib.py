@@ -2179,7 +2179,8 @@ class FigureGenerator:
                 plot.fill(center, fig.reverse, color='r')
                 plot.title(str(fig.z) + "+ charge state and " + str(fig.ntt) + " tryptic termini.")
                 plot.figure()
-        plot.show()   
+##        plot.show() # this may be out-of-date
+        plot.draw()
     
     def generateCalculatedColumns(self, x):
         # generate calculated columns

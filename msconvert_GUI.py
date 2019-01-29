@@ -375,10 +375,9 @@ class MSConvertGUI:
         raw_files_list attribute.
         """
         self.raw_name_list = PAW_lib.get_files(self.def_location, self.extension_list, 'Select RAW files(s)')
-        if not self.raw_name_list:
-            self.quit_gui()
-        self.raw_path = os.path.dirname(self.raw_name_list[0])
-        self.raw_path_view.set(' %s   (%i RAW files selected)' % (self.raw_path, len(self.raw_name_list)))
+        if self.raw_name_list:
+            self.raw_path = os.path.dirname(self.raw_name_list[0])
+            self.raw_path_view.set(' %s   (%i RAW files selected)' % (self.raw_path, len(self.raw_name_list)))
         return
 
     def start_processing(self):
