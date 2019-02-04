@@ -89,6 +89,10 @@ import PAW_protein_grouper
 decoy_string = 'REV'
 default_location = 'F:\PSR_Core_Analysis'
 
+if not os.path.exists(default_location):
+    default_location = os.getcwd()
+
+
 def is_peptide_valid(peptide):
     """Tests if peptides meet sufficient criteria.
 
@@ -391,7 +395,7 @@ class FDR_Counter:
 
 """Only need database name! Do not need a data container."""        
 def get_database(folder):
-    """Get FASTA database name from a Comet parameters file or an SQT file header
+    """Get FASTA database name from a Comet parameters file or an SQT file header.
     """
     database = ''
     if os.path.exists(os.path.join(folder, 'comet.params')): # get DB from params file
@@ -404,26 +408,37 @@ def get_database(folder):
             line = line.strip()
             if line.startswith('first_database_name'):
                 database = line.split('= ')[1]
-    else: # try getting database from SQT files
+
+    # try getting database from SQT files            
+    else: 
         hbuff = []
-        if glob.glob('*.sqt')[0]:
-            for line in open(glob.glob('*.sqt')[0]):
-                if line.startswith('H'):
-                    hbuff.append(line.strip())
-                if line.startswith('S'):
-                    break
-        elif glob.glob('*.sqt.gz')[0]:
-            for line in gzip.open(glob.glob('*.sqt.gz')[0]):
-                if line.startswith('H'):
-                    hbuff.append(line.strip())
-                if line.startswith('S'):
-                    break
-        else:
+        try:
+            # get header lines
+            if glob.glob('*.sqt')[0]:
+                for line in open(glob.glob('*.sqt')[0]):
+                    if line.startswith('H'):
+                        hbuff.append(line.strip())
+                    if line.startswith('S'):
+                        break
+            elif glob.glob('*.sqt.gz')[0]:
+                for line in gzip.open(glob.glob('*.sqt.gz')[0]):
+                    if line.startswith('H'):
+                        hbuff.append(line.strip())
+                    if line.startswith('S'):
+                        break
+
+            # extract DB from header
+            for line in hbuff:
+                if line.startswith('H\tDatabase'):
+                    database = line.split('\t')[2]
+                    
+        except IndexError:
             print('...WARNING: no params file or SQT files')
 
-        for line in hbuff:
-            if line.startswith('H\tDatabase'):
-                database = line.split('\t')[2]
+        if not os.path.exists(database):    # browse to database if path not found
+            ext_list = [('FASTA files', '*.fasta'), ('Zipped files', '*.gz'), ('All files', '*.*')]
+            title = 'Please locate the FASTA file'
+            database = PAW_lib.get_file(default_location, ext_list, title)
 
     return database
 
