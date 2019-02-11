@@ -156,7 +156,7 @@ After RAW files have been processed and searches completed, the Python scripts c
 
 [11] Nesvizhskii, A.I. and Aebersold, R., 2005. Interpretation of shotgun proteomic data the protein inference problem. Molecular & cellular proteomics, 4(10), pp.1419-1440.
 
-[12] Madhira, R., 2016. The Effects of Parsimony Logic and Extended Parsimony Clustering on Protein Identification and Quantification in Shotgun Proteomics. https://digitalcommons.ohsu.edu/etd/3855/
+[12] Madhira, R., 2016. The Effects of Parsimony Logic and Extended Parsimony Clustering on Protein Identification and Quantification in Shotgun Proteomics. https://digitalcollections.ohsu.edu/concern/etds/c534fp149
 
 [13] Deutsch, E.W., Sun, Z., Campbell, D.S., Binz, P.A., Farrah, T., Shteynberg, D., Mendoza, L., Omenn, G.S. and Moritz, R.L., 2016. Tiered human integrated sequence search databases for shotgun proteomics. Journal of proteome research, 15(11), pp.4091-4100.
 

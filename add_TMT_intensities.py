@@ -432,8 +432,8 @@ class PAWProteinSummary(object):
 
     def load_TMT_intensities(self, minimum_intensity=500.0, missing_intensity=0.0):
         """Loads PSM TMT intensities."""
-        total = 0
-        reject = 0
+        total = set()
+        reject = set()
         txt_list = None
         # get the TMT intensities from the filtered SQT/TXT files
         for obj in self.write:
@@ -457,7 +457,6 @@ class PAWProteinSummary(object):
             lc_name = os.path.splitext(txt_file)[0]
             with open(os.path.join(filtered_folder, txt_file), 'r') as txt_obj:
                 for line in txt_obj:
-                    total += 1
                     line = line.rstrip()
                     if line.startswith('start\tend'):
                         col_map = {v: i for i, v in enumerate(line.split('\t'))}
@@ -466,6 +465,7 @@ class PAWProteinSummary(object):
                     intensities = []
                     items = line.split('\t')
                     key = lc_name + '.' + items[col_map['start']]
+                    total.add(key)
                     for height in heights:
                         intensities.append(float(items[col_map[height]]))
                     # test minimum trimmed intensities against cutoff
@@ -473,7 +473,7 @@ class PAWProteinSummary(object):
                     try:
                         if (sum(test) / len(test)) < minimum_intensity:
                             intensities = [0.0 for x in intensities]    # zero out low intensity PSMs
-                            reject += 1
+                            reject.add(key)
                         else:
                             intensities = [x if x > 0.0 else missing_intensity for x in intensities] # option to replace zero
                     except ZeroDivisionError:
@@ -490,7 +490,7 @@ class PAWProteinSummary(object):
                             
         self.number_channels = len(heights)
         for obj in self.write:
-            print('reporter ions total:', total, 'below intensity cutoff:', reject, file=obj)
+            print('reporter ions total:', len(total), ', below intensity cutoff:', len(reject), file=obj)
             print('   intensity cutoff was:', minimum_intensity, file=obj)
             print('length of tmt_intensity_dict:', len(self.tmt_intensity_dict), file=obj)
 
