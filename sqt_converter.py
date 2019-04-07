@@ -673,8 +673,10 @@ def convert_sqt_files(sqt_list, params):
     params = set_up_conversions(sqt_list[0], params)
 
     # loop over SQT files and unpack data into OutData objects
+    scan_total = 0
     for sqt_file in sqt_list:
         outs = convert_one_sqt_file(sqt_file, params)
+        scan_total += len(outs)
         
         # print status line after file parsing has finished
         for obj in params.log_obj:
@@ -687,7 +689,7 @@ def convert_sqt_files(sqt_list, params):
         make_PAW_txt_file(sqt_file, outs, params)
         
     for obj in params.log_obj:
-        print('\nConversions complete!\n', file=obj)
+        print('\nConversion of %s scans has completed!\n' % scan_total, file=obj)
 
     # try and close log files
     for obj in params.log_obj:

@@ -297,6 +297,10 @@ class MSConvertGUI:
         self.root.title('MSConvert MSn creator v1.06')
         self.root.protocol('WM_DELETE_WINDOW', self.quit_gui)
 
+        # some globals
+        self.msn_total = 0       # number of MSn scans written to MSn files
+        self.reporter_total = 0  # number of reporter ion sets written to text files
+
         # maybe get the window to the top...
         self.root.attributes('-topmost', 1)
         self.root.attributes('-topmost', 0)
@@ -473,6 +477,10 @@ class MSConvertGUI:
         self.progressbar.update()
         self.move_files()
 
+        # write some log data to console
+        print("\nThere were %s scans written to MSn files and %s reporter ion regions processed." %
+              (self.msn_total, self.reporter_total))
+
         # update status line when done
         self.progresstext.configure(text='Conversions completed. Quit when ready...')
         self.progressbar.update()
@@ -482,7 +490,7 @@ class MSConvertGUI:
     def process_ms3_reporter_ions(self, lc_name):
         """Parses ms2 and ms3 spectrum blocks; gets scan numbers, and reporter ion data.
         """
-        self.ms2_count, self.ms3_count = 0, 0 # scan counters
+        count = 0   # scan counter
 
         # parse files to get ms2 scan numbers, ms3 scan numbers, and data
         ms_dict = {}            # used to link MS3 scan numbers to ms2 scan numbers
@@ -502,11 +510,11 @@ class MSConvertGUI:
                 if line.startswith('cvParam: ms level,'):   # get MSn level (2 or 3)
                     msn_level = int(line.split()[-1])
                     if msn_level == 2:
-                        self.ms2_count += 1 # MS2 scan counter
+                        count += 1 # MS2 scan counter
                     elif msn_level == 3:
-                        self.ms3_count += 1     # MS3 scan counter
-                        if (self.ms3_count % 1000) == 0:
-                            print('......%d MS3 scans processed...' % self.ms3_count)
+                        count += 1     # MS3 scan counter
+                    if (count % 1000) == 0:
+                        print('......%d scans processed...' % count)
                 if line.startswith('cvParam: filter string'):   # line with info linking MS2 scan to MS3 scan
                     ## had @cid3 and @hcd3 strings - we need to exclude higher energy HCD
                     if '@cid3' in line:
@@ -538,6 +546,8 @@ class MSConvertGUI:
                         centroids, areas, heights = self.process_tmt_data(mz_list, int_list)
                         self.tmt_data.append(Reporter_ion(lc_name, ms2_scan, scan_num, centroids, areas, heights))
                         spectrum_flag = False
+
+        self.reporter_total += count
 
     def process_tmt_data(self, mz_list, int_list):
         """Computes peak centroid and integral within each TMT window.
@@ -623,12 +633,15 @@ class MSConvertGUI:
 
         # write diagnostic stats from conversion
         print('...Diagnostics for:', lc_name)
-        spectra.report()
+        if spectra:
+            spectra.report()
 
-        # write data in desired formats
-        print('...writing MS%s file: %d scans passed cutoffs' % (msn_level, len(spectra.spectra)))
-        msn_name = os.path.join(self.raw_path, lc_name + msn_extension)
-        spectra.write_msn(msn_name)
+            # write data in desired formats
+            total_scans = len(spectra.spectra)
+            self.msn_total += total_scans
+            print('...writing MS%s file: %d scans passed cutoffs' % (msn_level, total_scans))
+            msn_name = os.path.join(self.raw_path, lc_name + msn_extension)
+            spectra.write_msn(msn_name)
         spectra = None
         return
 

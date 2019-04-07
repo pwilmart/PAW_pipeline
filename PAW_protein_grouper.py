@@ -386,7 +386,7 @@ class ProteinSummary:
                 prot.all_loci = set(new) # save the more complete set of other loci
         return
 
-    def print_summary(self, fileobj=None):
+    def print_summary(self, fileobj=None, log_list=None):
         """Prints a new protein summary file.
 
         We create a similar format to the original protein_summary file.
@@ -409,12 +409,6 @@ class ProteinSummary:
         rows = len([x for x in self.tuplets if x.keep == True])
         prefix = 5
         pre_header[1] = '=SUBTOTAL(109,B%s:B%s)' % (prefix+1, rows+prefix)  # make counter subtotal function
-        # add spectral count labels to row above header (Total, Unique, and Corrected)
-        start = self.col_map['UniqFrac']+4
-        for i in range(len(self.samples)):
-            pre_header[start+i] = 'Total'
-            pre_header[start+len(self.samples)+i] = 'Unique'
-            pre_header[start+2*len(self.samples)+i] = 'Corrected'
         print('\t'.join(pre_header), file=fileobj)
         print('\t'.join(header), file=fileobj)
 
@@ -445,16 +439,6 @@ class ProteinSummary:
                 row.append('%0.3f' % (float(p.uniqfrac),)) # do some formatting
                 row = row + p.totals + p.uniques + p.correcteds
                 print('\t'.join(row), file=fileobj)
-
-        # print test thresholds at bottom of table
-        print(file=fileobj)
-        print('PAW_protein_grouper settings:', file=fileobj)
-        print('PSEUDO:\t', PSEUDO, '\t(used in pseudo-redudant and pseudo-subset tests)', file=fileobj)
-        print('LOW:\t', LOW, '\t(used in combination test - min. ave. true unique count)', file=fileobj)
-        print('SHARE:\t', SHARE, '\t(used in combination test - absolute ave. share count)', file=fileobj)
-        print('MASS:\t', MASS, '\t(used in combination test - relative shared-to-unique fraction)', file=fileobj)
-
-        """should add column key here"""
 
     # end ProteinSummary class
 
@@ -533,7 +517,7 @@ class PeptideSummary:
         self.line_count += 1
         return
 
-    def print_summary(self, fileobj=None):
+    def print_summary(self, fileobj=None, log_list=None):
         """Prints a new peptide summary file. Any proteins that have been combined are
         flagged as non-keepers and skipped. Combined proteins add new tuplets with combined
         peptide rows.
@@ -541,19 +525,13 @@ class PeptideSummary:
         """
         import time
 
-        print('Program "quantitative_protein_report.py" run on', time.asctime(), file=fileobj)
+        print('Program "PAW_protein_grouper.py" run on', time.asctime(), file=fileobj)
+        print('\n\n', file=fileobj)
         print(self.header, file=fileobj)
         for prot in self.tuplets:
             if prot.keep:
                 for row in prot.rows:
                     print(row, file=fileobj)
-
-        # print test thresholds at end of the table
-        print('\nPAW_quantitative_protein_report settings:', file=fileobj)
-        print('PSEUDO:\t', PSEUDO, '\t(used in pseudo-redudant and pseudo-subset tests)', file=fileobj)
-        print('LOW:\t', LOW, '\t(used in combination test - min. ave. true unique count)', file=fileobj)
-        print('SHARE:\t', SHARE, '\t(used in combination test - absolute ave. share count)', file=fileobj)
-        print('MASS:\t', MASS, '\t(used in combination test - relative shared-to-unique fraction)', file=fileobj)
         return
 
     # end PeptideSummary class
@@ -1505,8 +1483,8 @@ def main(prot_file=None):
     new_pep_file = os.path.join(os.path.dirname(pep_file), 'grouped_'+os.path.basename(pep_file))
     new_prot_file_obj = open(new_prot_file, 'w')
     new_pep_file_obj = open(new_pep_file, 'w')
-    proteins.print_summary(new_prot_file_obj)
-    peptides.print_summary(new_pep_file_obj)
+    proteins.print_summary(new_prot_file_obj, write)
+    peptides.print_summary(new_pep_file_obj, write)
 
     # print summary of families
     for obj in write:
@@ -1522,12 +1500,16 @@ def main(prot_file=None):
                         print('......%s: %s' % (redundant, proteins.acc_to_desc[redundant]), file=obj)
 
 
-    # print some summary stats
+    # print some summary stats and parameter settings
     family_count = len(proteins.tuplets[proteins.protein_count:])
     distinguishable_count = (proteins.protein_count - candidates) + (keepers - family_count)
-    write.append(new_prot_file_obj)
-    write.append(new_pep_file_obj)
     for obj in write:
+        print(file=obj)
+        print('PAW_protein_grouper settings:', file=obj)
+        print('PSEUDO:\t', PSEUDO, '\t(used in pseudo-redudant and pseudo-subset tests)', file=obj)
+        print('LOW:\t', LOW, '\t(used in combination test - min. ave. true unique count)', file=obj)
+        print('SHARE:\t', SHARE, '\t(used in combination test - absolute ave. share count)', file=obj)
+        print('MASS:\t', MASS, '\t(used in combination test - relative shared-to-unique fraction)', file=obj)       
         print(file=obj)
         print('Number of proteins read in:', proteins.row_count, file=obj)
         print('...%d distinguishable peptide sets (proteins) and %d fully redundant peptide sets (groups)' %

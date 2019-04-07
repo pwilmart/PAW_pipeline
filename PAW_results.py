@@ -34,6 +34,7 @@ Ph: 503-494-8200, FAX: 503-494-4729, Email: techmgmt@ohsu.edu.
 """
 # added tracking and reporting of peptide and protein FDRs (1/10/11 -PW)
 # removed lots of legacy code (SEQUEST and DTASelect support) -PW 5/11/2016
+# made tables easier to read into R -PW 2/13/2019
 
 """To do:
 Keep dta_name variable??? Yes, dta_name is a handy key...
@@ -46,7 +47,7 @@ Make same set grouping and subset removal into functions
 
 Make report table generations into three functions
 """
-VERSION = 'v1.0.8'
+VERSION = 'v1.0.9'
 
 # set protein ID criteria here
 minimum_peptide_per_protein = 2     # min. number distinct peptides/protein/sample
@@ -1177,23 +1178,17 @@ for obj in write:
 # protein has multiple peptides, each peptide may have been sequenced more than
 # once, we have an option for either spectral counts or intensities, etc.
 
-# first find and print valid proteins spectral count numbers
+# first find and print valid protein spectral count numbers
 print('RESULTS FOLDER:', results_folder)
-print('...writing protein_summary_8.txt...')
-protein_filename = os.path.join(results_folder, 'protein_summary_8.txt')
+print('...writing protein_summary_9.txt...')
+protein_filename = os.path.join(results_folder, 'protein_summary_9.txt')
 protein_results = open(protein_filename, 'w')
+protein_companion = open(os.path.join(results_folder, 'protein_companion_9.txt'), 'w')
+
 valid_protein_count, valid_reversed = 0, 0
 reject_protein_count, reject_reversed = 0, 0
 
-# build the header line and print
-header = ['ProtGroup', 'Counter', 'Accession', 'Filter', 'Coverage', 'SeqLength', 'MW', 'Description',
-          'CountsTot', 'UniqueTot', 'UniqFrac']
-preheader = (['', '=subtotal(109,B3:B3)'] + (len(header)-2)*[''] + len(samples)*['Total'] +
-             len(samples)*['Unique'] + len(samples)*['Corrected'] + [''])
-print('\t'.join(preheader), file=protein_results)
-header = header + samples + samples + samples + ['OtherLoci']
-print('\t'.join([x if x else ' ' for x in header]), file=protein_results)
-#
+table_rows = []
 for prot in proteins:
     valid = False
     counts, uniq_counts, split_counts, items = [], [], [], []
@@ -1252,33 +1247,55 @@ for prot in proteins:
                      filter_tag, loci.Coverage, loci.SeqLength,
                      loci.MW, loci.Description, count_unique] + counts + other_loci
             string = '\t'.join([str(x) if str(x) else ' ' for x in items])  # add tabs and print          
-            print(string, file=protein_results)
+            table_rows.append(string)
             k += 1
     else:
         # keep count of rejected proteins
         reject_protein_count += 1
         if reversed_hit(prot.locus_list, decoy): reject_reversed += 1
 
+# build the header line and print
+header = ['ProtGroup', 'Counter', 'Accession', 'Filter', 'Coverage', 'SeqLength', 'MW', 'Description',
+          'CountsTot', 'UniqueTot', 'UniqFrac']
+##preheader = (['', '=subtotal(109,B3:B3)'] + (len(header)-2)*[''] + len(samples)*['Total'] +
+##             len(samples)*['Unique'] + len(samples)*['Corrected'] + [''])
+pre_lines = 4
+print('PAW protein_summary_9 results file', file=protein_results)
+print('written:', time.ctime(), file=protein_results)
+print(file=protein_results)
+formula = '=subtotal(109,B%d:B%d)' % (pre_lines+2, pre_lines+1+len(table_rows))
+preheader = ([' ', formula] + (len(header)-2)*[' '] + 3*len(samples)*[' '] + ['x'])
+print('\t'.join(preheader), file=protein_results)
+header = (header + ['Total_'+x for x in samples] + ['Unique_'+x for x in samples] +
+          ['Corrected_'+x for x in samples] + ['OtherLoci'])
+print('\t'.join([x if x else ' ' for x in header]), file=protein_results)
+
+for row in table_rows:
+    print(row, file=protein_results)
+
 # print total spectral counts per sample (normalization factors)
 if calc_ms2_int:
-    string1 = 'Per Sample Total MS2 Intensity:\t\t\t\t\t\t\t\t\t\t'
-    string2 = 'Per Sample Contaminant MS2 Intensity:\t\t\t\t\t\t\t\t\t\t'
+    string1 = 'Per Sample Total MS2 Intensity:'
+    string2 = 'Per Sample Contaminant MS2 Intensity:'
 else:
-    string1 = 'Per Sample Total Spectral Count:\t\t\t\t\t\t\t\t\t\t'
-    string2 = 'Per Sample Total Contaminant Count:\t\t\t\t\t\t\t\t\t\t'
+    string1 = 'Per Sample Total Spectral Count:'
+    string2 = 'Per Sample Total Contaminant Count:'
 for s in range(len(samples)):
     string1 += '\t' + str(sum(normalization[s].values()))
     string2 += '\t' + str(sum(contaminant[s].values()))
-print(file=protein_results)
-print(string1, file=protein_results)
-print(string2, file=protein_results)
+
+print('Protein summary 9 companion file:', file=protein_companion)
+print('written on:', time.ctime(), file=protein_companion)
+print(file=protein_companion)
+print(string1, file=protein_companion)
+print(string2, file=protein_companion)
 
 # finally, print summary stats to protein report
-print(file=protein_results)
-print('valid_protein_count\tvalid_reversed', file=protein_results)
-print(valid_protein_count, '\t', valid_reversed, file=protein_results)
-print('reject_protein_count\treject_reversed', file=protein_results)
-print(reject_protein_count, '\t', reject_reversed, file=protein_results)
+print(file=protein_companion)
+print('valid_protein_count\tvalid_reversed', file=protein_companion)
+print(valid_protein_count, '\t', valid_reversed, file=protein_companion)
+print('reject_protein_count\treject_reversed', file=protein_companion)
+print(reject_protein_count, '\t', reject_reversed, file=protein_companion)
 for obj in write:
     print('...valid proteins: %s(%s) [rejected proteins: %s(%s)]' %
           (valid_protein_count, valid_reversed, reject_protein_count, reject_reversed), file=obj)
@@ -1286,37 +1303,44 @@ if calc_ms2_int:
     string = 'Protein report of MS2 intensity values performed on'
 else:
     string = 'Protein report of Spectral Count values performed on'
-print(file=protein_results)
-print(string, time.asctime(time.localtime()), file=protein_results)
-print('Database: %s (%s entries)' % (DB_name, DB_total), file=protein_results)
-print('%s\tminimum_ntt_per_peptide' % (minimum_ntt_per_peptide,), file=protein_results)
-print('%s\tminimum_peptide_per_protein' % (minimum_peptide_per_protein,), file=protein_results)
-print('%s\tminimum_unique_per_protein' % (minimum_unique_per_protein,), file=protein_results)
+print(file=protein_companion)
+print(string, time.asctime(time.localtime()), file=protein_companion)
+print('Database: %s (%s entries)' % (DB_name, DB_total), file=protein_companion)
+print('%s\tminimum_ntt_per_peptide' % (minimum_ntt_per_peptide,), file=protein_companion)
+print('%s\tminimum_peptide_per_protein' % (minimum_peptide_per_protein,), file=protein_companion)
+print('%s\tminimum_unique_per_protein' % (minimum_unique_per_protein,), file=protein_companion)
 # less common parameters
 if calc_ms2_int:
-    print('%s\tcalc_ms2_int flag' % (calc_ms2_int,), file=protein_results)
-    print('%s\tmax_num_peaks' % (max_num_peaks,), file=protein_results)
+    print('%s\tcalc_ms2_int flag' % (calc_ms2_int,), file=protein_companion)
+    print('%s\tmax_num_peaks' % (max_num_peaks,), file=protein_companion)
 if not full_peptide_list:
-    print('%s\tfull_peptide_list flag' % (full_peptide_list,), file=protein_results)
+    print('%s\tfull_peptide_list flag' % (full_peptide_list,), file=protein_companion)
 if not remove_subsets:
-    print('%s\tremove_subsets flag' % (remove_subsets,), file=protein_results)
+    print('%s\tremove_subsets flag' % (remove_subsets,), file=protein_companion)
 if multiple_charge_states_ok:
-    print('%s\tmultiple_charge_states_ok flag' % (multiple_charge_states_ok,), file=protein_results)
+    print('%s\tmultiple_charge_states_ok flag' % (multiple_charge_states_ok,), file=protein_companion)
 if not modifications_ok:
-    print('%s\tmodifications_ok flag' % (modifications_ok,), file=protein_results)
+    print('%s\tmodifications_ok flag' % (modifications_ok,), file=protein_companion)
 if allow_prot_nterm_acytl:
-    print('%s\tallow_prot_nterm_acytl flag' % (allow_prot_nterm_acytl,), file=protein_results)
+    print('%s\tallow_prot_nterm_acytl flag' % (allow_prot_nterm_acytl,), file=protein_companion)
 #
 protein_results.close()
+protein_companion.close()
 
 # now do the peptide summary report by counts across samples: build and print header line
-print('...writing peptide_summary_8.txt...')
-peptide_results = open(os.path.join(results_folder, 'peptide_summary_8.txt'), 'w')
-header = ['ProtGroup', 'Accession', 'Sequence', 'Begin', 'End', 'Unique', \
+print('...writing peptide_summary_9.txt...')
+peptide_results = open(os.path.join(results_folder, 'peptide_summary_9.txt'), 'w')
+if calc_ms2_int:
+    string = 'Program "peptide_summary_9.py" report with MS2 intensites performed on'
+else:
+    string = 'Program "peptide_summary_9.py" report with spectral counts performed on'
+print(string, time.asctime(time.localtime()), file=peptide_results)
+
+header = ['\n\n\nProtGroup', 'Accession', 'Sequence', 'Begin', 'End', 'Unique', \
           'NTT', 'Z', 'TotCount'] + samples
 header.append('OtherLoci')
 print('\t'.join([x if x else ' ' for x in header]), file=peptide_results)
-#
+
 valid_count = 0
 for p in proteins:
     valid = False
@@ -1398,20 +1422,14 @@ for p in proteins:
             print_line.append(line[10])
             string = '\t'.join([str(x) if str(x) else ' ' for x in print_line])
             print(string, file=peptide_results)
-#
-if calc_ms2_int:
-    string = '\nPeptide report with MS2 intensites performed on'
-else:
-    string = '\nPeptide report with spectral counts performed on'
-print(string, time.asctime(time.localtime()), file=peptide_results)
 
 # close peptide results file
 peptide_results.close()
 
 # now do the peptide report for each sample with scoring details, masses, etc.
 for s in range(len(samples)):
-    print('...writing %s...' % (samples[s] + '_peptide_results_8.txt',))
-    peptide_results = open(os.path.join(results_folder, samples[s] + '_peptide_results_8.txt'), 'w')
+    print('...writing %s...' % (samples[s] + '_peptide_results_9.txt',))
+    peptide_results = open(os.path.join(results_folder, samples[s] + '_peptide_results_9.txt'), 'w')
     header = ['ProtGroup', 'Accession', 'Sequence', 'Unique', \
               'TotCount', 'NTT', 'XCorr', 'DeltaCN', 'SpRank', 'NewDisc', 'Z', 'Delta_Mass', \
               'Exp_Mass', 'Calc_Mass', 'DTA_filename']

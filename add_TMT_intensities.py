@@ -279,7 +279,7 @@ class PAWProteinSummary(object):
         self.headers = []       # original headers
         self.col_map = {}       # column header to index mapping
         self.new_headers = []   # headers with no spaces and label suffixed
-        self.frame = DataFrame() # main data table
+        self.frame = DataFrame()# main data table
         self.num_rows = 0       # number of rows in main table
         self.num_cols = 0       # number of columns in main table
 
@@ -292,12 +292,8 @@ class PAWProteinSummary(object):
         return
         
     def make_new_headers(self):
-        """Removes spaces, and adds labels to headers.
-        pandas will need unique headers for managing the table."""
+        """Replaces spaces with underscores in headers."""
         self.new_headers = [re.sub(r' ', r'_', x) for x in self.headers] # changes spaces to underscores
-        extras = ['Total', 'Unique', 'Corrected']
-        self.pre_headers += list((len(self.headers) - len(self.pre_headers)) * ' ') # pad pre_headers to same length
-        self.new_headers = [(x+'_'+y if x in extras else y) for (x, y) in zip(self.pre_headers, self.new_headers)]
         return
         
     def load_table(self, file_name):
@@ -337,6 +333,8 @@ class PAWProteinSummary(object):
             if (len(row.split('\t')) < (self.num_cols-1)) and not group:
                 table_end = i + table_start - 1
                 break
+        if table_end == 0:
+            table_end = i + table_start
         
         # save table, prefix, and suffix lines
         self.num_rows = table_end - table_start
@@ -345,7 +343,7 @@ class PAWProteinSummary(object):
         self.suffix = [x.rstrip() for x in contents[table_end+1:]]
 
         # get the list of biological samples
-        self.sample_list = [self.headers[i] for (i, label) in enumerate(self.pre_headers) if label == 'Total']
+        self.sample_list = [x.replace("Total_", "") for x in self.headers if x.startswith("Total_")]
 
         # if regular protein summary, make the table non-redundant by row
         if self.new_headers[-1] == 'OtherLoci':
@@ -364,16 +362,12 @@ class PAWProteinSummary(object):
                 
         # cast numerical columns to correct np array data types
         # most columns can remain as text, only convert a few to numbers.
-        samples = []
-        for key in self.col_map:
-            if key.startswith('Total_'):
-                samples.append(key[len('Total_'):])
-        floats = ['ProtGroup', 'UniqFrac'] + ['Corrected_' + x for x in samples]
+        floats = ['ProtGroup', 'UniqFrac'] + ['Corrected_' + x for x in self.sample_list]
         for key in floats:
             table_dict[key] = np.array(table_dict[key], dtype='float64')
         ints = (['Counter', 'CountsTot', 'UniqueTot'] +
-                ['Total_' + x for x in samples] +
-                ['Unique_' + x for x in samples])
+                ['Total_' + x for x in self.sample_list] +
+                ['Unique_' + x for x in self.sample_list])
         for key in ints:
             table_dict[key] = np.array(table_dict[key], dtype='int32')
                 
@@ -451,6 +445,8 @@ class PAWProteinSummary(object):
             ext_list = [('TXT files', '*.txt'), ('All files', '*.*')]
             title = 'Select one or more PAW text files'
             txt_list = PAW_lib.get_files(filtered_folder, ext_list, title)
+            if not txt_list:
+                sys.exit()
             txt_list = [os.path.split(x)[1] for x in txt_list] # need just the filename from path
         for txt_file in txt_list:
             lc_name = txt_file.replace('.txt', '')
@@ -497,7 +493,7 @@ class PAWProteinSummary(object):
     def load_peptide_unique_dict(self):
         """Reads the peptide summary file and saves unique peptide sequences in dictionary."""
         # look for the peptide file that matches the protein file
-        self.peptide_file = self.protein_file.replace('protein_summary_8', 'peptide_summary_8')
+        self.peptide_file = self.protein_file.replace('protein_summary_9', 'peptide_summary_9')
         if (self.peptide_file == self.protein_file) or not os.path.exists(self.peptide_file):
             print('peptide file missing:', self.protein_file)
             self.peptide_file = ''
@@ -536,7 +532,7 @@ class PAWProteinSummary(object):
             nr_psm_lists_dict = {}
             
             # look for the detailed peptide summary file
-            peptide_file = os.path.join(self.results_path, sample + '_peptide_results_8.txt')
+            peptide_file = os.path.join(self.results_path, sample + '_peptide_results_9.txt')
             if not os.path.exists(peptide_file):
                 print('detailed peptide file issue in:', self.results_path)
                 print('peptide_file:', peptide_file)
@@ -649,7 +645,7 @@ elif protein_summary.number_channels == 10:
     TMT = TMT10
 elif protein_summary.number_channels == 11:
     TMT = TMT11
-new_file = protein_summary.protein_file.replace('summary_8', 'summary_TMT_8')
+new_file = protein_summary.protein_file.replace('summary_9', 'summary_TMT_9')
 if new_file == protein_summary.protein_file:
     print('error creating new protein file name')
     sys.exit()
@@ -673,7 +669,7 @@ with open(os.path.join(protein_summary.results_path, new_file), 'w') as fout:
         print(line, file=fout)
 
 # write out the new peptide summary file
-new_file = peptide_summary.peptide_file.replace('summary_8', 'summary_TMT_8')
+new_file = peptide_summary.peptide_file.replace('summary_9', 'summary_TMT_9')
 if new_file == peptide_summary.peptide_file:
     print('error creating new protein file name')
     sys.exit()
