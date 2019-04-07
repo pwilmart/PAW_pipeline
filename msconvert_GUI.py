@@ -75,9 +75,10 @@ COMPUTE_AREAS = False
 
 class Spectra:
     """Container for Spectrum objects."""
-    def __init__(self, count=15, intensity=500, msn_level=2, header_block=None):
+    def __init__(self, count=15, intensity=500, msn_level=2, header_block=None, parent=None):
         self.count = count              # minimum peak count
         self.intensity = intensity      # minimum total absolute intensity
+        self.parent = parent            # parent object
         self.version = 1.04             # this program version
         self.xcalibur_version = None    # Xcalibur version
         self.msconvert_version = None   # Proteowizard version
@@ -391,6 +392,10 @@ class MSConvertGUI:
         if not self.raw_name_list:
             self.load_raw_files()
 
+        # set up log file
+        log_obj = open(os.path.join(self.raw_path, "MSConvert_GUI_log.txt"), mode='at')
+        self.log_obj = [None, log_obj]
+
         # build the MSConvert command options
         centroid = [[' --filter "peakPicking true 2-3"', ' --filter "peakPicking true 2"'],
                     [' --filter "peakPicking true 3"', '']]
@@ -430,10 +435,12 @@ class MSConvertGUI:
             # call MSConvert
             command_line = raw_name + centroid_picked + level_picked + ' --text --gzip'
             if not os.path.exists(msconvert_name):
-                print('MSConvert ' + command_line)
+                for obj in self.log_obj:
+                    print('MSConvert ' + command_line, file=obj)
                 os.system('START "MSConvert" /WAIT /MIN /LOW CMD /C MSConvert ' + command_line)
             else:
-                print('...Skipping conversion of:', lc_name)
+                for obj in self.log_obj:
+                    print('...Skipping conversion of:', lc_name, file=obj)
             self.progressbar.step(step)
             self.progressbar.update()
 
@@ -470,7 +477,8 @@ class MSConvertGUI:
                         result.write_row(fout) # data line
                     fout.close()
             else:
-                print('...WARNING: possible corrupt file:', lc_name)
+                for obj in self.log_obj:
+                    print('...WARNING: possible corrupt file:', lc_name, file=obj)
 
         # move the MSn and PAW_tmt files into separate folder
         self.progresstext.configure(text='Moving search and quant files')
@@ -478,14 +486,22 @@ class MSConvertGUI:
         self.move_files()
 
         # write some log data to console
-        print("\nThere were %s scans written to MSn files and %s reporter ion regions processed." %
-              (self.msn_total, self.reporter_total))
+        for obj in self.log_obj:
+            print("\nThere were %s scans written to MSn files and %s reporter ion regions processed." %
+                  (self.msn_total, self.reporter_total), file=obj)
 
         # update status line when done
         self.progresstext.configure(text='Conversions completed. Quit when ready...')
         self.progressbar.update()
         self.progressbar.step(step)
         self.progressbar.update()
+
+        # try and close log files
+        for obj in self.log_obj:
+            try:
+                obj.close()
+            except:
+                pass       
 
     def process_ms3_reporter_ions(self, lc_name):
         """Parses ms2 and ms3 spectrum blocks; gets scan numbers, and reporter ion data.
@@ -514,7 +530,8 @@ class MSConvertGUI:
                     elif msn_level == 3:
                         count += 1     # MS3 scan counter
                     if (count % 1000) == 0:
-                        print('......%d scans processed...' % count)
+                        for obj in self.log_obj:
+                            print('......%d scans processed...' % count, file=obj)
                 if line.startswith('cvParam: filter string'):   # line with info linking MS2 scan to MS3 scan
                     ## had @cid3 and @hcd3 strings - we need to exclude higher energy HCD
                     if '@cid3' in line:
@@ -522,7 +539,8 @@ class MSConvertGUI:
                     elif '@hcd3' in line:
                         moverz_key = line.split('@hcd3')[0].split()[-1]
                     else:
-                        print('WARNING: dissociation key (@cid or @hcd) not found')
+                        for obj in self.log_obj:
+                            print('WARNING: dissociation key (@cid or @hcd) not found', file=obj)
                 if line.startswith('spectrumRef: ') and msn_level == 2:
                     ms1_scan = int(line.split()[-1].split('=')[-1])
                     if ms1_scan != ms1_prev:  # this covers first scan and when MS1 cycle changes
@@ -600,7 +618,8 @@ class MSConvertGUI:
         block = []
         in_spec = False     # this skips lines until first spectrum block
         spectra = None      # initial value
-        print('...Starting %s.txt.gz file scan' % (lc_name,))
+        for obj in self.log_obj:
+            print('...Starting %s.txt.gz file scan' % (lc_name,), file=obj)
         for line in gzip.open(self.txt_name, 'rt'):
             line = line.strip()
             if line.startswith('chromatogramList'):
@@ -610,7 +629,7 @@ class MSConvertGUI:
             if line.startswith('spectrum:'):
                 # create container for all spectra when at first "spectrum" line
                 if spectra is None:
-                    spectra = Spectra(ion_count, min_intensity, msn_level, header_block)
+                    spectra = Spectra(ion_count, min_intensity, msn_level, header_block, self)
                 # regular spectrum block processing
                 in_spec = True
                 if block:   # process previous spectrum block
@@ -632,14 +651,16 @@ class MSConvertGUI:
                 self.tmt_data.append(Reporter_ion(lc_name, spectrum.scan, spectrum.scan, centroids, areas, heights))
 
         # write diagnostic stats from conversion
-        print('...Diagnostics for:', lc_name)
+        for obj in self.log_obj:
+            print('...Diagnostics for:', lc_name, file=obj)
         if spectra:
             spectra.report()
 
             # write data in desired formats
             total_scans = len(spectra.spectra)
             self.msn_total += total_scans
-            print('...writing MS%s file: %d scans passed cutoffs' % (msn_level, total_scans))
+            for obj in self.log_obj:
+                print('...writing MS%s file: %d scans passed cutoffs' % (msn_level, total_scans), file=obj)
             msn_name = os.path.join(self.raw_path, lc_name + msn_extension)
             spectra.write_msn(msn_name)
         spectra = None
