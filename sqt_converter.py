@@ -289,6 +289,11 @@ def lookup_peptide_sequences(out_list, params):
     for obj in params.log_obj:
         print('...starting peptide lookup:', time.ctime(), file=obj)
     agree, disagree = 0, 0
+    if params.enzyme_termini in [8, 9]:
+        minimum_termini = 1
+    else:
+        minimum_termini = params.enzyme_termini
+
     for out in out_list:
         try:
             for match in out.matches:
@@ -303,15 +308,19 @@ def lookup_peptide_sequences(out_list, params):
                     for acc in params.peptide_to_accessions[base_pep_masked]:
                         prot_list.append(params.proteins[params.prot_map[acc]])
                 except KeyError:
-                    for obj in params.log_obj:
-                        print('......WARNING: %s not in peptides dictionary' % match.sequence, file=obj)
-                    prot_list = params.proteins
+                    if minimum_termini == 2:
+                        for obj in params.log_obj:
+                            print('...WARNING: %s not in peptides dictionary' % match.sequence, file=obj)
+                    if match.additional == 0:
+                        prot_list = [params.proteins[params.prot_map[match.accession]]]
+                    else:
+                        prot_list = params.proteins
                     
                 # get peptide location in protein sequences
                 all_matches = PAW_lib.find_peptide(match.sequence, prot_list, params.mask)
                 """This is where premature stop codon peptides get rejected - modifiy amino_acid_count function?
                 """
-                filtered_matches = [t for t in all_matches if PAW_lib.amino_acid_count(t[3])[1] == params.enzyme_termini]
+                filtered_matches = [t for t in all_matches if PAW_lib.amino_acid_count(t[3])[1] >= minimum_termini]
                 number_tryptic = len(filtered_matches)
                 match.match_tuple_list = filtered_matches
                     
@@ -320,7 +329,7 @@ def lookup_peptide_sequences(out_list, params):
                     disagree += 1
                     if length >= params.min_pep_len:
                         for obj in params.log_obj:
-                            print('...scan #%s, seq: %s , Comet had %s, lookup was %s' %
+                            print('......WARNING: scan #%s, seq: %s , Comet had %s, lookup was %s' %
                                   (out.beg, match.sequence, match.additional+1, number_tryptic), file=obj)
                             if len(filtered_matches) < 5:                                                                            
                                 print(filtered_matches, file=obj)
@@ -365,7 +374,7 @@ def make_lookup_tables(params):
         regex = re.compile(r".(?:(?<![K](?!P)).)*")     # Lys-C strict
     else:
         for obj in params.log_obj:
-            print('......WARNING: enzyme will default to trypsin', file=obj)
+            print('...WARNING: enzyme will default to trypsin', file=obj)
         regex = None
         
     # make the peptide lookup dictionary            
@@ -576,7 +585,7 @@ def set_up_conversions(sqt_file, params):
                     params.enzyme = 'GluC'
                 else:
                     for obj in params.log_obj:
-                        print('......WARNING: enzyme not supported!', file=obj)
+                        print('...WARNING: enzyme not supported!', file=obj)
                     params.enzyme = None
                     
             """Should get static mods from CometParams and build amino acid table for digestion routine
@@ -599,7 +608,7 @@ def load_tmt_data(sqt_file, params):
         tmt_filename = sqt_filename[:-4] + '.PAW_tmt.txt'
     else:
         for obj in params.log_obj:
-            print('......WARNING: sqt filename does not end in sqt', file=obj)
+            print('...WARNING: sqt filename does not end in sqt', file=obj)
         
     project_folder = os.path.dirname(sqt_folder)
 
@@ -615,7 +624,7 @@ def load_tmt_data(sqt_file, params):
     # warning if no files found
     if not found:
         for obj in params.log_obj:
-            print('......WARNING: the PAW_tmt.txt file was not found!', file=obj)
+            print('...WARNING: the PAW_tmt.txt file was not found!', file=obj)
         return None, None
 
     # read and parse the TMT information
@@ -633,7 +642,7 @@ def load_tmt_data(sqt_file, params):
                 heights = [x for x in line.split('\t') if x.startswith('height_')]
                 if old_heights and (heights != old_heights):
                     for obj in params.log_obj:
-                        print('......WARNING: TMT reporter ions are not consistent!', file=obj)
+                        print('...WARNING: TMT reporter ions are not consistent!', file=obj)
                 continue
             
             # this does the rest of the lines
@@ -646,7 +655,7 @@ def load_tmt_data(sqt_file, params):
             # update dictionary
             if key in tmt_intensity_dict:
                 for obj in params.log_obj:
-                    print('......WARNING: non unique key: (will be zeroed out)', key, file=obj)
+                    print('...WARNING: non unique key: (will be zeroed out)', key, file=obj)
                 bad_keys.add(key)
             else:
                 tmt_intensity_dict[key] = intensities
@@ -713,7 +722,7 @@ def main(folder, overwrite=True):
         print('......WARNING: no file folder was selected!')
         return
     if not os.path.exists(folder):
-        print('......WARNING: folder could not be found')
+        print('...WARNING: folder could not be found')
         return
 
     # create container for parameters and lookup tables (easier to pass around)

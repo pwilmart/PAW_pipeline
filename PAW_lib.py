@@ -1495,8 +1495,9 @@ def amino_acid_count(sequence_string, enzyme='Tryp', return_base_pep=False):
             ntt += 1
         if (cterm in 'KR') or (suffix in '-*'):
             ntt += 1
-        if suffix == 'P' and ntt > 0:   # trypsin strict???
-            ntt -= 1
+## # this interferes with semi-tryptic option in Comet
+##        if suffix == 'P' and ntt > 0:   # trypsin strict???
+##            ntt -= 1
     elif enzyme.upper() == 'GLUC':  # cleaves at c-side of D, E
         if prefix in 'DE-*':
             ntt += 1
