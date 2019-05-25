@@ -1550,16 +1550,13 @@ class FileLoader:
     Written by Phil Wilmarth, OHSU, 2014. Extended by Billy Rathje, 2014.
     Added support for TXT file without PSR Core instrument designations 7/21/14 -PW
     """
-    def __init__(self, file_list, mass_type='High'):
-        self.accurateMass = False   # accurate mass default value (True for Orbitraps)
+    def __init__(self, file_list):
         self.peptideMassTol = 1.25  # search parent ion tolerance default (plus/minus in Da)
         self.modStrings = []        # list of variable modification symbols specified in search
         self.enzyme = True          # False if a no enzyme search was used (default=True)
 
         # get the list of TXT files and figure out instrument type
         folder = os.path.dirname(file_list[0])
-        if mass_type == 'High':
-            self.accurateMass = True
 
         # parse the params file and get relevant settings
         self.params = CometParams()
@@ -1588,8 +1585,8 @@ class FileLoader:
         for i, file_name in enumerate(file_list):
             file_obj = open(file_name, 'rU')
             name = os.path.basename(file_name)[:-4]
-##            frame = pd.read_table(file_obj, usecols=use_cols, dtype=col_types)
-            frame = pd.read_table(file_obj)
+##            frame = pd.read_csv(file_obj, sep='\t', usecols=use_cols, dtype=col_types)
+            frame = pd.read_csv(file_obj, sep='\t')
             info = TxtInfo(name)
             self.txt_info_list.append(info)
             frame['TxtIdx'] = i
@@ -2001,8 +1998,7 @@ class FigureGenerator:
         f = FileLoader(files)                   # load files
         self.f = f                               # pointer to initial file object
         x = self.f.getFrame()
-        self.accurateMass = self.f.accurateMass   # determine if there's accurate mass data
-#        self.accurateMass = accurateMass
+        self.accurateMass = accurateMass
         self.smoothed = smoothed
         self.peptideMassTol = self.f.getPeptideMassTol()
         
