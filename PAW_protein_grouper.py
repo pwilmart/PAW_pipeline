@@ -883,11 +883,10 @@ class OtherLociCombiner:
                     # several fields get values from the primary protein's data
                     new.filter = self.proteins.tuplets[self.proteins.acc_map[primary]].filter # filter
                     # these values in parentheses to see that they are from primary, extra single quote for Excel
-                    new.coverage = ("'(%0.1f)" %
-                                    (float(self.proteins.tuplets[self.proteins.acc_map[primary]].coverage),)) # coverage
-                    new.length = "'("+self.proteins.tuplets[self.proteins.acc_map[primary]].length+')' # length
-                    new.mw = "'("+self.proteins.tuplets[self.proteins.acc_map[primary]].mw+')' # molecular weight
-                    new.description = "'("+self.proteins.tuplets[self.proteins.acc_map[primary]].description+')' # description
+                    new.coverage = float(self.proteins.tuplets[self.proteins.acc_map[primary]].coverage) # coverage
+                    new.length = self.proteins.tuplets[self.proteins.acc_map[primary]].length # length
+                    new.mw = self.proteins.tuplets[self.proteins.acc_map[primary]].mw # molecular weight
+                    new.description = self.proteins.tuplets[self.proteins.acc_map[primary]].description # description
 
                     # these are recomputed because the grouping changed definitions of shared and unique
                     new.tot_count = str(get_counts(self.sets[i], self.tot_count[i])) # Total counts
@@ -1454,7 +1453,6 @@ def main(prot_file=None):
     # loop over protein tuplets created from reading the summary files
     for i in range(proteins.protein_count):
         prot = proteins.tuplets[i]
-    ##    print('loop:', i, 'protein:', prot.name)
         if prot.otherloci == '':    # unique proteins are already "done"
             prot.done = True
         elif not prot.done:     # skip proteins that have already been through testing (attribute set during testing)
