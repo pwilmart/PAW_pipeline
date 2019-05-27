@@ -4,7 +4,7 @@ Did some reformatting of summary tables (`results_files` folder) to make them ea
 
 A new `PAW_table_descriptions_9.txt` has been added to explain the columns in all of the tables written by the PAW pipeline. Most of those are results tables, but there are also top hit summaries and some TMT data tables. Depending on pipeline options and data, not all tables will be written for each analysis. The description file lists all potential tables.
 
-- Phil Wilmarth
+---
 
 ## List of scripts
 
