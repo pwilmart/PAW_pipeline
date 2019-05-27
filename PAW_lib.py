@@ -1537,7 +1537,170 @@ def get_base_peptide_sequence(sequence, mask=True):
     base_pep = ''.join(splitter.split(peptide))
     if mask:
         base_pep = re.sub(r'[IL]', 'j', base_pep)
-    return base_pep    
+    return base_pep
+
+def column_keys():
+    """Writes column header descriptions for the summary tables."""
+
+    # PAW_tmt text files
+    PAW_tmt_txt = [('** PAW TMT reporter ion text files (msn_files folder) **', 'Reporter ion peak values by scan number'),
+                   ('lc-name', 'RAW file basename'),
+                   ('ms2_scan', 'Peptide MS2 scan number'),
+                   ('ms3_scan', 'Associated MS3 scan number for SPS (or MS2 scan number)'),
+                   ('* cent_ *', 'Centroid of data within each narrow window for each channel'),
+                   ('* area_ *', 'AUC of reporter ion peak for each channel (probably all zero)'),
+                   ('* height_ *', 'Reporter ion peak height (maximum value in narrow window) for each channel')]
+    PAW_tmt_txt = OrderedDict(PAW_tmt_txt)
+    
+    # Top-hit text files in msn_files folder
+    top_hit_txt = [('** Top-hit text files (msn_files folder) **', 'Summaries of Comet top-hits (redundant by loci)'),
+                   ('start', 'Beginning scan number'),
+                   ('end', 'Ending scan number'),
+                   ('Z', 'Peptide charge state'),
+                   ('expM', 'Measured MH+ mass'),
+                   ('SpRank', 'Ranking from preliminary scoring'),
+                   ('theoM', 'Calculated MH+ mass for sequence'),
+                   ('deltaCN', 'Delta CN score (gap score)'),
+                   ('Xcorr', 'Cross correlation score'),
+                   ('Sequence', 'Peptide sequence string'),
+                   ('Loci', 'Protein accession (FASTA database key)'),
+                   ('NewDeltaCN', 'More robust gap score'),
+                   ('ISBDisc', 'Peptide prophet discriminant function (no longer used)'),
+                   ('NewDisc', 'New discriminant function score'),
+                   ('ntt', 'Number of peptide termini consistent with enzymatic cleavage'),
+                   ('ForR', 'F if target match, R if decoy match'),
+                   ('Sp', 'Preliminary score or expectation value (depends on Comet settings)'),
+                   ('[* height_ *]', '[optional] Reporter ion peak heights')]
+    top_hit_txt = OrderedDict(top_hit_txt)
+    
+    # filtered top hit text files in filtered files folder
+    filtered_top_hit_txt = [('** Filtered top-hit summaries (filtered_files folder) **', 'Top hits passing score thresholds'),
+                            ('start', 'Beginning scan number'),
+                            ('end', 'Ending scan number'),
+                            ('Z', 'Peptide charge state'),
+                            ('expM', 'Measured MH+ mass'),
+                            ('SpRank', 'Ranking from preliminary scoring'),
+                            ('theoM', 'Calculated MH+ mass for sequence'),
+                            ('deltaCN', 'Delta CN score (gap score)'),
+                            ('Xcorr', 'Cross correlation score'),
+                            ('Sequence', 'Peptide sequence string'),
+                            ('Loci', 'Protein accession (FASTA database key)'),
+                            ('NewDeltaCN', 'More robust gap score'),
+                            ('ISBDisc', 'Peptide prophet discriminant function (no longer used)'),
+                            ('NewDisc', 'New discriminant function score'),
+                            ('ntt', 'Number of peptide termini consistent with enzymatic cleavage'),
+                            ('ForR', 'F if target match, R if decoy match'),
+                            ('Sp', 'Preliminary score or expectation value (depends on Comet settings)'),
+                            ('[* height_ *]', '[optional] Reporter ion peak heights'),
+                            ('TxtIdx', 'Text file index'),
+                            ('dmassDa', 'Delta mass in Daltons'),
+                            ('dmassPPM', 'Delta mass in PPM'),
+                            ('Length', 'Peptide sequence length'),
+                            ('NumMods', 'Total number of variable modifications in peptide'),
+                            ('ModsStr', 'String summarizing peptide modifications (space for unmod)'),
+                            ('IndexTuple', 'Tuple with score index values'),
+                            ('TestValue', 'NewDisc threshold value for peptide class')]
+    filtered_top_hit_txt = OrderedDict(filtered_top_hit_txt)
+    
+    # protein_summary table
+    protein_summary = [('** Protein_summary table (results_files folder) **', 'Redundant inferred proteins summary'),
+                       ('ProtGroup', 'Arbitrary integral protein group number (redundant by groups)'),
+                       ('Counter', 'Column of ones for visible row counting'),
+                       ('Accession', 'FASTA database keys'),
+                       ('Filter', 'Text flag column to denote contaminant and decoy matches'),
+                       ('Coverage', 'Protein sequence coverage (%)'),
+                       ('SeqLength', 'Number of amino acids in protein sequence'),
+                       ('MW', 'Calculated molecular weight of FASTA protein sequence'),
+                       ('Description', 'FASTA sequence header line (after key)'),
+                       ('CountsTot', 'Total spectral counts (SpC) for all samples in experiment'),
+                       ('UniqueTot', 'Total unique SpC for all samples in experiment'),
+                       ('UniqFrac', 'Fraction of SpC that are unique (map to single FASTA entry)'),
+                       ('Total_', 'Total SpC for respective sample'),
+                       ('Unique_', 'Total unique SpC for respective sample'),
+                       ('Corrected_', 'Corrected SpC (shared peptide counts fractionally split) for respective sample'),
+                       ('OtherLoci', 'Union of all accessions having any common shared peptides for respective protein')]
+    protein_summary = OrderedDict(protein_summary)
+    
+    # peptide_summary table
+    peptide_summary = [('** Peptide_summary table (results_files folder) **', 'Peptide summary for proteins'),
+                       ('ProtGroup', 'Arbitrary protein group number (keyed to protein table)'),
+                       ('Accession', 'FASTA database keys'),
+                       ('Sequence', 'Peptide sequence string'),
+                       ('Begin', 'Beginning amino acid residue number (in FASTA sequence)'),
+                       ('End', 'Ending amino acid residue number (in FASTA sequence)'),
+                       ('Unique', 'TRUE if peptide only matches to one FASTA entry/group, FALSE if shared'),
+                       ('NTT', 'Number of peptide termini consistent with enzymatic cleavage'),
+                       ('Z', 'Peptide charge state'),
+                       ('TotCount', 'Total spectral count for peptide across all samples'),
+                       ('* sample names *', 'Total spectral counts for peptide in respective sample'),
+                       ('OtherLoci', 'Union of all accessions having any common shared peptides for respective protein')]
+    peptide_summary = OrderedDict(peptide_summary)
+
+    # Per-sample peptide results tables
+    peptide_results = [('** Per-sample peptide results files (results_files folder) **', 'Detailed peptide results'),
+                       ('ProtGroup', 'Arbitrary protein group number (keyed to protein table)'),
+                       ('Accession', 'FASTA database keys'),
+                       ('Sequence', 'Peptide sequence string'),
+                       ('Unique', 'TRUE if peptide only matches to one FASTA entry/group, FALSE if shared'),
+                       ('TotCount', 'Total spectral count for peptide'),
+                       ('NTT', 'Number of peptide termini consistent with enzymatic cleavage'),
+                       ('Xcorr', 'Cross correlation score'),
+                       ('DeltaCN', 'Delta CN score (gap score)'),
+                       ('SpRank', 'Ranking from preliminary scoring'),
+                       ('NewDisc', 'New discriminant function score'),
+                       ('Z', 'Peptide charge state'),
+                       ('Delta_Mass', 'Delta mass in Daltons'),
+                       ('Exp_Mass', 'Measured MH+ mass'),
+                       ('Calc_Mass', 'Calculated MH+ mass for sequence'),
+                       ('DTA_filename', 'SEQUEST-style DTA name (contains scan numbers and charge state)')]
+    peptide_results = OrderedDict(peptide_results)
+
+    # grouped_protein_summary table
+    grouped_protein_summary = [('** Grouped_protein_summary table (results_files folder) **', 'Grouped non-redundant protein summary'),
+                               ('ProtGroup', 'Arbitrary integral protein group number (redundant by groups)'),
+                               ('Counter', 'Column of ones for visible row counting'),
+                               ('Accession', 'FASTA database keys (for primary proteins)'),
+                               ('Identical', 'Accessions of other indistinguishable proteins'),
+                               ('Similar', 'Accessions of homologous proteins that were grouped into families'),
+                               ('OtherLoci', 'Union of all accessions having any common shared peptides for respective protein'),
+                               ('Filter', 'Text flag column to denote contaminant and decoy matches'),
+                               ('Coverage', 'Protein sequence coverage (%)'),
+                               ('SeqLength', 'Number of amino acids in protein sequence'),
+                               ('MW', 'Calculated molecular weight of FASTA protein sequence'),
+                               ('Description', 'FASTA sequence header line (after key)'),
+                               ('CountsTot', 'Total spectral counts (SpC) for all samples in experiment'),
+                               ('UniqueTot', 'Total unique SpC for all samples in experiment'),
+                               ('UniqFrac', 'Fraction of SpC that are unique (map to single FASTA entry)'),
+                               ('Total_', 'Total SpC for respective sample'),
+                               ('Unique_', 'Total unique SpC for respective sample'),
+                               ('Corrected_', 'Corrected SpC (shared peptide counts fractionally split) for respective sample')]
+    grouped_protein_summary = OrderedDict(grouped_protein_summary)      
+
+    # grouped_peptide_summary table
+    grouped_peptide_summary = [('** Grouped_peptide_summary table (results_files folder) **', 'Peptide summary for grouped proteins'),
+                               ('ProtGroup', 'Arbitrary protein group number (keyed to protein table)'),
+                               ('Accession', 'FASTA database keys'),
+                               ('Sequence', 'Peptide sequence string'),
+                               ('Begin', 'Beginning amino acid residue number (in FASTA sequence)'),
+                               ('End', 'Ending amino acid residue number (in FASTA sequence)'),
+                               ('Unique', 'TRUE if peptide only matches to one FASTA entry/group, FALSE if shared'),
+                               ('NTT', 'Number of peptide termini consistent with enzymatic cleavage'),
+                               ('Z', 'Peptide charge state'),
+                               ('TotCount', 'Total spectral count for peptide across all samples'),
+                               ('* sample names *', 'Total spectral counts for peptide in respective sample'),
+                               ('OtherLoci', 'Union of all accessions having any common shared peptides for respective protein')]
+    grouped_peptide_summary = OrderedDict(grouped_peptide_summary)
+
+    # echo dictionaries into a list
+    block = ['Column header keys for PAW tables:']
+    for col_key_dict in [PAW_tmt_txt, top_hit_txt, filtered_top_hit_txt, protein_summary, peptide_summary,
+                         peptide_results, grouped_protein_summary, grouped_peptide_summary]:
+        block.append('\n')
+        for header, description in col_key_dict.items():
+            block.append(header + '\t' + description)
+
+    return block
+    
 
 ################## end support functions for PAW pipeline use ##########################    
 
@@ -2688,3 +2851,5 @@ class Threshold:
     def __init__(self):
         self.low = -5.0
         self.high = +5.0
+
+
