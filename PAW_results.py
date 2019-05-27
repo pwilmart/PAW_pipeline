@@ -1428,7 +1428,9 @@ for s in range(len(samples)):
     for obj in write:
         print('...writing %s...' % (samples[s] + '_peptide_results_9.txt',), file=obj)
     peptide_results = open(os.path.join(results_folder, samples[s] + '_peptide_results_9.txt'), 'w')
-    header = ['ProtGroup', 'Accession', 'Sequence', 'Unique', \
+    print('Peptide report for sample "%s" performed on %s' %
+          (samples[s], time.asctime(time.localtime())), file=peptide_results)
+    header = ['\n\n\nProtGroup', 'Accession', 'Sequence', 'Unique', \
               'TotCount', 'NTT', 'XCorr', 'DeltaCN', 'SpRank', 'NewDisc', 'Z', 'Delta_Mass', \
               'Exp_Mass', 'Calc_Mass', 'DTA_filename']
     print('\t'.join([x if x else ' ' for x in header]), file=peptide_results)
@@ -1493,8 +1495,6 @@ for s in range(len(samples)):
             print_list.sort()
             for line in print_list:
                 print('\t'.join([str(x) if x else ' ' for x in line[2:]]), file=peptide_results)
-    print('\nPeptide report for sample "%s" performed on %s' %
-          (samples[s], time.asctime(time.localtime())), file=peptide_results)
     peptide_results.close()
 
 # run protein grouping
