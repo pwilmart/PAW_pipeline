@@ -744,7 +744,7 @@ def get_database_proteins(fasta_full_name, proteins, write):
     
     # open FASTA reader and create a Protein instance.
     for obj in write:
-        print('...opening FASTA database:', fasta_name, file=obj)
+        print('...reading:', fasta_name, file=obj)
     f = PAW_lib.FastaReader(fasta_full_name)
     p = PAW_lib.Protein()
     
@@ -1178,13 +1178,19 @@ for obj in write:
 # protein has multiple peptides, each peptide may have been sequenced more than
 # once, we have an option for either spectral counts or intensities, etc.
 
-# first find and print valid protein spectral count numbers
-print('RESULTS FOLDER:', results_folder)
-print('...writing protein_summary_9.txt...')
+# Print status and details to console and log file
+if calc_ms2_int:
+    string = '...MS2 intensity-weighted protein summary:'
+else:
+    string = '...spectral count protein summary:'
+for obj in write:
+    print('\nRESULTS FOLDER: %s' % results_folder, file=obj)
+    print(string, time.asctime(time.localtime()), file=obj)
+    print('...writing protein_summary_9.txt...', file=obj)
 protein_filename = os.path.join(results_folder, 'protein_summary_9.txt')
 protein_results = open(protein_filename, 'w')
-protein_companion = open(os.path.join(results_folder, 'protein_companion_9.txt'), 'w')
 
+# first figure out valid protein spectral count numbers
 valid_protein_count, valid_reversed = 0, 0
 reject_protein_count, reject_reversed = 0, 0
 
@@ -1273,62 +1279,53 @@ print('\t'.join([x if x else ' ' for x in header]), file=protein_results)
 for row in table_rows:
     print(row, file=protein_results)
 
+"""Things after the main table are not easy to parse with R"""
 # print total spectral counts per sample (normalization factors)
-if calc_ms2_int:
-    string1 = 'Per Sample Total MS2 Intensity:'
-    string2 = 'Per Sample Contaminant MS2 Intensity:'
-else:
-    string1 = 'Per Sample Total Spectral Count:'
-    string2 = 'Per Sample Total Contaminant Count:'
-for s in range(len(samples)):
-    string1 += '\t' + str(sum(normalization[s].values()))
-    string2 += '\t' + str(sum(contaminant[s].values()))
+##if calc_ms2_int:
+##    string1 = 'Per Sample Total MS2 Intensity:'
+##    string2 = 'Per Sample Contaminant MS2 Intensity:'
+##else:
+##    string1 = 'Per Sample Total Spectral Count:'
+##    string2 = 'Per Sample Total Contaminant Count:'
+##for s in range(len(samples)):
+##    string1 += '\t' + str(sum(normalization[s].values()))
+##    string2 += '\t' + str(sum(contaminant[s].values()))
+##
+##print('Protein summary 9 companion file:', file=protein_companion)
+##print('written on:', time.ctime(), file=protein_companion)
+##print(file=protein_companion)
+##print(string1, file=protein_companion)
+##print(string2, file=protein_companion)
 
-print('Protein summary 9 companion file:', file=protein_companion)
-print('written on:', time.ctime(), file=protein_companion)
-print(file=protein_companion)
-print(string1, file=protein_companion)
-print(string2, file=protein_companion)
-
-# finally, print summary stats to protein report
-print(file=protein_companion)
-print('valid_protein_count\tvalid_reversed', file=protein_companion)
-print(valid_protein_count, '\t', valid_reversed, file=protein_companion)
-print('reject_protein_count\treject_reversed', file=protein_companion)
-print(reject_protein_count, '\t', reject_reversed, file=protein_companion)
+# finally, print summary stats to log file and console
 for obj in write:
     print('...valid proteins: %s(%s) [rejected proteins: %s(%s)]' %
           (valid_protein_count, valid_reversed, reject_protein_count, reject_reversed), file=obj)
-if calc_ms2_int:
-    string = 'Protein report of MS2 intensity values performed on'
-else:
-    string = 'Protein report of Spectral Count values performed on'
-print(file=protein_companion)
-print(string, time.asctime(time.localtime()), file=protein_companion)
-print('Database: %s (%s entries)' % (DB_name, DB_total), file=protein_companion)
-print('%s\tminimum_ntt_per_peptide' % (minimum_ntt_per_peptide,), file=protein_companion)
-print('%s\tminimum_peptide_per_protein' % (minimum_peptide_per_protein,), file=protein_companion)
-print('%s\tminimum_unique_per_protein' % (minimum_unique_per_protein,), file=protein_companion)
-# less common parameters
-if calc_ms2_int:
-    print('%s\tcalc_ms2_int flag' % (calc_ms2_int,), file=protein_companion)
-    print('%s\tmax_num_peaks' % (max_num_peaks,), file=protein_companion)
-if not full_peptide_list:
-    print('%s\tfull_peptide_list flag' % (full_peptide_list,), file=protein_companion)
-if not remove_subsets:
-    print('%s\tremove_subsets flag' % (remove_subsets,), file=protein_companion)
-if multiple_charge_states_ok:
-    print('%s\tmultiple_charge_states_ok flag' % (multiple_charge_states_ok,), file=protein_companion)
-if not modifications_ok:
-    print('%s\tmodifications_ok flag' % (modifications_ok,), file=protein_companion)
-if allow_prot_nterm_acytl:
-    print('%s\tallow_prot_nterm_acytl flag' % (allow_prot_nterm_acytl,), file=protein_companion)
+    print('...database: %s (%s entries)' % (DB_name, DB_total), file=obj)
+    print('...minimum_ntt_per_peptide: %s' % (minimum_ntt_per_peptide,), file=obj)
+    print('...minimum_peptide_per_protein: %s' % (minimum_peptide_per_protein,), file=obj)
+    print('...minimum_unique_per_protein: %s' % (minimum_unique_per_protein,), file=obj)
+    # less common parameters
+    if calc_ms2_int:
+        print('...calc_ms2_int flag: %s' % (calc_ms2_int,), file=obj)
+        print('......max_num_peaks: %s' % (max_num_peaks,), file=obj)
+    if not full_peptide_list:
+        print('...full_peptide_list flag: %s' % (full_peptide_list,), file=obj)
+    if not remove_subsets:
+        print('...remove_subsets flag: %s' % (remove_subsets,), file=obj)
+    if multiple_charge_states_ok:
+        print('...multiple_charge_states_ok flag: %s' % (multiple_charge_states_ok,), file=obj)
+    if not modifications_ok:
+        print('...modifications_ok flag: %s' % (modifications_ok,), file=obj)
+    if allow_prot_nterm_acytl:
+        print('...allow_prot_nterm_acytl flag: %s' % (allow_prot_nterm_acytl,), file=obj)
+    print(file=obj)
 #
 protein_results.close()
-protein_companion.close()
 
 # now do the peptide summary report by counts across samples: build and print header line
-print('...writing peptide_summary_9.txt...')
+for obj in write:
+    print('...writing peptide_summary_9.txt...', file=obj)
 peptide_results = open(os.path.join(results_folder, 'peptide_summary_9.txt'), 'w')
 if calc_ms2_int:
     string = 'Program "peptide_summary_9.py" report with MS2 intensites performed on'
@@ -1428,7 +1425,8 @@ peptide_results.close()
 
 # now do the peptide report for each sample with scoring details, masses, etc.
 for s in range(len(samples)):
-    print('...writing %s...' % (samples[s] + '_peptide_results_9.txt',))
+    for obj in write:
+        print('...writing %s...' % (samples[s] + '_peptide_results_9.txt',), file=obj)
     peptide_results = open(os.path.join(results_folder, samples[s] + '_peptide_results_9.txt'), 'w')
     header = ['ProtGroup', 'Accession', 'Sequence', 'Unique', \
               'TotCount', 'NTT', 'XCorr', 'DeltaCN', 'SpRank', 'NewDisc', 'Z', 'Delta_Mass', \
@@ -1504,12 +1502,18 @@ PAW_protein_grouper.main(protein_filename)
 
 # echo final stats and ending message, close log file
 for obj in write:
-    print('Valid proteins: %s(%s) [rejected proteins: %s(%s)]' %
+    print('\nValid proteins: %s(%s) [rejected proteins: %s(%s)]' %
           (valid_protein_count, valid_reversed, reject_protein_count,
            reject_reversed), file=obj)
     print('Ending PAW_results (%s) at: %s' % (VERSION, time.ctime()), file=obj)
     
 log_obj.close()
+
+# write a tables description file
+tables_filename = os.path.join(results_folder, 'PAW_table_descriptions_9.txt')
+with open(tables_filename, 'w') as tables_obj:
+    for line in PAW_lib.column_keys():
+        print(line, file=tables_obj)
     
 # Fini (Yeah!!!)
 

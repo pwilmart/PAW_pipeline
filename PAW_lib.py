@@ -1615,9 +1615,9 @@ def column_keys():
                        ('CountsTot', 'Total spectral counts (SpC) for all samples in experiment'),
                        ('UniqueTot', 'Total unique SpC for all samples in experiment'),
                        ('UniqFrac', 'Fraction of SpC that are unique (map to single FASTA entry)'),
-                       ('Total_', 'Total SpC for respective sample'),
-                       ('Unique_', 'Total unique SpC for respective sample'),
-                       ('Corrected_', 'Corrected SpC (shared peptide counts fractionally split) for respective sample'),
+                       ('* Total_ *', 'Total SpC for respective sample'),
+                       ('* Unique_ *', 'Total unique SpC for respective sample'),
+                       ('* Corrected_ *', 'Corrected SpC (shared peptide counts fractionally split) for respective sample'),
                        ('OtherLoci', 'Union of all accessions having any common shared peptides for respective protein')]
     protein_summary = OrderedDict(protein_summary)
     
@@ -1671,9 +1671,9 @@ def column_keys():
                                ('CountsTot', 'Total spectral counts (SpC) for all samples in experiment'),
                                ('UniqueTot', 'Total unique SpC for all samples in experiment'),
                                ('UniqFrac', 'Fraction of SpC that are unique (map to single FASTA entry)'),
-                               ('Total_', 'Total SpC for respective sample'),
-                               ('Unique_', 'Total unique SpC for respective sample'),
-                               ('Corrected_', 'Corrected SpC (shared peptide counts fractionally split) for respective sample')]
+                               ('* Total_ *', 'Total SpC for respective sample'),
+                               ('* Unique_ *', 'Total unique SpC for respective sample'),
+                               ('* Corrected_ *', 'Corrected SpC (shared peptide counts fractionally split) for respective sample')]
     grouped_protein_summary = OrderedDict(grouped_protein_summary)      
 
     # grouped_peptide_summary table
