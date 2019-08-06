@@ -44,7 +44,7 @@ version 1.04:
     directly integrates MS3 reporter ion peaks - 7/2016 PW
 version 1.05:
     now does all 11 TMT tags (131C added)
-    renamed tags so the sort in mass order (128_N before 128C) - PW 11/2017
+    renamed tags so they sort in mass order (128_N before 128C) - PW 11/2017
 version 1.06:
     separate reporter ion files (one for each RAW) -PW 3/2018
 version 1.07:
@@ -393,7 +393,9 @@ class MSConvertGUI:
             self.load_raw_files()
 
         # set up log file
-        log_obj = open(os.path.join(self.raw_path, "MSConvert_GUI_log.txt"), mode='at')
+        log_name = 'MSConvert_GUI_log.txt'
+##        log_name = 'MSConvert_GUI_%s_log.txt' % time.time() # this add a time stamp - will have multiple log files
+        log_obj = open(os.path.join(self.raw_path, log_name), mode='wt')
         self.log_obj = [None, log_obj]
 
         # build the MSConvert command options

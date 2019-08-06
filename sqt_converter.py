@@ -22,6 +22,9 @@ import time
 import math
 import copy
 import re
+
+from collections import OrderedDict
+
 import PAW_lib
 try:
     from configuration import *
@@ -33,8 +36,8 @@ except:
 DECOY_STRING = decoy_string
 MIN_PEP_LEN = min_pep_len
 DEFAULT_LOCATION = default_location
-MASK = False
-VERSION = 'v2.0.1'
+MASK = False    # I think Comet list all sequences explicitly
+VERSION = 'v2.0.2'
 
 ##############################################################################################
 # routines for discriminant scores, alternate DeltaCNs, and data structures for search results
@@ -280,21 +283,25 @@ def make_PAW_txt_file(sqt_file, outs, params):
         
     return    
 
-def lookup_peptide_sequences(out_list, params):
+def lookup_peptide_sequences(out_list, already_seen, params):
     """Function to lookup peptide sequences in protein sequences when peptides match to
     more than one protein.
 
     out_list is list of all OUT objects, many things in params object
     """
     for obj in params.log_obj:
-        print('...starting peptide lookup:', time.ctime(), file=obj)
+        print('...starting lookups for %d results at %s' % (len(out_list), time.ctime()), file=obj)
     agree, disagree = 0, 0
     if params.enzyme_termini in [8, 9]:
         minimum_termini = 1
     else:
         minimum_termini = params.enzyme_termini
 
+    out_count = 0
     for out in out_list:
+        out_count += 1              
+        if (out_count % 5000) == 0.0:              
+            print('..%s scans looked up (%s)..' % (out_count, time.ctime()))
         try:
             for match in out.matches:
                 length, ntt = PAW_lib.amino_acid_count(match.sequence)
@@ -302,45 +309,85 @@ def lookup_peptide_sequences(out_list, params):
                     continue
                 
                 # try to lookup the peptide (faster)
-                try:
-                    prot_list = []
-                    base_pep_masked = PAW_lib.get_base_peptide_sequence(match.sequence, params.mask)
-                    for acc in params.peptide_to_accessions[base_pep_masked]:
-                        prot_list.append(params.proteins[params.prot_map[acc]])
-                except KeyError:
-                    if minimum_termini == 2:
-                        for obj in params.log_obj:
-                            print('...WARNING: %s not in peptides dictionary' % match.sequence, file=obj)
-                    if match.additional == 0:
-                        prot_list = [params.proteins[params.prot_map[match.accession]]]
-                    else:
-                        prot_list = params.proteins
-                    
-                # get peptide location in protein sequences
-                all_matches = PAW_lib.find_peptide(match.sequence, prot_list, params.mask)
-                """This is where premature stop codon peptides get rejected - modifiy amino_acid_count function?
-                """
-                filtered_matches = [t for t in all_matches if PAW_lib.amino_acid_count(t[3])[1] >= minimum_termini]
-                number_tryptic = len(filtered_matches)
-                match.match_tuple_list = filtered_matches
-                    
-                # see if number of protein matches agrees with Comet number
-                if (match.additional+1) != number_tryptic:
-                    disagree += 1
-                    if length >= params.min_pep_len:
-                        for obj in params.log_obj:
-                            print('......WARNING: scan #%s, seq: %s , Comet had %s, lookup was %s' %
-                                  (out.beg, match.sequence, match.additional+1, number_tryptic), file=obj)
-                            if len(filtered_matches) < 5:                                                                            
-                                print(filtered_matches, file=obj)
+                base_pep_masked = PAW_lib.get_base_peptide_sequence(match.sequence, params.mask)
+                if base_pep_masked in already_seen:
+                    match.match_tuple_list = already_seen[base_pep_masked]
+
+                elif match.additional == 0:
+                    prot_list = [params.proteins[params.prot_map[match.accession]]]
+
                 else:
-                    agree +=1
+                    prot_list = []
+                    lookup = True
+                    if base_pep_masked in params.peptide_to_accessions:
+                        # make protein list from digest dictionaries - look for full peptides first
+                        for acc in params.peptide_to_accessions[base_pep_masked]:
+                            prot_list.append(params.proteins[params.prot_map[acc]])
+                        if len(prot_list) != match.additional + 1: # if we have all matches, skip semis
+                            prot_list = params.proteins
+                            lookup = False
+                    elif lookup:
+                        # look for semi-trpytics next
+                        acc_list = []
+                        if base_pep_masked[:6] in params.Nterm_to_accessions:
+                            for acc in params.Nterm_to_accessions[base_pep_masked[:6]]:
+                                acc_list.append(acc)
+                        if base_pep_masked[-6:] in params.Cterm_to_accessions:
+                            for acc in params.Cterm_to_accessions[base_pep_masked[-6:]]:
+                                acc_list.append(acc)
+                        # simplify indexes of accession list (it might be redundant)
+                        idx_list = sorted(set([params.prot_map[acc] for acc in acc_list]))
+                        for idx in idx_list:
+                            prot_list.append(params.proteins[idx])
+                            
+                    if not prot_list:
+                        for obj in params.log_obj:
+                            print('...WARNING: out count:', out_count, file=obj)
+                            print('...WARNING: %s not in peptide dictionaries' % match.sequence, file=obj)
+                        # if all else fails, search all proteins
+                        prot_list = params.proteins
+
+                    # lookup matches, save in ordered dict, add matches to already_seen                        
+                    all_matches = PAW_lib.find_peptide(match.sequence, prot_list, params.mask, verbose=True)
+                    if not all_matches:
+                        all_matches = PAW_lib.find_peptide(match.sequence, params.proteins, params.mask)
+
+                    # make sure matches are non-redundant and preserve order
+                    all_matches = list(OrderedDict([(key, None) for key in all_matches]).keys())
+                    
+                    """This is where premature stop codon peptides get rejected - modifiy amino_acid_count function?"""
+                    filtered_matches = [t for t in all_matches if PAW_lib.amino_acid_count(t[3])[1] >= minimum_termini]
+
+                    number_tryptic = len(filtered_matches)
+                    match.match_tuple_list = filtered_matches
+                    already_seen[base_pep_masked] = filtered_matches
+                    
+                    # see if number of protein matches agrees with Comet number
+                    if (match.additional+1) != number_tryptic:
+##                        print('Length proteins list:', len(prot_list))
+##                        print('All matches:')
+##                        for _match in all_matches:
+##                            print(_match)
+##                        print('Filtered matches:')
+##                        for _match in filtered_matches:
+##                            print(_match)
+
+                        disagree += 1
+                        if length >= params.min_pep_len:
+                            for obj in params.log_obj:
+                                print('......WARNING: scan #%s, seq: %s , Comet had %s, lookup was %s' %
+                                      (out.beg, match.sequence, match.additional+1, number_tryptic), file=obj)
+                                if len(filtered_matches) < 5:                                                                            
+                                    print(filtered_matches, file=obj)
+                    else:
+                        agree +=1
                             
         except IndexError:
             continue    # seems we get some empty scans with Comet
+        
     for obj in params.log_obj:
-        print('...match counts agreed: %s, disagreed: %s' % (agree, disagree), file=obj)      
-    return
+        print('...match counts agreed: %s, disagreed: %s' % (agree, disagree), file=obj)
+    return already_seen
 
 def make_lookup_tables(params):
     """Reads a FASTA file and makes a dictionary of peptide sequence to
@@ -379,21 +426,51 @@ def make_lookup_tables(params):
         
     # make the peptide lookup dictionary            
     params.peptide_to_accessions = {}
+    params.Nterm_to_accessions = {}
+    params.Cterm_to_accessions = {}
+    
     for prot in params.proteins:
-        peptides = prot.enzymaticDigest(regex)    # use the digestion method of Protein class
+        # NOTE: need a large high peptide mass cutoff to get all semi-tryptics in dictionary below
+        peptides = prot.enzymaticDigest(enzyme_regex=regex, high=1000000)    # use the digestion method of Protein class
+        
         for pep in peptides:
+            
+            # see what to do with I and L residues
             if params.mask:
                 mass_spec_seq = re.sub(r'[IL]', 'j', pep.seq)
             else:
                 mass_spec_seq = pep.seq
+                
+            # add full peptides to their dictionary
             if mass_spec_seq in params.peptide_to_accessions:
                 if prot.accession not in params.peptide_to_accessions[mass_spec_seq]:
                     params.peptide_to_accessions[mass_spec_seq].append(prot.accession)
             else:
                 params.peptide_to_accessions[mass_spec_seq] = [prot.accession]
+
+            # N-term tags (if doing semi-tryptic searches)
+            if params.enzyme_termini == 1 or params.enzyme_termini == 8:
+                if mass_spec_seq[:6] in params.Nterm_to_accessions:
+                    if prot.accession not in params.Nterm_to_accessions[mass_spec_seq[:6]]:
+                        params.Nterm_to_accessions[mass_spec_seq[:6]].append(prot.accession)
+                else:
+                    params.Nterm_to_accessions[mass_spec_seq[:6]] = [prot.accession]
+                    
+            # C-term tags (if doing semi-tryptic searches)
+            if params.enzyme_termini == 1 or params.enzyme_termini == 9:
+                if mass_spec_seq[-6:] in params.Cterm_to_accessions:
+                    if prot.accession not in params.Cterm_to_accessions[mass_spec_seq[-6:]]:
+                        params.Cterm_to_accessions[mass_spec_seq[-6:]].append(prot.accession)
+                else:
+                    params.Cterm_to_accessions[mass_spec_seq[-6:]] = [prot.accession]
+
     end_digest = time.ctime()
     for obj in params.log_obj:
-        print('...peptide digest had %s peptides' % (len(params.peptide_to_accessions),), file=obj)
+        print('...peptide digest has %s peptides' % (len(params.peptide_to_accessions),), file=obj)
+        if params.Nterm_to_accessions:
+            print('...N-term lookup has %s tags' % (len(params.Nterm_to_accessions),), file=obj)
+        if params.Nterm_to_accessions:
+            print('...C-term lookup has %s tags' % (len(params.Cterm_to_accessions),), file=obj)
         print('...start: %s, end: %s' % (start_digest, end_digest), file=obj)
     
     return params
@@ -485,7 +562,7 @@ def convert_one_sqt_file(sqt_file, params):
     if params.zipflag:
         sqt_file_obj = gzip.open(sqt_file, 'rb').readlines()
     else:
-        sqt_file_obj = open(sqt_file,'rU').readlines()
+        sqt_file_obj = open(sqt_file,'r').readlines()
 
     # initializations
     out = OutData()        
@@ -529,12 +606,17 @@ def set_up_conversions(sqt_file, params):
     """Reads header lines from SQT file and sets some global parameters.
     Assumes all SQT files in a folder have same set of header lines,
     i.e. all from same Comet search.
+
+    Does an in silico digest of the FASTA file for peptide lookups. Adds
+    semi-tryptic N- and C-term 6 aa tags if semi-tryptic searches were used.
     """        
     # get path to location of SQT files and open log file there
     path = os.path.dirname(sqt_file)
     params.default_location = path
-    params.log_obj = [None]
-    params.log_obj.append(open(os.path.join(path, 'sqt_conversion.log'), 'w'))
+    log_name = 'sqt_conversion_log.txt'
+##    log_name = 'sqt_conversion_%s_log.txt' % time.time() # this add a time stamp - will have multiple log files
+    log_obj = open(os.path.join(path, log_name), 'wt')
+    params.log_obj = [None, log_obj]
 
     # we have log file setup so print some info
     for obj in params.log_obj:
@@ -547,7 +629,7 @@ def set_up_conversions(sqt_file, params):
     if params.zipflag:
         sqt_file_obj = gzip.open(sqt_file, 'rb').readlines()
     else:
-        sqt_file_obj = open(sqt_file,'rU').readlines()
+        sqt_file_obj = open(sqt_file,'r').readlines()
 
     # read header lines, then close
     for line in sqt_file_obj:
@@ -683,6 +765,7 @@ def convert_sqt_files(sqt_list, params):
 
     # loop over SQT files and unpack data into OutData objects
     scan_total = 0
+    already_seen = {} # save looked up peptides
     for sqt_file in sqt_list:
         outs = convert_one_sqt_file(sqt_file, params)
         scan_total += len(outs)
@@ -692,7 +775,7 @@ def convert_sqt_files(sqt_list, params):
             print('\n...done reading: %s (%s scans)' % (os.path.basename(sqt_file), len(outs)), file=obj)
 
         # lookup peptides that match to more than one protein, and get match tuples for all                
-        lookup_peptide_sequences(outs, params)
+        lookup_peptide_sequences(outs, already_seen, params)
             
         # we have all of the data in OutData objects so write the TXT file
         make_PAW_txt_file(sqt_file, outs, params)

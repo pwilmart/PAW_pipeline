@@ -47,6 +47,9 @@ Ph: 503-494-8200, FAX: 503-494-4729, Email: techmgmt@ohsu.edu.
 # 12/4/2018 -PW
 # added a log file for console output
 
+# 7/2/2019 -PW
+# made TXT file table parsing a little more robust (trim header line, etc.)
+
 
 import os
 import sys
@@ -169,7 +172,7 @@ class PAW_TMT_results(object):
                 
                 # replace spaces with underscores in header lines
                 self.pre_headers = [re.sub(r' ', r'_', x) for x in self.contents[i-1].split('\t')]
-                self.headers = [re.sub(r' ', r'_', x) for x in row.split('\t')]
+                self.headers = [re.sub(r' ', r'_', x) for x in row.strip().split('\t')]
                 
                 self.num_cols = len(self.headers)
                 labels = [x[len('Total_'):] for x in self.headers if x.startswith('Total_')]
@@ -203,14 +206,14 @@ class PAW_TMT_results(object):
         # parse columns into dictionaries (header: list) for data frame loading
         table_dict = {header: [] for header in self.headers}
         for line in self.contents[table_start:table_end]:
-            for i, cell in enumerate(line.split('\t')): 
+            for i, cell in enumerate(line.split('\t')[:self.num_cols]): 
                 table_dict[self.headers[i]].append(cell)
                 
         # cast intensity columns to correct np array data types
         for exp in self.TMT_exps:
             for header in exp.all_channels:
                 table_dict[header] = np.array(table_dict[header], dtype='float64')
-                
+
         # make a data frame from the table column dictionary and return it
         self.frame = DataFrame(table_dict, columns=self.headers)
         return

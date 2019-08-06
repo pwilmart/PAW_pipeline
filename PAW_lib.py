@@ -985,7 +985,7 @@ class Protein:
             coverage_map.append((str(i+1), aa, freq_dict.get(str(i+1), 0)))
         return (coverage, coverage_map)
     
-    def enzymaticDigest(self, enzyme_regex=None, low=400.0, high=6000.0, length=6, missed=3, mass='mono'):
+    def enzymaticDigest(self, enzyme_regex=None, low=400.0, high=10000.0, length=6, missed=3, mass='mono'):
         """Performs a tryptic digest of a protein sequence. This does not
         do any modifications to residues except for reduction/alkylation of
         cys residues (C+57). Mass filters should be relaxed.
@@ -1490,19 +1490,23 @@ def amino_acid_count(sequence_string, enzyme='Tryp', return_base_pep=False):
     Seems Comet deals with premature stop codons as sequence breaks (* in prefix or suffix)
     """
     ntt = 0
+    cterm_flag = False
     if enzyme.upper() == 'TRYP':  # cleaves at c-side of K, R
         if (prefix in 'KR-*'):
             ntt += 1
         if (cterm in 'KR') or (suffix in '-*'):
             ntt += 1
-## # this interferes with semi-tryptic option in Comet
-##        if suffix == 'P' and ntt > 0:   # trypsin strict???
-##            ntt -= 1
+            cterm_flag = True
+        if suffix == 'P' and cterm_flag and ntt > 0:   # trypsin strict???
+            ntt -= 1
     elif enzyme.upper() == 'GLUC':  # cleaves at c-side of D, E
         if prefix in 'DE-*':
             ntt += 1
         if (cterm in 'DE') or (suffix in '-*'):
             ntt += 1
+            cterm_flag = True
+        if suffix == 'P' and cterm_flag and ntt > 0:   # trypsin strict???
+            ntt -= 1
     elif enzyme.upper() == 'ASPN': # cleaves at n-side of D
         if (prefix in '-*') or (nterm == 'D'):
             ntt += 1
@@ -1512,7 +1516,10 @@ def amino_acid_count(sequence_string, enzyme='Tryp', return_base_pep=False):
         if (prefix in 'K-*'):
             ntt += 1
         if (cterm in 'K') or (suffix in '-*'):
-            ntt += 1        
+            ntt += 1
+            cterm_flag = True
+        if suffix == 'P' and cterm_flag and ntt > 0:   # trypsin strict???
+            ntt -= 1
     else:
         print('   amino_acid_count WARNING: unknown enzyme specified', enzyme)
     
@@ -1744,7 +1751,7 @@ class FileLoader:
         # loop over files and read into pandas DataFrames (save in list)
         self.txt_info_list = []
         self.frame = pd.DataFrame()
-        print('\nProcessing all TXT files in:', os.path.basename(folder), time.asctime())
+        print('\nProcessing TXT files in:', os.path.basename(folder), time.asctime())
         for i, file_name in enumerate(file_list):
             file_obj = open(file_name, 'rU')
             name = os.path.basename(file_name)[:-4]

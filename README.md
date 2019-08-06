@@ -1,3 +1,6 @@
+# Update 8/6/2019
+New version of `sqt_converter.py` greatly speeds up processing of semi-trpytic searches. There are some changes to `PAW_lib.py` that are also needed. New versions of these two scripts are now in the repository. The conversion step creates peptide lookup dictionaries by doing an *in silico* digestion of the FASTA file. This can take a few minutes upfront, depending on database size. The dictionaries can be pretty large.
+
 # Update 5/27/2019
 
 Did some reformatting of summary tables (`results_files` folder) to make them easier to read in R scripts. The new table names will end in `_9` to help keep versions clear. It is easy to skip lines at the top of files when reading data into R, so some meta data (if any) will be in the first 4 rows. The table header line will be in row 5 and there will be nothing after the main table. The protein grouping script used to put a few things (coverage, length, MW, description) in parentheses because these may not have all been the same for all proteins that were grouped. That created columns with mixtures of numerical and text data. R generally does not like character/text data, so values from the primary protein are now used. There were also minor changes to some log files to collect additional meta data.

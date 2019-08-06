@@ -27,7 +27,8 @@ THE SOFTWARE.
 Direct questions to:
 Technology & Research Collaborations, Oregon Health & Science University,
 Ph: 503-494-8200, FAX: 503-494-4729, Email: techmgmt@ohsu.edu.
-"""###############################
+"""
+###############################
 ###############################
 # converting to Python 3 -PW 9/16/2017
 
