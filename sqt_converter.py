@@ -37,7 +37,7 @@ DECOY_STRING = decoy_string
 MIN_PEP_LEN = min_pep_len
 DEFAULT_LOCATION = default_location
 MASK = False    # I think Comet list all sequences explicitly
-VERSION = 'v2.0.2'
+VERSION = 'v2.0.3'
 
 ##############################################################################################
 # routines for discriminant scores, alternate DeltaCNs, and data structures for search results
@@ -620,9 +620,9 @@ def set_up_conversions(sqt_file, params):
 
     # we have log file setup so print some info
     for obj in params.log_obj:
-        print('============================================================', file=obj)
-        print(' sqt_converter.py, %s, written by Phil Wilmarth, 4/2016  ' % VERSION, file=obj)
-        print('============================================================', file=obj)
+        print('==========================================================', file=obj)
+        print(' sqt_converter.py, %s, written by Phil Wilmarth, 2019  ' % VERSION, file=obj)
+        print('==========================================================', file=obj)
         print('processing: %s: %s' % (os.path.dirname(sqt_file), time.ctime()), file=obj)
     
     # check file type and open accordingly

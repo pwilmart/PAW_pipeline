@@ -1249,7 +1249,7 @@ for prot in proteins:
             
             # build up the output line's items
             filter_tag = get_filter_tag(loci.ID, decoy, k)
-            items = [str(valid_protein_count+0.01*k), '1', loci.ID,
+            items = [str(valid_protein_count+0.0001*k), '1', loci.ID,
                      filter_tag, loci.Coverage, loci.SeqLength,
                      loci.MW, loci.Description, count_unique] + counts + other_loci
             string = '\t'.join([str(x) if str(x) else ' ' for x in items])  # add tabs and print          
