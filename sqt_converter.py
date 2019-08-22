@@ -200,6 +200,7 @@ def make_PAW_txt_file(sqt_file, outs, params):
     """
     for obj in params.log_obj:
         print('...starting TXT file creation at:', time.ctime(), file=obj)
+    print('length of outs:', len(outs))
     
     # open file or zipped file
     txt_name = sqt_file.replace('.sqt', '.txt')
@@ -226,6 +227,7 @@ def make_PAW_txt_file(sqt_file, outs, params):
     
     # loop over scans and build output lines
     empty_scans = 0
+    short_peptides = 0
     for out in outs:
 
         # double check peptide lookups
@@ -271,6 +273,7 @@ def make_PAW_txt_file(sqt_file, outs, params):
                                 line += ['0.0' for x in heights]
                         txt.write('\t'.join(line) + '\n')
                 except IndexError:
+                    short_peptides += 1
                     pass    # empty match tuple (short peptide)
     txt.close()
     if params.zipflag:
@@ -280,6 +283,9 @@ def make_PAW_txt_file(sqt_file, outs, params):
     if empty_scans:
         for obj in params.log_obj:
             print('...there were %s/%s empty scans' % (empty_scans, len(outs)), file=obj)
+    if short_peptides:
+        for obj in params.log_obj:
+            print('...there were %s short peptides' % (short_peptides,), file=obj)
         
     return    
 
@@ -312,8 +318,9 @@ def lookup_peptide_sequences(out_list, already_seen, params):
                 base_pep_masked = PAW_lib.get_base_peptide_sequence(match.sequence, params.mask)
                 if base_pep_masked in already_seen:
                     match.match_tuple_list = already_seen[base_pep_masked]
+                    continue
 
-                elif match.additional == 0:
+                if match.additional == 0:
                     prot_list = [params.proteins[params.prot_map[match.accession]]]
 
                 else:
@@ -326,7 +333,7 @@ def lookup_peptide_sequences(out_list, already_seen, params):
                         if len(prot_list) != match.additional + 1: # if we have all matches, skip semis
                             prot_list = params.proteins
                             lookup = False
-                    elif lookup:
+                    if lookup:
                         # look for semi-trpytics next
                         acc_list = []
                         if base_pep_masked[:6] in params.Nterm_to_accessions:
@@ -347,40 +354,40 @@ def lookup_peptide_sequences(out_list, already_seen, params):
                         # if all else fails, search all proteins
                         prot_list = params.proteins
 
-                    # lookup matches, save in ordered dict, add matches to already_seen                        
-                    all_matches = PAW_lib.find_peptide(match.sequence, prot_list, params.mask, verbose=True)
-                    if not all_matches:
-                        all_matches = PAW_lib.find_peptide(match.sequence, params.proteins, params.mask)
+                # lookup matches, save in ordered dict, add matches to already_seen                        
+                all_matches = PAW_lib.find_peptide(match.sequence, prot_list, params.mask, verbose=True)
+                if not all_matches:
+                    all_matches = PAW_lib.find_peptide(match.sequence, params.proteins, params.mask)
 
-                    # make sure matches are non-redundant and preserve order
-                    all_matches = list(OrderedDict([(key, None) for key in all_matches]).keys())
-                    
-                    """This is where premature stop codon peptides get rejected - modifiy amino_acid_count function?"""
-                    filtered_matches = [t for t in all_matches if PAW_lib.amino_acid_count(t[3])[1] >= minimum_termini]
+                # make sure matches are non-redundant and preserve order
+                all_matches = list(OrderedDict([(key, None) for key in all_matches]).keys())
+                
+                """This is where premature stop codon peptides get rejected - modifiy amino_acid_count function?"""
+                filtered_matches = [t for t in all_matches if PAW_lib.amino_acid_count(t[3])[1] >= minimum_termini]
 
-                    number_tryptic = len(filtered_matches)
-                    match.match_tuple_list = filtered_matches
-                    already_seen[base_pep_masked] = filtered_matches
-                    
-                    # see if number of protein matches agrees with Comet number
-                    if (match.additional+1) != number_tryptic:
-##                        print('Length proteins list:', len(prot_list))
-##                        print('All matches:')
-##                        for _match in all_matches:
-##                            print(_match)
-##                        print('Filtered matches:')
-##                        for _match in filtered_matches:
-##                            print(_match)
+                number_tryptic = len(filtered_matches)
+                match.match_tuple_list = filtered_matches
+                already_seen[base_pep_masked] = filtered_matches
+                
+                # see if number of protein matches agrees with Comet number
+                if (match.additional+1) != number_tryptic:
+                    print('Length proteins list:', len(prot_list))
+                    print('All matches:')
+                    for _match in all_matches:
+                        print(_match)
+                    print('Filtered matches:')
+                    for _match in filtered_matches:
+                        print(_match)
 
-                        disagree += 1
-                        if length >= params.min_pep_len:
-                            for obj in params.log_obj:
-                                print('......WARNING: scan #%s, seq: %s , Comet had %s, lookup was %s' %
-                                      (out.beg, match.sequence, match.additional+1, number_tryptic), file=obj)
-                                if len(filtered_matches) < 5:                                                                            
-                                    print(filtered_matches, file=obj)
-                    else:
-                        agree +=1
+                    disagree += 1
+                    if length >= params.min_pep_len:
+                        for obj in params.log_obj:
+                            print('......WARNING: scan #%s, seq: %s , Comet had %s, lookup was %s' %
+                                  (out.beg, match.sequence, match.additional+1, number_tryptic), file=obj)
+                            if len(filtered_matches) < 5:                                                                            
+                                print(filtered_matches, file=obj)
+                else:
+                    agree +=1
                             
         except IndexError:
             continue    # seems we get some empty scans with Comet

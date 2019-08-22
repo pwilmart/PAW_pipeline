@@ -1,3 +1,6 @@
+# UPDATE 8/22/2019
+Prior version of `sqt_converter.py` had a serious bug that resulted in a large amount of data to be dropped. Please discard any scripts downloaded between 8/6/2019 and 8/22/2019 and replace with new versions.
+
 # Update 8/6/2019
 New version of `sqt_converter.py` greatly speeds up processing of semi-trpytic searches. There are some changes to `PAW_lib.py` that are also needed. New versions of these two scripts are now in the repository. The conversion step creates peptide lookup dictionaries by doing an *in silico* digestion of the FASTA file. This can take a few minutes upfront, depending on database size. The dictionaries can be pretty large.
 
