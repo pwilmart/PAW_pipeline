@@ -372,9 +372,10 @@ def lookup_peptide_sequences(out_list, already_seen, params):
                 # see if number of protein matches agrees with Comet number
                 if (match.additional+1) != number_tryptic:
                     print('Length proteins list:', len(prot_list))
-                    print('All matches:')
-                    for _match in all_matches:
-                        print(_match)
+                    if len(all_matches) != len(filtered_matches):
+                        print('All matches:')
+                        for _match in all_matches:
+                            print(_match)
                     print('Filtered matches:')
                     for _match in filtered_matches:
                         print(_match)
