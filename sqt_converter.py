@@ -200,7 +200,6 @@ def make_PAW_txt_file(sqt_file, outs, params):
     """
     for obj in params.log_obj:
         print('...starting TXT file creation at:', time.ctime(), file=obj)
-    print('length of outs:', len(outs))
     
     # open file or zipped file
     txt_name = sqt_file.replace('.sqt', '.txt')
@@ -307,7 +306,7 @@ def lookup_peptide_sequences(out_list, already_seen, params):
     for out in out_list:
         out_count += 1              
         if (out_count % 5000) == 0.0:              
-            print('..%s scans looked up (%s)..' % (out_count, time.ctime()))
+            print('......%s scans looked up (%s)' % (out_count, time.ctime()))
         try:
             for match in out.matches:
                 length, ntt = PAW_lib.amino_acid_count(match.sequence)
@@ -371,6 +370,7 @@ def lookup_peptide_sequences(out_list, already_seen, params):
                 
                 # see if number of protein matches agrees with Comet number
                 if (match.additional+1) != number_tryptic:
+                    disagree += 1
                     print('Length proteins list:', len(prot_list))
                     if len(all_matches) != len(filtered_matches):
                         print('All matches:')
@@ -379,8 +379,7 @@ def lookup_peptide_sequences(out_list, already_seen, params):
                     print('Filtered matches:')
                     for _match in filtered_matches:
                         print(_match)
-
-                    disagree += 1
+                    
                     if length >= params.min_pep_len:
                         for obj in params.log_obj:
                             print('......WARNING: scan #%s, seq: %s , Comet had %s, lookup was %s' %
