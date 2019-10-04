@@ -699,13 +699,13 @@ def lookup_peptides(psm_list, proteins, prot_index):
             acc = psm.accessions.split(';')[0].strip() # usual parsing
             try:
                 psm.match = proteins[prot_index[acc]].findPeptide(psm.new_sequence)
-                psm.start = psm.match[0][0]
+                psm.start = psm.match[0][1]
             except KeyError:
                 print('acc not in prot_index', acc)
                 try:
                     acc = acc.split()[0]
                     psm.match = proteins[prot_index[acc]].findPeptide(psm.new_sequence) # phrog DB
-                    psm.start = psm.match[0][0]
+                    psm.start = psm.match[0][1]
                 except KeyError:
                     psm.valid_acc = False
         except IndexError:
@@ -733,7 +733,7 @@ def make_group_index(psm_list):
 def add_SEQUEST_sequences(psm_list):
     for psm in psm_list:
         try:
-            psm.SEQUEST = psm.match[0][2]
+            psm.SEQUEST = psm.match[0][3]
         except IndexError:
 ##            print('\nindex error:', psm.match)
 ##            psm._snoop()

@@ -584,6 +584,11 @@ class MSConvertGUI:
             mask = (df['m/z'] >= left) & (df['m/z'] <= right)
             df_window = df[mask].copy() # copy needed if doing the centroid calculation
             df_window['weighted intensity'] = df_window['m/z'] * df_window['intensity']
+            """
+            =========================================================
+            should skip centroid calc if using instrument centroiding
+            =========================================================            
+            """
             try:
                 centroid = df_window['weighted intensity'].sum() / df_window['intensity'].sum()
             except ZeroDivisionError:

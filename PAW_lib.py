@@ -2596,7 +2596,10 @@ class DataInfoAndFilter:
         params_list = [p for p in os.listdir(self.folder) if p.endswith('.params')]
         print('params_list:', params_list)
         for param in params_list:
-            shutil.copy2(os.path.join(self.folder, param), os.path.join(self.filtered_folder, param))
+            try:
+                shutil.copy2(os.path.join(self.folder, param), os.path.join(self.filtered_folder, param))
+            except PermissionError:
+                pass
  
     def filter_with_stats(self, mass_thresholds, score_thresholds):
         """Filters and computes numbers of target and decoy matches passing thresholds over the peptide subclasses
