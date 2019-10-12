@@ -51,6 +51,35 @@ TMT10 = ['TotInt_126C', 'TotInt_127N', 'TotInt_127C', 'TotInt_128N', 'TotInt_128
        'TotInt_129N', 'TotInt_129C', 'TotInt_130N', 'TotInt_130C', 'TotInt_131N']
 TMT11 = ['TotInt_126C', 'TotInt_127N', 'TotInt_127C', 'TotInt_128N', 'TotInt_128C',
        'TotInt_129N', 'TotInt_129C', 'TotInt_130N', 'TotInt_130C', 'TotInt_131N', 'TotInt_131C']
+TMT16 = ['TotInt_126C', 'TotInt_127N', 'TotInt_127C', 'TotInt_128N', 'TotInt_128C',
+         'TotInt_129N', 'TotInt_129C', 'TotInt_130N', 'TotInt_130C', 'TotInt_131N',
+         'TotInt_131C', 'TotInt_132N', 'TotInt_132C', 'TotInt_133N', 'TotInt_133C', 'TotInt_134N']
+
+def base_peptide_sequence(sequence, mask=False):
+    """Returns the peptide amino acid residues from SEQUEST peptide strings
+    """
+    # remove bounding residues (SEQUEST/Comet format: A.BCD.E)
+    prefix, peptide, suffix = split_peptide(sequence)
+
+    # remove the 2017 Comet style mod strings
+    peptide = re.sub(r'\[[-+]?[0-9]*(.)?[0-9]*\]', '', peptide)        
+    # remove modification symbols: '*', '#', '@', '^', '~', '$', '%', '!', '+', 'n', 'c', '[', ']', "(', ')', '{', '}'
+    peptide = re.sub(r'[*#@^~$%!+nc\[\]\{\}\(\)]', '', peptide)
+    
+    # mask I/L if needed:
+    if mask:
+        return re.sub(r'[IL]', 'j', peptide)
+    else:
+        return peptide
+
+def split_peptide(sequence):
+    """Splits peptide assuming that there might be single preceeding and following residues with periods."""
+    if re.match(r'[-A-Z]\..+\.[-A-Z]', sequence):
+        return sequence[0], sequence[2:-2], sequence[-1]
+    else:
+        if min(sequence.count('['), sequence.count(']')) != sequence.count('.'):
+            print('   WARNING: possible malformed peptide string:', sequence)
+        return '', sequence, ''
 
 class PAWTable(object):
     """General container for PAW tabular results files.
@@ -499,6 +528,10 @@ class PAWProteinSummary(object):
             self.peptide_file = ''
             sys.exit()
 
+        # count all peptides
+        peptide_dict = {}
+        nr_peptides = {}
+
         # open the peptide file and save the unique peptides
         with open(self.peptide_file) as fin:
             process = False
@@ -514,15 +547,20 @@ class PAWProteinSummary(object):
                 # process main table lines
                 if process and len(line.split('\t')) > 3:
                     items = line.split('\t')
-                    seq = items[cols['Sequence']].split('.')[1] + '_' + items[cols['Z']]
-                    if seq == 'X.X.X' or seq in self.unique_peptide_dict:
+                    sequence = items[cols['Sequence']]
+                    if sequence == 'X.X.X':
                         continue
-                    else:
-                        if items[cols['Unique']] == 'TRUE':
-                            self.unique_peptide_dict[seq] = True
+                    base_pep = base_peptide_sequence(sequence)
+                    nr_peptides[base_pep] = True
+                    seq = sequence.split('.')[1] + '_' + items[cols['Z']]
+                    peptide_dict[seq] = True
+                    if items[cols['Unique']] == 'TRUE':
+                        self.unique_peptide_dict[seq] = True
                             
         for obj in self.write:
+            print('length of peptide_dict:', len(peptide_dict), file=obj)
             print('length of unique_peptide_dict:', len(self.unique_peptide_dict), file=obj)
+            print('non-redundant peptide sequence count:', len(nr_peptides), file=obj)
 
     def load_psm_list_dict(self):
         """Loads the lists of psm DTA-like names for each peptide sequence
@@ -645,6 +683,8 @@ elif protein_summary.number_channels == 10:
     TMT = TMT10
 elif protein_summary.number_channels == 11:
     TMT = TMT11
+elif protein_summary.number_channels == 16:
+    TMT = TMT16
 new_file = protein_summary.protein_file.replace('summary_9', 'summary_TMT_9')
 if new_file == protein_summary.protein_file:
     print('error creating new protein file name')

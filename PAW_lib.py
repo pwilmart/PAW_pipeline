@@ -48,6 +48,8 @@ from tkinter import filedialog
 import pandas as pd
 import numpy as np
 
+MIN_PEP_LEN = 7
+
 # this is only used in a debugging block
 ##import matplotlib.pyplot as pyplot    # this seems incompatible with  standard IDLE (OK with Anaconda)
 
@@ -2093,17 +2095,17 @@ class BRTxtInfo:
         self.target_scans = 0           # total number of target scans
         self.decoy_scans = 0            # total number of decoy scans
         
-        self.target_matches_top = None     # multi-dimensional collection of counters for target matches
-        self.decoy_matches_top = None      # multi-dimensional collection of counters for decoys
-        self.target_matches_scan = None     # multi-dimensional collection of counters for target matches
-        self.decoy_matches_scan = None      # multi-dimensional collection of counters for decoys
+        self.target_matches_top = None  # multi-dimensional collection of counters for target matches
+        self.decoy_matches_top = None   # multi-dimensional collection of counters for decoys
+        self.target_matches_scan = None # multi-dimensional collection of counters for target matches
+        self.decoy_matches_scan = None  # multi-dimensional collection of counters for decoys
 
         self.target_subclass = None     # multi-dimensional collection of counters for target matches
         self.decoy_subclass = None      # multi-dimensional collection of counters for decoys
         self.target_filtered = 0
         self.decoy_filtered = 0
-        self.min_length = 7             # minimum peptide length (should be passed in)
-        self.maxMods = 3               # maximum number of mods per peptide (should be passed in)
+        self.min_length = MIN_PEP_LEN   # minimum peptide length (should be passed in)
+        self.maxMods = 3                # maximum number of mods per peptide (should be passed in)
  
     def getStats(self, frame, dm_list, z_list, ntt_list, mod_list, masses, scores):
         """Computes several stats on numbers of target and decoy matches
@@ -2154,7 +2156,7 @@ class FigureGenerator:
         Plot objects corresponding to individual histograms. This list is passed to the GUI object for display.
         '''
     def __init__(self, files, accurateMass=True, smoothed=True, dmList=['0 Da', '1 Da', 'out'], zList=[1, 2, 3, 4],
-                 nttList=[0, 1, 2], modString=' *', minLength=7, maxMods=2):
+                 nttList=[0, 1, 2], modString=' *', minLength=MIN_PEP_LEN, maxMods=2):
         
         
         # Main containers
@@ -2387,7 +2389,7 @@ class DataInfoAndFilter:
     track both before filtering and post filtering counts.
     """    
     def __init__(self, folder, frame, txt_info_list, dm_list, z_list, ntt_list, mod_list, 
-                  min_length=7, max_mods=2, parent_tol=2.5):
+                  min_length=MIN_PEP_LEN, max_mods=2, parent_tol=2.5):
         import copy
         
         # main data passed in
