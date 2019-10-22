@@ -148,6 +148,10 @@ The protein grouping console output is usually really interesting to look at. Al
 
 Summary statistics are logged at the end.
 
+More details on the concepts behind the extended parsimony grouping can be found at this [Cascadia 2013 talk](https://github.com/pwilmart/Cascadia_2013) repository.
+
+You can watch an example of the algorithm in action in [this video link](https://youtu.be/IAE59QrQYos). It is just over 2 minutes long. The data is from [this repository](https://github.com/pwilmart/MaxQuant_and_PAW/tree/master/PAW_results) and the `PAW_protein_grouper.log` file has all of the console output. The samples are from cultured mouse bone marrow cells.
+
 ---
 
 ![results folder](../images/PAW_results/22_results-folder.png)
