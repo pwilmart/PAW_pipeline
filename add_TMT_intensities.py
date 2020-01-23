@@ -40,8 +40,10 @@ import numpy as np
 import PAW_lib
 
 # globals and constants
-INTENSITY = 500.0    # individual PSM test of minimum trimmed average reporter ion intensity
-MISSING = 150.0      # replacement for zero total intensities only at the summed protein level
+INTENSITY = 500.0    # MS3: individual PSM test of minimum trimmed average reporter ion intensity
+MISSING = 150.0      # MS3: replacement for zero total intensities only at the summed protein level
+INTENSITY = 2000.0   # MS2: individual PSM test of minimum trimmed average reporter ion intensity
+MISSING = 500.0      # MS2: replacement for zero total intensities only at the summed protein level
 VERSION = 'v1.0.0'
 
 # output labels for different TMT sets

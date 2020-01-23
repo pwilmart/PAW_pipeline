@@ -13,7 +13,8 @@
     written by Phil Wilmarth 2015.
 
     3/20/2017 (PW): added flag to skip or not skip unmodified peptides
-    6/15/2017 (PW): moved missing data inputation to the combined PSMs only; added DB to results files; 
+    6/15/2017 (PW): moved missing data inputation to the combined PSMs only; added DB to results files
+    1/8/2020 (PW): added log file and brief output file
 
     TODO:
     rewrite intensity functions to return test value and do the
@@ -266,6 +267,27 @@ class PSM():
                         'Used PSM Count', 'PeptideMatchInfo'])
         return '\t'.join(header_line)
 
+    def make_header_brief(self):
+        """Makes a brief header line.
+        """
+        header_line = ['Counter', 'Protein Group Accessions', 'Protein Descriptions',
+                       'Quan Info', 'Isolation Inteference [%]', 'New Sequence',
+                       'New Modifications', 'Number Phospho Sites', 'Peptide Length',
+                       'New Site Prob Peptide', 'New Site Prob Protein', 'Site List',
+                       'Localization Status', 'Used PSM Count', '126', '127_N', '127_C',
+                       '128_N', '128_C', '129_N', '129_C', '130_N', '130_C', '131']
+        return '\t'.join(header_line)
+
+    def make_data_brief(self):
+        """Makes a brief data line for PSM data
+        """
+        data_list = ([1, self.accessions, self.descriptions,
+                      self.quant_info, self.interference, self.new_sequence,
+                      self.new_modifications, self.number_phospho, self.peptide_length,
+                      self.new_site_prob_peptide, self.new_site_prob, self.sites,
+                      self.localization, self.psm_count] + self.intensities)
+        return '\t'.join([str(x) for x in data_list])
+
     def make_data(self):
         """Makes a data line for PSM data
         """
@@ -282,7 +304,7 @@ class PSM():
                       self.max_prob, self.min_prob, self.sites, self.localization, self.grouper, self.grouped_psms,
                       self.psm_count, self.match])
         return '\t'.join([str(x) for x in data_list])
-
+    
     def make_key(self):
         """Makes a column header key
         """
@@ -663,7 +685,8 @@ def lookup_peptides(psm_list, proteins, prot_index):
         try:
             # eventually add lookup of all accessions, just first to test
             acc = psm.accessions.split(';')[0].strip()
-            psm.match = proteins[prot_index[acc]].findPeptide(psm.new_sequence, pad_count=3)
+            prot = proteins[prot_index[acc]]
+            psm.match = prot.findPeptide(psm.new_sequence, pad_count=3)
             psm.start = psm.match[0][1]
         except IndexError:
             print()
@@ -671,9 +694,10 @@ def lookup_peptides(psm_list, proteins, prot_index):
             print('pre-acc:', psm.accessions)
             print('acc:', acc)
             print('index:', prot_index[acc])
-            print('full acc:', proteins[prot_index[acc]].accession)
+            print('full acc:', prot.accession)
             print('peptide:', psm.new_sequence)
-            print('peptide in sequence?', psm.new_sequence in proteins[prot_index[acc]].sequence)
+            print('base_peptide:', prot.base_peptide_sequence(psm.new_sequence))
+            print('peptide in sequence?', psm.new_sequence in prot.sequence)
             print()
             psm.start = 0
         
@@ -703,27 +727,32 @@ def analyze_modifications(psm_list):
 
     return aa_freq, all_mods
 
-def print_modification_report(all_mods, mod_type):
+def print_modification_report(all_mods, mod_type, log_obj):
     """Prints a summary of variable and static modifications
     """
     variable = []
-    print('\nVariable modifications:')   # print mod type, symbol, affected residues
+    for obj in [None, log_obj]:
+        print('\nVariable modifications:', file=obj)   # print mod type, symbol, affected residues
     for mod in mod_type:
         if mod_type[mod]:
             variable.append([mod, mod_type[mod], sorted(all_mods[mod].keys()), sum(all_mods[mod].values())])
     variable = sorted(variable, reverse=True, key=lambda x: x[3])   # order mods by decreasing frequency
     for mod in variable:
-        print('  ', mod[0], mod[1], mod[2])
+        for obj in [None, log_obj]:
+            print('  ', mod[0], mod[1], mod[2], file=obj)
 
     static = []
-    print('Static modifications:')   # print mod type and afected residues
+    for obj in [None, log_obj]:
+        print('Static modifications:', file=obj)   # print mod type and afected residues
     for mod in mod_type:
         if not mod_type[mod]:
             static.append([mod, sorted(all_mods[mod].keys()), sum(all_mods[mod].values())])
     static = sorted(static, reverse=True, key=lambda x: x[2])   # order mods by decreasing freqiuency
     for mod in static:
-        print('  ', mod[0], mod[1])
-    print()
+        for obj in [None, log_obj]:
+            print('  ', mod[0], mod[1], file=obj)
+    for obj in [None, log_obj]:
+        print(file=obj)
     return
 
 def test_phosphoRS_localization(psm_list):
@@ -748,10 +777,12 @@ def make_grouped_PSMs(psm_list, group_index, missing=150.0):
     for key in group_index:
         if len(group_index[key]) == 1:
             # nothing to group
-            best_psm = psm_list[group_index[key][0]]
+            best_psm = copy.deepcopy(psm_list[group_index[key][0]])
             best_psm.localization = 'consistent'
             best_psm.grouped_psms = str(best_psm.psm_number)
-            best_psm.psm_count = 1
+            best_psm.psm_count = 1            
+            # replace any zeros
+            best_psm.intensities = [(x if x > 0.0 else missing) for x in best_psm.intensities]
             new_psm_list.append(best_psm)
         else:
             # pick group member with best q-value to represent group
@@ -784,21 +815,33 @@ def make_grouped_PSMs(psm_list, group_index, missing=150.0):
 ######## main program starts here #########
 ###########################################
 
-print('\n====================================================')
-print(' program "PD_TMT_phospho_processer.py", version 2.0 ')
 print('====================================================')
-print('\nRan on:', time.ctime())
+print(' program "PD_TMT_phospho_processer.py", version 2.1 ')
+print('====================================================')
+print('Ran on:', time.ctime())
 print('INTENSITY = %s, QVALUE = %s, MISSING = %s, PPM = %s' % (INTENSITY, QVALUE, MISSING, PPM))
-
+    
 # get the PSM results PD export file information
 default_location = r'F:\PSR_Core_Analysis'
 if not os.path.exists(default_location):
     default_location = os.getcwd()
-print('Select the PSM export file')
+print('\nSelect the PSM export file')
 psm_filename = PAW_lib.get_file(default_location,
                                 [('Text files', '*.txt'), ('All files', '*.*')],
                                 'Select a phospho PSM export file')
-if not psm_filename: sys.exit()     # exit if not file selected
+if not psm_filename: sys.exit()     # exit if no file selected
+print('...', psm_filename, 'was selected')
+
+# get PSM path and basename, open log file
+path, base = os.path.split(psm_filename)
+base_log = base.replace('.txt', '_log.txt')
+log_obj = open(os.path.join(path, base_log), 'a')
+
+print('\n====================================================', file=log_obj)
+print(' program "PD_TMT_phospho_processer.py", version 2.1 ', file=log_obj)
+print('====================================================', file=log_obj)
+print('Ran on:', time.ctime(), file=log_obj)
+print('INTENSITY = %s, QVALUE = %s, MISSING = %s, PPM = %s' % (INTENSITY, QVALUE, MISSING, PPM), file=log_obj)
 
 # get the FASTA database file
 print('Select the FASTA protein database file')
@@ -806,6 +849,7 @@ db_filename = PAW_lib.get_file(default_location,
                                [('Fasta files', '*.fasta'), ('All files', '*.*')],
                                'Select a FASTA database')
 if not db_filename: sys.exit()
+print('...', db_filename, 'was selected')
 
 # read in the protein sequences
 print('Reading proteins...')
@@ -825,7 +869,7 @@ aa_freq, all_mods = analyze_modifications(psm_list)
 
 # analyze mods and print summary
 mod_type = fixed_or_variable(all_mods, aa_freq)
-print_modification_report(all_mods, mod_type)    
+print_modification_report(all_mods, mod_type, log_obj)    
 
 # add alternatively formatted sequence string (SEQUEST style), reformat modifications string (remove static mods)
 for psm in psm_list:
@@ -865,8 +909,9 @@ for psm in psm_list:
 # print keys at end of table (psm should still be last psm in psm_list)
 print(psm.make_key(), file=psmout)
 
-for out in [None, psmout]:
+for out in [None, psmout, log_obj]:
     # print the parsing statistics
+    print('The PSM export file was:', base, file=out)
     print('The FASTA database was:', db_filename, file=out)
     print('There were', counts[0], 'Total rows in PSM table export', file=out)
     print('There were', counts[1], 'Top ranked PSMs', file=out)
@@ -880,23 +925,28 @@ for out in [None, psmout]:
     print('There were', counts[9], 'PSMs with TMT ions below intensity threshold', file=out)
     print('(%0.2f%% of scans rejected)' % (100.0 * counts[9] / (counts[8]+counts[9]),), file=out)
 
-# close file
+# close files
 psmout.close()
+log_obj.close()
 
 # open results file for combined PSMs, print header lines
 psmout = open(psm_filename.replace('_psms', '_psm_filtered_combined'), 'w')
+psmout_brief = open(psm_filename.replace('_psms', '_psm_filtered_combined_brief'), 'w')
 print(new_psm_list[0].make_header(), file=psmout)
+print(new_psm_list[0].make_header_brief(), file=psmout_brief)
 
 # print PSM data to file sorted by decreasing total intensity
 new_psm_list = sorted(new_psm_list, key=lambda x: x.total, reverse=True)
 for psm in new_psm_list:
     print(psm.make_data(), file=psmout)
+    print(psm.make_data_brief(), file=psmout_brief)
 
 # print keys at end of tables
-print('The FASTA database was:', db_filename, file=psmout)
+print('\nThe FASTA database was:', db_filename, file=psmout)
 print(psm.make_key(), file=psmout)
     
 # close files
 psmout.close()
+psmout_brief.close()
 
 # end

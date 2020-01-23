@@ -53,7 +53,7 @@ VERSION = 'v1.0.9'
 minimum_peptide_per_protein = 2     # min. number distinct peptides/protein/sample
 
 # set peptide requirements here
-minimum_ntt_per_peptide = 2         # how many ntt for distinct peptides?
+minimum_ntt_per_peptide = 2        # how many ntt for distinct peptides?
 
 
 # seldom changed parameters:

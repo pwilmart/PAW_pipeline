@@ -1141,6 +1141,8 @@ class OtherLociCombiner:
 
         # flag proteins that are being combined (set protein and peptide "keep" flags to False)
         for acc in combine_list:
+            if acc == '':
+                continue
             if '&' not in acc:
                 self.not_to_keep.append(acc)
                 self.proteins.tuplets[self.proteins.acc_map[acc]].keep = False # flag to skip for output
@@ -1308,7 +1310,10 @@ class OtherLociCombiner:
 
         to_sort = []
         for acc in temp:
-
+            if acc == '':
+                print('...WARNING: empty accession string')
+                continue
+            
             # make sort tuples so sorting is by counts not aphabetical by accessions
             tuplet = self.proteins.tuplets[self.proteins.acc_map[acc]]
             try:
