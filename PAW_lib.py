@@ -30,6 +30,7 @@ Ph: 503-494-8200, FAX: 503-494-4729, Email: techmgmt@ohsu.edu.
 # Updated for Python 3, Aug. 2017 -PW
 # added a sample name parsing class, -PW 10/21/2017
 # recoded older routines like "amino_acid_count" for better Comet support. -PW 10/27/2017
+# np.linspace needed an integer for last argument (float conversion in np was failing sometimes) -PW 20200201
 
 import os
 import sys
@@ -44,6 +45,7 @@ from collections import OrderedDict
 
 import tkinter
 from tkinter import filedialog
+from tkinter import messagebox
 
 import pandas as pd
 import numpy as np
@@ -195,6 +197,13 @@ def get_string(title, prompt='Enter a string', initial=''):
     return askstring(title, prompt, initialvalue=initial)
 
     # end
+
+def get_yesno(title, message='Answer yes or no', **options):
+    """Asks a yes (True) or no (False) question.
+    """
+    from tkinter.messagebox import askyesno
+    return askyesno(title, message, **options)
+
 
 ################## some support functions/classes for PAW pipeline use #####################
 # updated for 2017 Comet compatibility (new mod formats) -PW 10/27/2017
@@ -1971,8 +1980,8 @@ class DeltaMassPlot(Plot):
             self.mybins = np.linspace(-self.dmRange, self.dmRange, self.LOW_MASS_BINS+1)
             mybins = self.mybins
         else:
-            self.mybins = np.linspace(-self.dmRange, self.dmRange, ((2*self.dmRange)/0.0005)+1)
-            mybins = np.linspace(low, high, ((high-low)/0.0005)+1)
+            self.mybins = np.linspace(-self.dmRange, self.dmRange, int((2*self.dmRange/0.0005)+1))
+            mybins = np.linspace(low, high, int(((high-low)/0.0005)+1))
         counts, bins = np.histogram(forward['dmassDa'], bins=mybins)
         rcounts, bins = np.histogram(reverse['dmassDa'], bins=mybins)
         return counts, rcounts
@@ -1986,10 +1995,10 @@ class DeltaMassPlot(Plot):
         if not self.ACCURATE_MASS:
 #            self.mybins = np.linspace(-self.dmRange, self.dmRange, self.LOW_MASS_BINS+2)
             self.dmRange = 500.0 # may want another variable here
-            self.mybins = np.linspace(-self.dmRange, self.dmRange, (2*self.dmrange)+1)
+            self.mybins = np.linspace(-self.dmRange, self.dmRange, int((2*self.dmrange)+1))
         else:
             self.dmRange = 50.0 # may want another variable here
-            self.mybins = np.linspace(-self.dmRange, self.dmRange, ((2*self.dmRange)/0.01)+1)
+            self.mybins = np.linspace(-self.dmRange, self.dmRange, int((2*self.dmRange/0.01)+1))
         counts, bins = np.histogram(forward['dmassPPM'], bins=self.mybins)
         rcounts, bins = np.histogram(reverse['dmassPPM'], bins=self.mybins)
         return counts, rcounts
@@ -2000,7 +2009,7 @@ class DeltaMassPlot(Plot):
         if not self.ACCURATE_MASS:
             self.histo['deltaMass'] = np.linspace(-self.dmRange, self.dmRange, self.LOW_MASS_BINS+1)[:-1]
         else:
-            self.histo['deltaMass'] = np.linspace(-self.dmRange, self.dmRange, ((2*self.dmRange)/0.0005)+1)[:-1]
+            self.histo['deltaMass'] = np.linspace(-self.dmRange, self.dmRange, int((2*self.dmRange/0.0005)+1))[:-1]
         self.histo['ForwardDeltaMass'] = self.forwardDeltaMass
         self.histo['ReverseDeltaMass'] = self.reverseDeltaMass
         self.histo['SmForwardDeltaMass'] = self.smForwardDeltaMass

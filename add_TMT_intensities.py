@@ -40,11 +40,14 @@ import numpy as np
 import PAW_lib
 
 # globals and constants
-INTENSITY = 500.0    # MS3: individual PSM test of minimum trimmed average reporter ion intensity
-MISSING = 150.0      # MS3: replacement for zero total intensities only at the summed protein level
-INTENSITY = 2000.0   # MS2: individual PSM test of minimum trimmed average reporter ion intensity
-MISSING = 500.0      # MS2: replacement for zero total intensities only at the summed protein level
-VERSION = 'v1.0.0'
+# SPS MS3 zero replacement values
+MS3_INTENSITY = 500.0    # MS3: individual PSM test of minimum trimmed average reporter ion intensity
+MS3_MISSING = 150.0      # MS3: replacement for zero total intensities only at the summed protein level
+# MS2 reporter ion zero replacement values
+MS2_INTENSITY = 2000.0   # MS2: individual PSM test of minimum trimmed average reporter ion intensity
+MS2_MISSING = 500.0      # MS2: replacement for zero total intensities only at the summed protein level
+# version
+VERSION = 'v1.0.1'
 
 # output labels for different TMT sets
 TMT6 = ['TotInt_126', 'TotInt_127', 'TotInt_128',
@@ -636,6 +639,15 @@ results_file = PAW_lib.get_file(default_location,
                                 'Select a protein results file')
 if not results_file:
     sys.exit()
+
+# get type of reporter ions (MS2 or MS3) and set test and replacement values
+if PAW_lib.get_yesno('Reporter ions', 'Is this SPS MS3 data?'):
+    INTENSITY = MS3_INTENSITY
+    MISSING = MS3_MISSING
+else:
+    INTENSITY = MS2_INTENSITY
+    MISSING = MS2_MISSING
+    
 # get location and set up log file
 # not sure about platform default encoding between PC and Mac
 log_obj = open(os.path.join(os.path.dirname(results_file), 'add_TMT_intensities.log'), mode='at')

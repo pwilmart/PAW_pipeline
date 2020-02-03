@@ -39,8 +39,8 @@ Ph: 503-494-8200, FAX: 503-494-4729, Email: techmgmt@ohsu.edu.
 # NOTE: there is no input validation checking for numerical fields
 ###########################
 
-# default Comet params file contents (this is for version 2016.01 rev. 2)
-comet_default_params = """# comet_version 2016.01 rev. 2
+# default Comet params file contents (this is for version 2016.01 rev. 3)
+comet_default_params = """# comet_version 2016.01 rev. 3
 # Comet MS/MS search engine parameters file.
 # Everything following the '#' symbol is treated as a comment.
 
