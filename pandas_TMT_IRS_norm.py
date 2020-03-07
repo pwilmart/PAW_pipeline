@@ -129,7 +129,8 @@ class PAW_TMT_results(object):
     def label_duplicates(self, samples):
         """Make TMT samples unique per plex."""
         # make list of suffixes
-        suffixes = ['-A', '-B', '-C', '-D', '-E', '-F', '-G', '-H', '-I', '-J', '-K']   # up to 11 duplicate times
+        suffixes = ['-A', '-B', '-C', '-D', '-E', '-F', '-G', '-H',
+                    '-I', '-J', '-K', '-L', '-M', '-N', '-O', '-P']   # up to 16 duplicate times
         
         # find set of duplicate values
         values = list(samples.values())
@@ -173,7 +174,7 @@ class PAW_TMT_results(object):
                 # replace spaces with underscores in header lines
                 self.pre_headers = [re.sub(r' ', r'_', x) for x in self.contents[i-1].split('\t')]
                 self.headers = [re.sub(r' ', r'_', x) for x in row.strip().split('\t')]
-                
+
                 self.num_cols = len(self.headers)
                 labels = [x[len('Total_'):] for x in self.headers if x.startswith('Total_')]
                 self.TMT_exps = [TMT_experiment(label) for label in labels] # create the TMT exp containers
@@ -213,7 +214,7 @@ class PAW_TMT_results(object):
         for exp in self.TMT_exps:
             for header in exp.all_channels:
                 table_dict[header] = np.array(table_dict[header], dtype='float64')
-
+                
         # make a data frame from the table column dictionary and return it
         self.frame = DataFrame(table_dict, columns=self.headers)
         return

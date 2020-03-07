@@ -485,6 +485,9 @@ class PAWProteinSummary(object):
         for txt_file in txt_list:
             lc_name = txt_file.replace('.txt', '')
             lc_name = os.path.splitext(txt_file)[0]
+            lc_total = set()
+            lc_reject = set()
+            print_all = True
             with open(os.path.join(filtered_folder, txt_file), 'r') as txt_obj:
                 for line in txt_obj:
                     line = line.rstrip()
@@ -496,6 +499,7 @@ class PAWProteinSummary(object):
                     items = line.split('\t')
                     key = lc_name + '.' + items[col_map['start']]
                     total.add(key)
+                    lc_total.add(key)
                     for height in heights:
                         intensities.append(float(items[col_map[height]]))
                     # test minimum trimmed intensities against cutoff
@@ -504,6 +508,7 @@ class PAWProteinSummary(object):
                         if (sum(test) / len(test)) < minimum_intensity:
                             intensities = [0.0 for x in intensities]    # zero out low intensity PSMs
                             reject.add(key)
+                            lc_reject.add(key)
                         else:
                             intensities = [x if x > 0.0 else missing_intensity for x in intensities] # option to replace zero
                     except ZeroDivisionError:
@@ -517,11 +522,20 @@ class PAWProteinSummary(object):
                         continue    # scans are redundant, one for each loci
                     else:
                         self.tmt_intensity_dict[key] = np.array(intensities)
+                        
+            # print LC run reject rate
+            if print_all:
+                print('\nLC run:', txt_file)
+                print('Total: %d, reject: %d, reject rate: %0.2f'
+                      % (len(lc_total), len(lc_reject), 100.0 * len(lc_reject)/len(lc_total)))
                             
         self.number_channels = len(heights)
+        if print_all:
+            print()
         for obj in self.write:
-            print('reporter ions total:', len(total), ', below intensity cutoff:', len(reject), file=obj)
-            print('   intensity cutoff was:', minimum_intensity, file=obj)
+            print('reporter ions total:', len(total), file=obj)
+            print('below intensity cutoff:', len(reject), file=obj)
+##            print('   intensity cutoff was:', minimum_intensity, file=obj)
             print('length of tmt_intensity_dict:', len(self.tmt_intensity_dict), file=obj)
 
     def load_peptide_unique_dict(self):
@@ -663,6 +677,8 @@ for obj in write:
 # read in the protein summary file
 for obj in write:
     print('results file:', os.path.split(results_file)[1], file=obj)
+    print('trimmed average intensity must exceed:', INTENSITY, file=obj)
+    print('final zero values replaced with:', MISSING, file=obj)
 protein_summary = PAWProteinSummary()
 protein_summary.write = write
 protein_summary.load_table(results_file)
