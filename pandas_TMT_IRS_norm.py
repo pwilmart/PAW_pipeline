@@ -148,8 +148,11 @@ class PAW_TMT_results(object):
     def get_sample_keys(self):
         """Makes TMT channel to sample key dictionary."""
         # get the indexes for each experiment
-        for exp in self.TMT_exps:            
-            exp.all_channels = [head for head in self.headers if ('TotInt_' in head) and (exp.label in head)]
+        for exp in self.TMT_exps:
+            print('experiment:', exp.label, exp.number)
+##            exp.all_channels = [head for head in self.headers if ('TotInt_' in head) and (exp.label in head)] # original statement
+            # this test is more specific
+            exp.all_channels = [head for head in self.headers if (head.startswith('TotInt_')) and (head.endswith(exp.label))]
             exp.sample_key = {head: self.pre_headers[j] for (j, head) in enumerate(self.headers) if head in exp.all_channels}
             self.label_duplicates(exp.sample_key)
             exp.channels = [x for x in exp.all_channels if 'UNUSED' not in exp.sample_key[x].upper()]
@@ -178,8 +181,8 @@ class PAW_TMT_results(object):
                 self.num_cols = len(self.headers)
                 labels = [x[len('Total_'):] for x in self.headers if x.startswith('Total_')]
                 self.TMT_exps = [TMT_experiment(label) for label in labels] # create the TMT exp containers
-                for i, exp in enumerate(self.TMT_exps):
-                    exp.number = i + 1
+                for j, exp in enumerate(self.TMT_exps):
+                    exp.number = j + 1
                 break
             
         # end is after the actual data

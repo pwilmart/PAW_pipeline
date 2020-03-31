@@ -50,8 +50,7 @@ Make report table generations into three functions
 VERSION = 'v1.0.9'
 
 # set protein ID criteria here
-minimum_peptide_per_protein = 2     # min. number distinct peptides/protein/sample
-
+minimum_peptide_per_protein = 2     # min. number distinct peptides/protein/sample2
 # set peptide requirements here
 minimum_ntt_per_peptide = 2        # how many ntt for distinct peptides?
 

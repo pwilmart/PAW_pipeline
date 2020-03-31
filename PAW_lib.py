@@ -2446,7 +2446,7 @@ class DataInfoAndFilter:
 ##        self.sqt_container = os.path.dirname(self.folder)
 ##        self.filtered_folder = os.path.join(self.sqt_container, 'filtered_files')
         self.filtered_folder = os.path.join(os.path.dirname(self.folder), 'filtered_files')
-        self.log_file = open(os.path.join(self.folder, os.path.basename(self.folder) + '_PAW.log'), 'a')
+        self.log_file = open(os.path.join(self.folder, os.path.basename(self.folder) + '_PAW_log.txt'), 'a')
         self.write = [None, self.log_file]
 
         return

@@ -525,17 +525,19 @@ class PAWProteinSummary(object):
                         
             # print LC run reject rate
             if print_all:
-                print('\nLC run:', txt_file)
-                print('Total: %d, reject: %d, reject rate: %0.2f'
-                      % (len(lc_total), len(lc_reject), 100.0 * len(lc_reject)/len(lc_total)))
+                for obj in self.write:
+                    print('\nLC run:', txt_file, file=obj)
+                    print('Total: %d, reject: %d, reject rate: %0.2f%%'
+                          % (len(lc_total), len(lc_reject), 100.0 * len(lc_reject)/len(lc_total)),
+                          file=obj)
                             
         self.number_channels = len(heights)
         if print_all:
             print()
         for obj in self.write:
-            print('reporter ions total:', len(total), file=obj)
-            print('below intensity cutoff:', len(reject), file=obj)
-##            print('   intensity cutoff was:', minimum_intensity, file=obj)
+            print('total PSMs with reporter ions:', len(total), file=obj)
+            print('total PSMs with intensities below cutoff:', len(reject), file=obj)
+            print('overall reject rate: %0.2f%%' % (100*len(reject)/len(total),), file=obj)
             print('length of tmt_intensity_dict:', len(self.tmt_intensity_dict), file=obj)
 
     def load_peptide_unique_dict(self):
@@ -664,9 +666,8 @@ else:
     
 # get location and set up log file
 # not sure about platform default encoding between PC and Mac
-log_obj = open(os.path.join(os.path.dirname(results_file), 'add_TMT_intensities.log'), mode='at')
+log_obj = open(os.path.join(os.path.dirname(results_file), 'add_TMT_intensities_log.txt'), mode='at')
 write = [None, log_obj]
-
 # print name, version information
 for obj in write:
     print(file=obj)
