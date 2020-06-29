@@ -44,8 +44,8 @@ import PAW_lib
 MS3_INTENSITY = 500.0    # MS3: individual PSM test of minimum trimmed average reporter ion intensity
 MS3_MISSING = 150.0      # MS3: replacement for zero total intensities only at the summed protein level
 # MS2 reporter ion zero replacement values
-MS2_INTENSITY = 2000.0   # MS2: individual PSM test of minimum trimmed average reporter ion intensity
-MS2_MISSING = 500.0      # MS2: replacement for zero total intensities only at the summed protein level
+MS2_INTENSITY = 1500.0   # MS2: individual PSM test of minimum trimmed average reporter ion intensity
+MS2_MISSING = 250.0      # MS2: replacement for zero total intensities only at the summed protein level
 # version
 VERSION = 'v1.0.1'
 
@@ -201,11 +201,14 @@ class PeptideSummaryRow(object):
         
         for psm_lists_dict in psm_lists_dict_list:
             int_list = []
+            used_psm_count = 0
                 
             # loop over all psms in the psm list and collect intensities
             try:
                 for psm in psm_lists_dict[self.seq_key]:
                     int_list.append(tmt_intensity_dict[psm])
+                    if sum(tmt_intensity_dict[psm]) > 0.0:
+                        used_psm_count += 1
             except KeyError:
                 pass
                 
@@ -219,7 +222,7 @@ class PeptideSummaryRow(object):
                 self.intensities = np.zeros(number_channels)
 
             # add peptide reporter ion intensities to peptide summary line
-            self.new_line = self.new_line + '\t' + '\t'.join([str(x) for x in self.intensities])
+            self.new_line = self.new_line + '\t' + '\t'.join([str(x) for x in self.intensities]) + '\t' + str(used_psm_count)
 
 class ProteinSummaryRow(object):
     """Make a container for original line and TMT intensities summed to the protein level."""
@@ -463,17 +466,23 @@ class PAWProteinSummary(object):
         total = set()
         reject = set()
         txt_list = None
+        empty_total = 0
+
+        
         # get the TMT intensities from the filtered SQT/TXT files
         for obj in self.write:
             print('getting intensities from SQT/TXT files', file=obj)
         filtered_folder = os.path.join(self.project_path, 'filtered_files')
+        
         # first: look for filtered SQT file names
         sqt_list = [x for x in os.listdir(filtered_folder) if x.endswith('_filtered.sqt')]
         if sqt_list:
             txt_list = [x.replace('_filtered.sqt', '_filtered.txt') for x in sqt_list]
+            
         # second: look for *.PAW.txt files
         if not txt_list:
             txt_list = [x for x in os.listdir(filtered_folder) if x.endswith('.PAW.txt')]
+            
         # finally: have user select the TXT files
         if not txt_list:
             ext_list = [('TXT files', '*.txt'), ('All files', '*.*')]
@@ -482,12 +491,16 @@ class PAWProteinSummary(object):
             if not txt_list:
                 sys.exit()
             txt_list = [os.path.split(x)[1] for x in txt_list] # need just the filename from path
+
+        # loop through the filtered TXT files
         for txt_file in txt_list:
             lc_name = txt_file.replace('.txt', '')
             lc_name = os.path.splitext(txt_file)[0]
             lc_total = set()
             lc_reject = set()
             print_all = True
+            empty = set()
+            
             with open(os.path.join(filtered_folder, txt_file), 'r') as txt_obj:
                 for line in txt_obj:
                     line = line.rstrip()
@@ -502,10 +515,15 @@ class PAWProteinSummary(object):
                     lc_total.add(key)
                     for height in heights:
                         intensities.append(float(items[col_map[height]]))
+
+                    # test for empty scans
+                    if sum(intensities) == 0:
+                        empty.add(key)
+                        
                     # test minimum trimmed intensities against cutoff
                     test = sorted(intensities)[1:-1]
                     try:
-                        if (sum(test) / len(test)) < minimum_intensity:
+                        if (sum(test)/len(test)) < minimum_intensity:
                             intensities = [0.0 for x in intensities]    # zero out low intensity PSMs
                             reject.add(key)
                             lc_reject.add(key)
@@ -527,16 +545,22 @@ class PAWProteinSummary(object):
             if print_all:
                 for obj in self.write:
                     print('\nLC run:', txt_file, file=obj)
-                    print('Total: %d, reject: %d, reject rate: %0.2f%%'
-                          % (len(lc_total), len(lc_reject), 100.0 * len(lc_reject)/len(lc_total)),
-                          file=obj)
+                    print('Total: %d, reject: %d, net: %d, reject rate: %0.2f%%'
+                          % (len(lc_total), len(lc_reject), len(lc_total) - len(lc_reject),
+                             100.0 * len(lc_reject)/len(lc_total)), file=obj)
+                    print('  Reject breakdown: empty: %d, weak: %d' % (len(empty), len(lc_reject)-len(empty)), file=obj)
+
+            empty_total += len(empty)
                             
         self.number_channels = len(heights)
         if print_all:
-            print()
+            for obj in self.write:
+                print(file=obj)
         for obj in self.write:
-            print('total PSMs with reporter ions:', len(total), file=obj)
-            print('total PSMs with intensities below cutoff:', len(reject), file=obj)
+            print('total PSMs with added reporter ions:', len(total), file=obj)
+            print('total PSMs with empty reporter ions:', empty_total, file=obj)
+            print('total PSMs with intensities below cutoff:', len(reject)-empty_total, file=obj)
+            print('total PSMs with zeroed reporter ions:', len(reject), file=obj)
             print('overall reject rate: %0.2f%%' % (100*len(reject)/len(total),), file=obj)
             print('length of tmt_intensity_dict:', len(self.tmt_intensity_dict), file=obj)
 
@@ -587,6 +611,7 @@ class PAWProteinSummary(object):
         """Loads the lists of psm DTA-like names for each peptide sequence
         for each biological sample."""
         for sample in self.sample_list:
+            scans = {}
             psm_lists_dict = {}
             nr_psm_lists_dict = {}
             
@@ -616,6 +641,7 @@ class PAWProteinSummary(object):
                         dta_short = '.'.join(items[cols['DTA_filename']].split('.')[:-2])
                         if seq == 'X.X.X':
                             continue
+                        scans[dta_short] = True
                         if seq in psm_lists_dict:
                             psm_lists_dict[seq].append(dta_short)
                         else:
@@ -629,13 +655,10 @@ class PAWProteinSummary(object):
             self.psm_lists_dict_list.append(nr_psm_lists_dict)
 
             # print some summary stats
-            both = [len(nr_psm_lists_dict[k]) for k in nr_psm_lists_dict]
-            unique = [len(nr_psm_lists_dict[k]) for k in nr_psm_lists_dict if k in self.unique_peptide_dict]
+            psm_count = sum([len(set(nr_psm_lists_dict[k])) for k in nr_psm_lists_dict])
             for obj in self.write:
                 print(os.path.split(peptide_file)[1], file=obj)
-                print('..length psm_list_dict:', len(nr_psm_lists_dict), file=obj)
-                print('..sum of all peptides:', sum(both), file=obj)
-                print('..sum of all unique peptides:', sum(unique), file=obj)
+                print('..number of psms (scans):', psm_count, file=obj)
             
 def make_new_prefix(protein_summary):
     """Pads the prefix for headers are in Row 5 and adds sample labels above TMT reporter ion channels."""
@@ -746,7 +769,7 @@ if new_file == peptide_summary.peptide_file:
     sys.exit()
 tmt_headers = []
 for sample in protein_summary.sample_list:
-    tmt_headers += [x+'_'+sample for x in TMT]
+    tmt_headers += [x+'_'+sample for x in (TMT+['UsedPSMs'])]
 with open(os.path.join(protein_summary.results_path, new_file), 'w') as fout:
     peptide_summary.prefix.insert(0, 'New PAW TMT results file!')
     for line in peptide_summary.prefix:

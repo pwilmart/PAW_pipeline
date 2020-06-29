@@ -50,6 +50,8 @@ version 1.06:
 version 1.07:
     support for MS2 or MS3 reporter ions -PW 20180711
     PAW_tmt.txt files are moved to location with MSn files -PW 20180816
+version 1.08:
+    support for real time search SPS MS3 data -PW 20200520
 
 """
 # global imports
@@ -431,7 +433,7 @@ class MSConvertGUI:
             # clear any data structures that reset with each RAW file
             self.tmt_data = []
             lc_name = os.path.splitext(os.path.basename(raw_name))[0]
-            if raw_name.endswith('.raw'):
+            if raw_name.lower().endswith('.raw'):
                 msconvert_name = raw_name[:-4] + '.txt.gz'
 
             # call MSConvert
@@ -508,67 +510,171 @@ class MSConvertGUI:
     def process_ms3_reporter_ions(self, lc_name):
         """Parses ms2 and ms3 spectrum blocks; gets scan numbers, and reporter ion data.
         """
-        count = 0   # scan counter
+        ms2_count = 0   # MS2 scan counter
+        ms3_count = 0   # MS3 scan counter
 
         # parse files to get ms2 scan numbers, ms3 scan numbers, and data
         ms_dict = {}            # used to link MS3 scan numbers to ms2 scan numbers
         spectrum_flag = False   # limits parsing to spectrum blocks
         msn_level = None        # the MSn level of the scan
-        mz_arr_flag = False     # True if data array is m/z values
+#        mz_arr_flag = False     # True if data array is m/z values
         ms1_prev = 0            # previous (maybe current?) MS1 scan number
-        moverz_key = ''            # relevant string from scan header line to link MS2 and MS3
+#        moverz_key = ''         # relevant string from scan header line to link MS2 and MS3
+        dict_list = []          # keeps track of two scan cycles to support RTS data
+        buff = []
+
         # read lines in MSConvert file
-        for line in gzip.open(self.txt_name, 'rt'):
+        for k, line in enumerate(gzip.open(self.txt_name, 'rt')):
             line = line.strip()    # remove leading, trailing white space
-            if line.startswith('spectrum:'):    # look for each spectrum block
+
+           # look for each spectrum block 
+            if line.startswith('spectrum:') or line.startswith('chromatogramList'):
                 spectrum_flag = True
-            if spectrum_flag:   # only parse lines when inside spectrum blocks
-                if line.startswith('id:') and 'scan=' in line:  # get scan number
-                    scan_num = int(line.split()[-1].split('=')[-1])
-                if line.startswith('cvParam: ms level,'):   # get MSn level (2 or 3)
-                    msn_level = int(line.split()[-1])
-                    if msn_level == 2:
-                        count += 1 # MS2 scan counter
-                    elif msn_level == 3:
-                        count += 1     # MS3 scan counter
-                    if (count % 1000) == 0:
-                        for obj in self.log_obj:
-                            print('......%d scans processed...' % count, file=obj)
-                if line.startswith('cvParam: filter string'):   # line with info linking MS2 scan to MS3 scan
-                    ## had @cid3 and @hcd3 strings - we need to exclude higher energy HCD
-                    if '@cid3' in line:
-                        moverz_key = line.split('@cid3')[0].split()[-1]
-                    elif '@hcd3' in line:
-                        moverz_key = line.split('@hcd3')[0].split()[-1]
-                    else:
-                        for obj in self.log_obj:
-                            print('WARNING: dissociation key (@cid or @hcd) not found', file=obj)
-                if line.startswith('spectrumRef: ') and msn_level == 2:
-                    ms1_scan = int(line.split()[-1].split('=')[-1])
-                    if ms1_scan != ms1_prev:  # this covers first scan and when MS1 cycle changes
-                        ms_dict = {}
-                        ms1_prev = ms1_scan
-                    ms_dict[moverz_key] = scan_num     # map CID strings to MS2 scans in each MS1 cycle
-                    spectrum_flag = False   # done with info for MS2 scans
-                if msn_level == 3:
-                    try:
-                        ms2_scan = ms_dict[moverz_key]
-                    except KeyError:
-                        print(scan_num, lc_name)
-                        raise
-                    if line == 'cvParam: m/z array, m/z':
-                        mz_arr_flag = True
-                    if line.startswith('binary: ') and mz_arr_flag:
-                        mz_list = [float(x) for x in line.split()[2:]]
-                        mz_arr_flag = False
-                    elif line.startswith('binary: ') and not mz_arr_flag:
-                        int_list = [float(x) for x in line.split()[2:]]
-                        centroids, areas, heights = self.process_tmt_data(mz_list, int_list)
-                        self.tmt_data.append(Reporter_ion(lc_name, ms2_scan, scan_num, centroids, areas, heights))
-                        spectrum_flag = False
+                if buff: # parse the previous spectrum block
+                    for buff_line in buff:
+                        if buff_line.startswith('cvParam: ms level,'):   # get MSn level (2 or 3)
+                            msn_level = int(buff_line.split()[-1])
 
-        self.reporter_total += count
+                            # MS2 scan parsing
+                            if msn_level == 2:
+                                ms2_count += 1
+                                if (ms2_count % 1000) == 0:
+                                    for obj in self.log_obj:
+                                        print('......%d MS2 scans processed...' % ms2_count, file=obj)
+                                ms1_scan = self.parse_ms2_scan(buff, ms_dict)
 
+                                # look for next instrument cycle (a new MS1 scan)
+                                if ms1_scan != ms1_prev:
+                                    dict_list.append(ms_dict)
+                                    ms_dict = {}
+                                    ms1_prev = ms1_scan
+
+                            # MS3 scan parsing        
+                            elif msn_level == 3:    
+                                ms3_count += 1
+                                self.parse_ms3_scan(buff, ms_dict, dict_list, lc_name)
+                                
+                            break
+
+                # reset buffer
+                buff = []
+
+            # spectrum_flag skips header lines until first spectrum block. Stops at chromato info.
+            if line.startswith('chromatogramList'):
+                spectrum_flag = False
+ 
+            # save lines in buffer if inside a spectrum block
+            if spectrum_flag:
+                buff.append(line)
+
+        # update total MS3 counter
+        self.reporter_total += ms3_count
+
+    def parse_ms2_scan(self, buffer, ms_dict):
+        """Parses an MS2 scan block.
+        """
+        # read lines
+        for line in buffer:
+            
+            # get the scan number
+            if line.startswith('id:') and 'scan=' in line:
+                scan_num = int(line.split()[-1].split('=')[-1])
+                
+            # get MS1 scan number
+            if line.startswith('spectrumRef: '):
+                ms1_scan = int(line.split()[-1].split('=')[-1])
+                
+            # get MS2 dissociation key (m/z value) and link to MS2 scan number
+            if line.startswith('cvParam: filter string'):
+                if '@cid3' in line:
+                    moverz_key = line.split('@cid3')[0].split()[-1]
+                elif '@hcd3' in line:
+                    moverz_key = line.split('@hcd3')[0].split()[-1]
+                else:
+                    for obj in self.log_obj:
+                        print('WARNING: dissociation key (@cid or @hcd) not found', file=obj)
+                    return
+                ms_dict[moverz_key] = scan_num
+                
+        return ms1_scan
+
+    def parse_ms3_scan(self, buffer, ms_dict, dict_list, lc_name):
+        """Parses an MS2 scan block.
+        """
+        # read lines
+        for line in buffer:
+            
+            # get the scan number
+            if line.startswith('id:') and 'scan=' in line:  # get scan number
+                scan_num = int(line.split()[-1].split('=')[-1])
+
+            # get MS2 dissociation key (m/z value) accosicate with the MS3 scan
+            if line.startswith('cvParam: filter string'):
+                if '@cid3' in line:
+                    moverz_key = line.split('@cid3')[0].split()[-1]
+                elif '@hcd3' in line:
+                    moverz_key = line.split('@hcd3')[0].split()[-1]
+                else:
+                    for obj in self.log_obj:
+                        print('WARNING: dissociation key (@cid or @hcd) not found', file=obj)
+                    return
+
+                # try and lookup the MS2 scan number
+                ms2_scan = None
+                if moverz_key in ms_dict:
+                    ms2_scan = ms_dict[moverz_key]
+                else:  
+                    for i in range(10):
+                        if moverz_key in dict_list[-(i+1)]:
+                            ms2_scan = dict_list[-(i+1)][moverz_key]
+                            break
+                        
+                # might have small precursor mass error (mass correction?)
+                if not ms2_scan:
+                    print('starting fuzzy lookup :', moverz_key, scan_num)
+                    fuzzy_list = []
+                    lookup = float(moverz_key)
+                    for key in ms_dict:                 # try current dictionary
+                        if abs(lookup - float(key)) <= 0.02:
+                            fuzzy_list.append(key)
+                    if len(fuzzy_list) == 1:
+                        ms2_scan = ms_dict[fuzzy_list[0]]
+                        print('fuzzy matching key was:', fuzzy_list[0])
+                    if not fuzzy_list:
+                        for key in dict_list[-1]:       # try last dictionary in saved list
+                            if abs(lookup - float(key)) <= 0.015:
+                                fuzzy_list.append(key)                        
+                        if len(fuzzy_list) == 1:
+                            ms2_scan = dict_list[-1][fuzzy_list[0]]
+                            print('fuzzy matching key was:', fuzzy_list[0])
+                    if not fuzzy_list:
+                        for key in dict_list[-2]:       # also try one farther back
+                            if abs(lookup - float(key)) <= 0.015:
+                                fuzzy_list.append(key)                        
+                        if len(fuzzy_list) == 1:
+                            ms2_scan = dict_list[-2][fuzzy_list[0]]
+                            print('fuzzy matching key was:', fuzzy_list[0])
+
+                # now it is time to give up       
+                if not ms2_scan:
+                    print('*** MS2 lookup failed! scan:', scan_num, 'key:', moverz_key)
+                    print(moverz_key in dict_list[-1])
+                    print(ms_dict)
+                    print(dict_list[-1])
+                    return
+                
+            # get the scan data    
+            if line == 'cvParam: m/z array, m/z':
+                mz_arr_flag = True
+            if line.startswith('binary: ') and mz_arr_flag:
+                mz_list = [float(x) for x in line.split()[2:]]
+                mz_arr_flag = False
+            elif line.startswith('binary: ') and not mz_arr_flag:
+                int_list = [float(x) for x in line.split()[2:]]
+                centroids, areas, heights = self.process_tmt_data(mz_list, int_list)
+                self.tmt_data.append(Reporter_ion(lc_name, ms2_scan, scan_num, centroids, areas, heights))
+        return
+    
     def process_tmt_data(self, mz_list, int_list):
         """Computes peak centroid and integral within each TMT window.
         This will work for either MS2 reporter ions or MS3 reporter ions."""

@@ -2365,7 +2365,7 @@ class FigureGenerator:
         
         # deltaMasses (Da and ppm))
         x['dmassDa'] = x['expM'] - x['theoM']
-        x['dmassPPM'] = (10000000*(x['expM'] - x['theoM'])  / (np.sqrt(x['expM'] * (x['theoM'] ))))
+        x['dmassPPM'] = (1000000*(x['expM'] - x['theoM'])  / (np.sqrt(x['expM'] * (x['theoM'] ))))
         
         # peptide length
         temp = x['Sequence'].str.split('.')

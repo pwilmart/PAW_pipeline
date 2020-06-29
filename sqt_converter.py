@@ -268,7 +268,7 @@ def make_PAW_txt_file(sqt_file, outs, params):
                             try:
                                 line += tmt_intensity_dict[lc_name + '.' + out.beg]
                             except KeyError:
-                                print('...WARNING: no key:', lc_name + '.' + out.beg)
+                                print('...WARNING: no key for scan:', out.beg)
                                 line += ['0.0' for x in heights]
                         txt.write('\t'.join(line) + '\n')
                 except IndexError:

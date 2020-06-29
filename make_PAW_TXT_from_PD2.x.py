@@ -29,6 +29,9 @@ Direct questions to:
 Technology & Research Collaborations, Oregon Health & Science University,
 Ph: 503-494-8200, FAX: 503-494-4729, Email: techmgmt@ohsu.edu.
 """
+# added some exception handling in case "# Protein Groups" column is missing -PW 20200421
+# had to add lots more try/except and support Mascot -PW 20200421
+# annotated sequence format changed with newer PD - now has bounding residues -PW 20200629
 
 import os
 import sys
@@ -41,7 +44,7 @@ import pandas as pd
 import numpy as np
 import PAW_lib
 
-VERSION = 'v1.0.1'
+VERSION = 'v1.0.2'
 
 # globals
 SEPARATOR = '\t'  # column separator character
@@ -56,6 +59,8 @@ as possible to build the best list of proteins. Removing PSMs before protein
 inference will decrease the number of identified proteins.
 
 v1.0.1: Removed options to test reporter ion intensities or input zero replacements. -PW 10/17/2017
+
+v1.0.2: Trying to support Mascot searches and newer PD 2.x format changes  
 """
 
 
@@ -139,24 +144,41 @@ class PSM(object):
         self.psm_ambiguity = row_series['PSM Ambiguity']
         self.annotated_sequence = row_series['Annotated Sequence']
         try:
+            self.annotated_sequence = self.annotated_sequence.split('.')[1]
+        except IndexError:
+            pass
+        try:
             self.sequence = row_series['Sequence']
         except KeyError:
             self.sequence = row_series['Annotated Sequence'].upper()
+            try:
+                self.sequence = self.sequence.split('.')[1]
+            except IndexError:
+                pass
         self.modifications = row_series['Modifications']
         try:
             self.number_groups = self._int(row_series['Number of Protein Groups'])
         except KeyError:
-            self.number_groups = self._int(row_series['# Protein Groups'])
+            try:
+                self.number_groups = self._int(row_series['# Protein Groups'])
+            except KeyError:
+                self.number_groups = None   # if column not present
         try:
             self.number_proteins = self._int(row_series['Number of Proteins'])
         except KeyError:
             self.number_proteins = self._int(row_series['# Proteins'])
+        # there might not be any protein grouping selected and that column could be missing
+        if self.number_groups == None:
+            self.number_groups = self.number_proteins
         self.master_accessions = row_series['Master Protein Accessions']
         try:
             self.master_descriptions = row_series['Master Protein Descriptions']
         except KeyError:
             self.master_descriptions = None
-        self.accessions = row_series['Protein Accessions']            
+        try:
+            self.accessions = row_series['Protein Accessions']
+        except KeyError:
+            self.accessions = self.master_accessions    # if Protein Accessions missing, use Master accs
         try:
             self.descriptions = row_series['Protein Descriptions']
         except KeyError:
@@ -173,15 +195,27 @@ class PSM(object):
         try:
             self.delta_score = self._float(row_series['Delta Score'])
         except KeyError:
-            self.delta_score = self._float(row_series['DeltaScore'])
+            try:
+                self.delta_score = self._float(row_series['DeltaScore'])
+            except KeyError:    # if Mascot was used, there is no delta score
+                self.delta_score = 0.0 
         if self.delta_score == 1.0:
             self.delta_score = 0.0
         try:
             self.delta_cn = self._float(row_series['Delta Cn'])
         except KeyError:
-            self.delta_cn = self._float(row_series['DeltaCn'])
-        self.rank = self._int(row_series['Rank'])
-        self.search_engine_rank = self._int(row_series['Search Engine Rank'])
+            try:
+                self.delta_cn = self._float(row_series['DeltaCn'])
+            except KeyError:
+                self.delta_cn = 0.0    # if Mascot was used, there is no delta score
+        try:
+            self.rank = self._int(row_series['Rank'])
+        except KeyError:
+            self.rank = 1
+        try:
+            self.search_engine_rank = self._int(row_series['Search Engine Rank'])
+        except KeyError:
+            self.search_engine_rank = None
         try:
             self.concatenated_rank = self._int(row_series['Concatenated Rank'])
         except KeyError:
@@ -197,16 +231,28 @@ class PSM(object):
         try:
             self.theo_mhplus = self._float(row_series['Theo MHplus in Da'])
         except KeyError:
-            self.theo_mhplus = None
+            try:
+                self.theo_mhplus = self._float(row_series['Theo. MH+ [Da]'])
+            except KeyError:
+                self.theo_mhplus = None
         try:
             self.deltamassppm = self._float(row_series['Delta M in ppm'])
         except KeyError:
-            self.deltamassppm = self._float(row_series['DeltaM [ppm]'])       
+            try:
+                self.deltamassppm = self._float(row_series['DeltaM [ppm]'])
+            except KeyError:
+                self.deltamassppm = 1000000.0 * (self.mhplus - self.theo_mhplus) / np.sqrt(self.mhplus * self.theo_mhplus)
         try:
             self.deltamassda = self._float(row_series['Delta mz in Da'])
         except KeyError:
-            self.deltamassda = self._float(row_series['Deltam/z [Da]'])
-        self.ions_matched = row_series['Ions Matched']
+            try:
+                self.deltamassda = self._float(row_series['Deltam/z [Da]'])
+            except KeyError:
+                self.deltamassda = self.mhplus - self.theo_mhplus
+        try:
+            self.ions_matched = row_series['Ions Matched']
+        except KeyError:
+            self.ions_matched = None
         try:
             self.matched_ions = row_series['Matched Ions']
         except KeyError:
@@ -218,9 +264,15 @@ class PSM(object):
         try:
             self.intensity = self._float(row_series['Intensity'])
         except KeyError:
-            self.intensity = None            
-        self.activation = row_series['Activation Type']
-        self.ms_order = row_series['MS Order']
+            self.intensity = None
+        try:
+            self.activation = row_series['Activation Type']
+        except KeyError:
+            self.activation = None
+        try:
+            self.ms_order = row_series['MS Order']
+        except KeyError:
+            self.ms_order = None
         try:
             self.interference = self._int(row_series['Isolation Interference in Percent'])
         except KeyError:
@@ -228,16 +280,28 @@ class PSM(object):
         try:
             self.ave_reporter_SN = row_series['Average Reporter SN']
         except KeyError:
-            self.ave_reporter_SN = row_series['Average Reporter S/N']
+            try:
+                self.ave_reporter_SN = row_series['Average Reporter S/N']
+            except KeyError:
+                self.ave_reporter_SN = None
         try:
             self.inject_time = self._int(row_series['Ion Inject Time in ms'])
         except KeyError:
-            self.inject_time = self._int(row_series['Ion Inject Time [ms]'])
+            try:
+                self.inject_time = self._int(row_series['Ion Inject Time [ms]'])
+            except KeyError:
+                self.inject_time = None
         try:
             self.rt = self._float(row_series['RT in min'])
         except KeyError:
-            self.rt = self._float(row_series['RT [min]'])
-        self.first = self._int(row_series['First Scan'])
+            try:
+                self.rt = self._float(row_series['RT [min]'])
+            except KeyError:
+                self.rt = None
+        try:
+            self.first = self._int(row_series['First Scan'])
+        except KeyError:
+            self.first = None
         try:
             self.last = self._int(row_series['Last Scan'])
         except KeyError:
@@ -266,7 +330,10 @@ class PSM(object):
             self.peptides_matched = row_series['Peptides Matched']
         except KeyError:
             self.peptides_matched = None
-        self.xcorr = self._float(row_series['XCorr'])
+        try:
+            self.xcorr = self._float(row_series['XCorr'])
+        except KeyError:
+            self.xcorr = self._float(row_series['Ions Score'])   # in case Mascot was used
         try:
             self.contam = row_series['Contaminant']
         except KeyError:
@@ -320,7 +387,7 @@ class PSM(object):
         return '\t'.join(header_line)
 
     def make_data(self):
-        """Makes a data line for PSM data
+        """Makes a data line for PSM data.
         """
         data_list = ([1, self.confidence, self.sequence, self.psm_ambiguity, self.descriptions,
                       self.number_groups, self.accessions, self.modifications, self.activation,
@@ -580,10 +647,17 @@ def analyze_modifications(psm_list):
     """
     aa_freq = {}
     all_mods = {}
-    
-    aa_freq['N-Term'] = len(psm_list)
-    aa_freq['C-Term'] = len(psm_list)
+
+    num_mod_strings = 0
+    for i, psm in enumerate(psm_list):
+        if str(psm.modifications) != 'nan':
+            num_mod_strings += 1
+        
+    aa_freq['N-Term'] = num_mod_strings
+    aa_freq['C-Term'] = num_mod_strings
     for psm in psm_list:
+        if str(psm.modifications) == 'nan':
+            continue
         amino_acid_frequency(psm.sequence, aa_freq)
         mods = parse_mods(psm.modifications)
         update_dictionary(all_mods, mods)
@@ -690,6 +764,8 @@ def get_variable_positions(psm, mod_type):
     """Parses PD modification descriptions to get modification positions and symbols."""
     modmask = {}
 
+    if str(psm.modifications) == 'nan':
+        return modmask
     # split modification description string
     modlist = psm.modifications.split(';')
     for mod in modlist:
@@ -742,14 +818,20 @@ def print_modification_report(all_mods, mod_type, write):
 
 def fix_PTM_info(psm, mod_type):
     """Makes SEQUEST-style sequences and removes static mods from modifications strings."""
-    new_seq = list(psm.sequence.upper())
+    if '].' in psm.sequence and '.[' in psm.sequence:
+        new_seq = psm.sequence.split('.')[1].upper()
+    else:
+        new_seq = list(psm.sequence.upper())
     new_symbols = ['' for x in new_seq]
     modmask = get_variable_positions(psm, mod_type)
     for index in modmask:
         new_symbols[index] = modmask[index]
     psm.new_sequence = ''.join([j for i in zip(new_seq, new_symbols) for j in i])
 
-    new_mod_list = [x.strip() for x in psm.modifications.split(';') if mod_type[x[:-1].replace(')(', '_').split('(')[1]]]
+    if str(psm.modifications) == 'nan':
+        new_mod_list = []
+    else:
+        new_mod_list = [x.strip() for x in psm.modifications.split(';') if mod_type[x[:-1].replace(')(', '_').split('(')[1]]]
     psm.new_modifications = '; '.join(new_mod_list)
 
 def make_protein_index(proteins):
