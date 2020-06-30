@@ -52,6 +52,7 @@ version 1.07:
     PAW_tmt.txt files are moved to location with MSn files -PW 20180816
 version 1.08:
     support for real time search SPS MS3 data -PW 20200520
+    support for 16-plex TMT reagents -PW 20200630
 
 """
 # global imports
@@ -311,23 +312,6 @@ class MSConvertGUI:
         self.raw_name_list = None
         self.progressbar = None
 
-        # load TMT labels and masses (all 11 - others kits are subsets)
-        # assumes we have high resolution data where N- and C-forms are resolved
-        self.tmt_tuples = [('126C', 126.1277),
-                          ('127_N', 127.1248),
-                          ('127C', 127.1311),
-                          ('128_N', 128.1281),
-                          ('128C', 128.1344),
-                          ('129_N', 129.1315),
-                          ('129C', 129.1378),
-                          ('130_N', 130.1348),
-                          ('130C', 130.1411),
-                          ('131_N', 131.1382),
-                          ('131C', 131.1445)]
-        self.tmt_labels = [x[0] for x in self.tmt_tuples]
-        self.tmt_masses = [x[1] for x in self.tmt_tuples]
-        self.zeroes = [0.0 for x in self.tmt_tuples]
-
         # create GUI
         self.create_files_frame()
         self.create_defaults_frame()
@@ -336,11 +320,68 @@ class MSConvertGUI:
         Button(self.root, text='Start conversion', command=self.start_processing).pack(pady=2)
         Button(self.root, text='Quit', command=self.quit_gui).pack(pady=2)
 
-        # set up m/z windows for TMT reporter ions
-        self.set_windows()
-
         # enter mainloop
         self.root.mainloop()
+        return
+
+    def set_tmt_plex(self):
+        """Sets the TMt plex when Start conversion button is clicked."""
+        # load TMT labels and masses (all 11 - others kits are subsets)
+        # assumes we have high resolution data where N- and C-forms are resolved
+        tmt_plex = self.tmt_plex.get()
+        if (tmt_plex == 0) or (tmt_plex == 1):       # 6-plex
+            self.tmt_tuples = [('126C', 126.1278),
+                               ('127_N', 127.1248),
+                               ('128C', 128.1344),
+                               ('129_N', 129.1315),
+                               ('130C', 130.1411),
+                               ('131_N', 131.1382)]
+        elif tmt_plex == 2:     # 10-plex
+            self.tmt_tuples = [('126C', 126.1278),
+                               ('127_N', 127.1248),
+                               ('127C', 127.1311),
+                               ('128_N', 128.1281),
+                               ('128C', 128.1344),
+                               ('129_N', 129.1315),
+                               ('129C', 129.1378),
+                               ('130_N', 130.1348),
+                               ('130C', 130.1411),
+                               ('131_N', 131.1382)]
+        elif tmt_plex == 3:     # 11-plex
+            self.tmt_tuples = [('126C', 126.1278),
+                               ('127_N', 127.1248),
+                               ('127C', 127.1311),
+                               ('128_N', 128.1281),
+                               ('128C', 128.1344),
+                               ('129_N', 129.1315),
+                               ('129C', 129.1378),
+                               ('130_N', 130.1348),
+                               ('130C', 130.1411),
+                               ('131_N', 131.1382),
+                               ('131C', 131.1445)]
+        elif tmt_plex == 4:     # 16-plex
+            self.tmt_tuples = [('126C', 126.1278),
+                               ('127_N', 127.1248),
+                               ('127C', 127.1311),
+                               ('128_N', 128.1281),
+                               ('128C', 128.1344),
+                               ('129_N', 129.1315),
+                               ('129C', 129.1378),
+                               ('130_N', 130.1348),
+                               ('130C', 130.1411),
+                               ('131_N', 131.1382),
+                               ('131C', 131.1445),
+                               ('132_N', 132.1415),
+                               ('132C', 132.1479),
+                               ('133_N', 133.1449),
+                               ('133C', 133.1512),
+                               ('134_N', 134.1482)]
+        self.tmt_labels = [x[0] for x in self.tmt_tuples]
+        self.tmt_masses = [x[1] for x in self.tmt_tuples]
+        self.zeroes = [0.0 for x in self.tmt_tuples]
+
+        # set up m/z windows for TMT reporter ions
+        self.set_windows()
         return
 
     # functions to help create widgets
@@ -393,6 +434,9 @@ class MSConvertGUI:
         """
         if not self.raw_name_list:
             self.load_raw_files()
+
+        # set the TMT plex
+        self.set_tmt_plex()
 
         # set up log file
         log_name = 'MSConvert_GUI_log.txt'
@@ -505,7 +549,7 @@ class MSConvertGUI:
             try:
                 obj.close()
             except:
-                pass       
+                pass
 
     def process_ms3_reporter_ions(self, lc_name):
         """Parses ms2 and ms3 spectrum blocks; gets scan numbers, and reporter ion data.
@@ -527,7 +571,7 @@ class MSConvertGUI:
         for k, line in enumerate(gzip.open(self.txt_name, 'rt')):
             line = line.strip()    # remove leading, trailing white space
 
-           # look for each spectrum block 
+           # look for each spectrum block
             if line.startswith('spectrum:') or line.startswith('chromatogramList'):
                 spectrum_flag = True
                 if buff: # parse the previous spectrum block
@@ -549,11 +593,11 @@ class MSConvertGUI:
                                     ms_dict = {}
                                     ms1_prev = ms1_scan
 
-                            # MS3 scan parsing        
-                            elif msn_level == 3:    
+                            # MS3 scan parsing
+                            elif msn_level == 3:
                                 ms3_count += 1
                                 self.parse_ms3_scan(buff, ms_dict, dict_list, lc_name)
-                                
+
                             break
 
                 # reset buffer
@@ -562,7 +606,7 @@ class MSConvertGUI:
             # spectrum_flag skips header lines until first spectrum block. Stops at chromato info.
             if line.startswith('chromatogramList'):
                 spectrum_flag = False
- 
+
             # save lines in buffer if inside a spectrum block
             if spectrum_flag:
                 buff.append(line)
@@ -575,15 +619,15 @@ class MSConvertGUI:
         """
         # read lines
         for line in buffer:
-            
+
             # get the scan number
             if line.startswith('id:') and 'scan=' in line:
                 scan_num = int(line.split()[-1].split('=')[-1])
-                
+
             # get MS1 scan number
             if line.startswith('spectrumRef: '):
                 ms1_scan = int(line.split()[-1].split('=')[-1])
-                
+
             # get MS2 dissociation key (m/z value) and link to MS2 scan number
             if line.startswith('cvParam: filter string'):
                 if '@cid3' in line:
@@ -595,7 +639,7 @@ class MSConvertGUI:
                         print('WARNING: dissociation key (@cid or @hcd) not found', file=obj)
                     return
                 ms_dict[moverz_key] = scan_num
-                
+
         return ms1_scan
 
     def parse_ms3_scan(self, buffer, ms_dict, dict_list, lc_name):
@@ -603,7 +647,7 @@ class MSConvertGUI:
         """
         # read lines
         for line in buffer:
-            
+
             # get the scan number
             if line.startswith('id:') and 'scan=' in line:  # get scan number
                 scan_num = int(line.split()[-1].split('=')[-1])
@@ -623,12 +667,12 @@ class MSConvertGUI:
                 ms2_scan = None
                 if moverz_key in ms_dict:
                     ms2_scan = ms_dict[moverz_key]
-                else:  
+                else:
                     for i in range(10):
                         if moverz_key in dict_list[-(i+1)]:
                             ms2_scan = dict_list[-(i+1)][moverz_key]
                             break
-                        
+
                 # might have small precursor mass error (mass correction?)
                 if not ms2_scan:
                     print('starting fuzzy lookup :', moverz_key, scan_num)
@@ -643,27 +687,27 @@ class MSConvertGUI:
                     if not fuzzy_list:
                         for key in dict_list[-1]:       # try last dictionary in saved list
                             if abs(lookup - float(key)) <= 0.015:
-                                fuzzy_list.append(key)                        
+                                fuzzy_list.append(key)
                         if len(fuzzy_list) == 1:
                             ms2_scan = dict_list[-1][fuzzy_list[0]]
                             print('fuzzy matching key was:', fuzzy_list[0])
                     if not fuzzy_list:
                         for key in dict_list[-2]:       # also try one farther back
                             if abs(lookup - float(key)) <= 0.015:
-                                fuzzy_list.append(key)                        
+                                fuzzy_list.append(key)
                         if len(fuzzy_list) == 1:
                             ms2_scan = dict_list[-2][fuzzy_list[0]]
                             print('fuzzy matching key was:', fuzzy_list[0])
 
-                # now it is time to give up       
+                # now it is time to give up
                 if not ms2_scan:
                     print('*** MS2 lookup failed! scan:', scan_num, 'key:', moverz_key)
                     print(moverz_key in dict_list[-1])
                     print(ms_dict)
                     print(dict_list[-1])
                     return
-                
-            # get the scan data    
+
+            # get the scan data
             if line == 'cvParam: m/z array, m/z':
                 mz_arr_flag = True
             if line.startswith('binary: ') and mz_arr_flag:
@@ -674,7 +718,7 @@ class MSConvertGUI:
                 centroids, areas, heights = self.process_tmt_data(mz_list, int_list)
                 self.tmt_data.append(Reporter_ion(lc_name, ms2_scan, scan_num, centroids, areas, heights))
         return
-    
+
     def process_tmt_data(self, mz_list, int_list):
         """Computes peak centroid and integral within each TMT window.
         This will work for either MS2 reporter ions or MS3 reporter ions."""
@@ -693,7 +737,7 @@ class MSConvertGUI:
             """
             =========================================================
             should skip centroid calc if using instrument centroiding
-            =========================================================            
+            =========================================================
             """
             try:
                 centroid = df_window['weighted intensity'].sum() / df_window['intensity'].sum()
@@ -836,6 +880,7 @@ class MSConvertGUI:
         self.ion_count = IntVar()
         self.min_intensity = DoubleVar()
         self.msn_level = IntVar()
+        self.tmt_plex = IntVar()
         self.ms2_centroid = IntVar()
         self.ms3_centroid = IntVar()
 
@@ -845,6 +890,9 @@ class MSConvertGUI:
         self.create_radiobuttons(defaults_frame, 'Data to extract: ',
                                  [('MS2', 0), ('MS3', 1), ('MS2 TMT', 2), ('MS3 TMT', 3)],
                                  self.msn_level).pack(fill=X, expand=YES)
+        self.create_radiobuttons(defaults_frame, 'TMT Reagents: ',
+                                 [('None', 0), ('6-plex', 1), ('10-plex', 2), ('11-plex', 3), ('16-plex', 4)],
+                                 self.tmt_plex).pack(fill=X, expand=YES)
         self.create_radiobuttons(defaults_frame, 'Centroid MS2 data: ',
                                  [('Yes', 0), ('No', 1)], self.ms2_centroid).pack(fill=X, expand=YES)
         self.create_radiobuttons(defaults_frame, 'Centroid MS3 data: ',
@@ -854,6 +902,7 @@ class MSConvertGUI:
         self.ion_count.set(15)
         self.min_intensity.set(100)
         self.msn_level.set(0)
+        self.tmt_plex.set(0)
         self.ms2_centroid.set(0)
         self.ms3_centroid.set(0)
         return
