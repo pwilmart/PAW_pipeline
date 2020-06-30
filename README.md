@@ -1,5 +1,5 @@
-# Update 6/29/2020
-Made some changes to `make_PAW_TXT_from_PD2.x.py` to support Mascot search exports and some output changes in newer PD 2.x exports. There are  also some output log information changes for some pipeline steps.
+# Update 6/30/2020
+Made some changes to `make_PAW_TXT_from_PD2.x.py` to support Mascot search exports and some output changes in newer PD 2.x exports. There are  also some output log information changes for some pipeline steps. Added support for real time search SPS-MS3 raw files and 16-plex TMT reagents to `msconvert_GUI.py`. Added support for 16-plex TMT reagents and high res MS2 fragment ions to `comet_GUI.py`.
 
 ## Update 8/22/2019
 Prior version of `sqt_converter.py` had a serious bug that resulted in a large amount of data to be dropped. Please discard any scripts downloaded between 8/6/2019 and 8/22/2019 and replace with new versions.
