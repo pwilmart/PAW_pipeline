@@ -32,7 +32,9 @@ Ph: 503-494-8200, FAX: 503-494-4729, Email: techmgmt@ohsu.edu.
 """
 
 # need to change license to MIT
-# converted for Python 3 -PW 9/15/2017
+# converted for Python 3 -PW 20170915
+# added support for TMT 16-plex to static mods -PW 20200629
+# added support for high-res MS2 -PW 20200629
 
 
 ###########################
@@ -246,8 +248,11 @@ class staticMods(Toplevel):
         """Create some action buttons below main GUI elements.
         """
         box = Frame(self)
-        w1 = Button(box, text='TMT labels', width=10, command=self.TMT)
+        w1 = Button(box, text='TMT 6/10/11', width=10, command=self.TMT_229)
         w1.pack(side=LEFT, padx=5, pady=5)
+        w2 = Button(box, text='TMT 16', width=10, command=self.TMT_304)
+        w2.pack(side=LEFT, padx=5, pady=5)
+
         box.pack()
         w = Button(box, text='Done', width=10, command=self.onDone)
         w.pack(side=LEFT, padx=5, pady=5)
@@ -300,7 +305,7 @@ class staticMods(Toplevel):
 
         return
 
-    def TMT(self, event=None):
+    def TMT_229(self, event=None):
         """Sets static mods for 10-plex TMT labeling.
         """
         self.static_dict['add_K_lysine'] = ('229.1629320', 'added to K - avg. 128.1723, mono. 128.09496')
@@ -309,8 +314,16 @@ class staticMods(Toplevel):
             # get values from parsed dictionary and set entry fields
             mass, comment = self.static_dict[key]
             self.static_mass[i].set(float(mass))
-##        print('\nstatic dict:')
-##        print(self.static_dict)
+
+    def TMT_304(self, event=None):
+        """Sets static mods for 10-plex TMT labeling.
+        """
+        self.static_dict['add_K_lysine'] = ('304.2071', 'added to K - avg. 128.1723, mono. 128.09496')
+        self.static_dict['add_Nterm_peptide'] = ('304.2071', '')
+        for i, key in enumerate(self.keys):
+            # get values from parsed dictionary and set entry fields
+            mass, comment = self.static_dict[key]
+            self.static_mass[i].set(float(mass))
         
     def onDone(self, event=None):
         """Reads out the deltamass values and loads them into a passed in list pointer, then exits.
@@ -497,7 +510,6 @@ class CometGUI:
         user_selected_params = {
                 'database_name': (self.database.get(), ''),
                 'peptide_mass_tolerance': (self.pep_mass_tol.get(), ''),
-                'fragment_bin_tol': (self.frag_bin_tol.get(), '# binning to use on fragment ions'),
                 'peptide_mass_units': (self.pep_mass_units.get(), '# 0=amu, 1=mmu, 2=ppm'),
                 'mass_type_parent': (self.mass_type_par.get(), '# 0=average masses, 1=monoisotopic masses'),
                 'mass_type_fragment': (self.mass_type_frag.get(), '# 0=average masses, 1=monoisotopic masses'),
@@ -523,6 +535,16 @@ class CometGUI:
                 'output_pepxmlfile':  ('0', '# 0=no, 1=yes  write pep.xml file'),
                 'num_output_lines': ('12', '# num peptide results to show')
             }
+        if self.frag_ion_type.get() == 0:
+            user_selected_params['fragment_bin_tol'] = ('1.0005', '# binning to use on fragment ions')
+            user_selected_params['fragment_bin_offset'] = ('0.4', '# offset position to start the binning (0.0 to 1.0)')
+            user_selected_params['theoretical_fragment_ions'] = ('1', '# 0=use flanking peaks, 1=M peak only')
+            user_selected_params['spectrum_batch_size'] =('0', '# max. # of spectra to search at a time; 0 to search the entire scan range in one loop')
+        else:
+            user_selected_params['fragment_bin_tol'] = ('0.02', '# binning to use on fragment ions')
+            user_selected_params['fragment_bin_offset'] = ('0.0', '# offset position to start the binning (0.0 to 1.0)')
+            user_selected_params['theoretical_fragment_ions'] = ('0', '# 0=use flanking peaks, 1=M peak only')
+            user_selected_params['spectrum_batch_size'] =('20000', '# max. # of spectra to search at a time; 0 to search the entire scan range in one loop')
 
         # see if database can be found
         if not os.path.exists(user_selected_params['database_name'][0]):
@@ -551,7 +573,13 @@ class CometGUI:
                     if key == 'peptide_mass_tolerance':
                         f.write(str(key) + ' = ' + '{0:.2f}'.format(self.pep_mass_tol.get()) + '\n')
                     elif key == 'fragment_bin_tol':
-                        f.write('%s = %0.4f%s%s\n' % (key, user_selected_params[key][0], (30-len(key))*' ', user_selected_params[key][1]))
+                        f.write('%s = %s%s%s\n' % (key, user_selected_params[key][0], (36-len(key)-len(user_selected_params[key][0]))*' ', user_selected_params[key][1]))
+                    elif key == 'fragment_bin_offset':
+                        f.write('%s = %s%s%s\n' % (key, user_selected_params[key][0], (36-len(key)-len(user_selected_params[key][0]))*' ', user_selected_params[key][1]))
+                    elif key == 'theoretical_fragment_ions':
+                        f.write('%s = %s%s%s\n' % (key, user_selected_params[key][0], (36-len(key)-len(user_selected_params[key][0]))*' ', user_selected_params[key][1]))
+                    elif key == 'spectrum_batch_size':
+                        f.write('%s = %s%s%s\n' % (key, user_selected_params[key][0], (36-len(key)-len(user_selected_params[key][0]))*' ', user_selected_params[key][1]))
                     elif key.startswith('search_'):
                         idx = self.search_enzyme_list.index(user_selected_params[key][0])
                         user_selected_params[key] = (idx, user_selected_params[key][1])
@@ -567,7 +595,8 @@ class CometGUI:
                     elif key.startswith('variable_'):
                         f.write('%s = %s \n' % (key, user_selected_params[key][0]))
                     elif key.startswith('add_'):
-                        f.write('%s = %0.4f%s%s\n' % (key, user_selected_params[key][0], (30-len(key))*' ', user_selected_params[key][1]))
+                        value = '%0.4f' % user_selected_params[key][0]
+                        f.write('%s = %s%s%s\n' % (key, value, (36-len(key)-len(value))*' ', user_selected_params[key][1]))
                     else:
                         pad = (36 - len(key) - len(str(user_selected_params[key][0]))) * ' '
                         f.write('%s = %s%s%s\n' % (key, user_selected_params[key][0], pad, user_selected_params[key][1]))
@@ -665,10 +694,10 @@ class CometGUI:
         
         #Variables
         self.pep_mass_tol = DoubleVar()
-        self.frag_bin_tol = DoubleVar()
         self.pep_mass_units = IntVar()
         self.mass_type_par = IntVar()
-        self.mass_type_frag = IntVar()        
+        self.mass_type_frag = IntVar()
+        self.frag_ion_type = IntVar()
         
         #Creation
         self.create_entry(masses_frame, 'Peptide Mass Tolerance: ', self.pep_mass_tol).pack(fill=X, expand=YES)
@@ -676,14 +705,15 @@ class CometGUI:
                                  [('AMU',0),('MMU',1),('PPM',2)], self.pep_mass_units).pack(fill=X, expand=YES)
         self.create_radiobuttons(masses_frame, 'Parent Ion Mass Type: ',
                                  [('Average',0),('Monoisotopic',1)], self.mass_type_par).pack(fill=X, expand=YES)
-        self.create_entry(masses_frame, 'Fragment Bin Tolerance (use 1.0005 for low-res IT) : ', self.frag_bin_tol).pack(fill=X, expand=YES)        
+        self.create_radiobuttons(masses_frame, 'Fragment ion type:',
+                                 [('low res (IT)', 0), ('high res (Orbi)', 1)], self.frag_ion_type).pack(fill=X, expand=YES)
         
         #Set Defaults
         self.pep_mass_tol.set(1.25)
-        self.frag_bin_tol.set(1.0005)
         self.pep_mass_units.set(0)
         self.mass_type_par.set(1)
-        self.mass_type_frag.set(1)
+        self.mass_type_frag.set(1)  # hidden: set to monoisotopic 
+        self.frag_ion_type.set(0)                                 
         return
         
     def create_use_ion_frame(self):
