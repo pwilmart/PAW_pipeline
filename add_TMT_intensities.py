@@ -28,6 +28,12 @@ Direct questions to:
 Technology & Research Collaborations, Oregon Health & Science University,
 Ph: 503-494-8200, FAX: 503-494-4729, Email: techmgmt@ohsu.edu.
 """
+# To Do Thoughts:
+"""Read each filtered TXT file into pandas table
+for each column of intensities
+  save as a series or list
+
+"""
 # Requires Python 3.6 or greater and uses numpy.
 
 import os

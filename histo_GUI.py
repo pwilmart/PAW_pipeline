@@ -862,7 +862,7 @@ class GUI:
         self.sparseDiscScore = 100.0        
         self.ACCURATE_MASS = True
         self.SMOOTHED = True
-        if self.massAccuracy.get() == 'Low':
+        if self.massAccuracy.get() == 'Low Resolution':
             self.ACCURATE_MASS = False
         if variable.get() == 'Plot':
             self.SMOOTHED = False
