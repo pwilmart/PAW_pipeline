@@ -74,19 +74,19 @@ def get_folder(default_location, title_string=None):
         root.tk.call('console', 'hide')
     except:
         pass
-    
+
     # set default title string and location if not passed
-    if title_string is None:   
+    if title_string is None:
         title_string = 'Select a folder with desired files/dirs'
     if not default_location:
         default_location = os.getcwd()
-    
+
     # create dialog box for folder selection
     root.update()   # helps make sure dialog box goes away after selection
-    full_folder_name = filedialog.askdirectory(parent=root, initialdir=default_location, 
-                                               title=title_string, mustexist=True)    
+    full_folder_name = filedialog.askdirectory(parent=root, initialdir=default_location,
+                                               title=title_string, mustexist=True)
     # return full folder name
-    return full_folder_name    
+    return full_folder_name
 
 def get_file(default_location, ext_list, title_string=None):
     """Dialog box to browse to a file.  Returns full file name.
@@ -106,21 +106,21 @@ def get_file(default_location, ext_list, title_string=None):
         root.tk.call('console', 'hide')
     except:
         pass
-    
+
     # set default title string and ext list if not passed
-    if title_string is None:   
+    if title_string is None:
         title_string = 'Select a single FILE'
     if not ext_list:
         ext_list =  [('All files', '*.*')]
     if not default_location:
         default_location = os.getcwd()
-    
+
     # create dialog box for file selection
     root.update()   # helps make sure dialog box goes away after selection
-    filename = filedialog.askopenfilename(parent=root, initialdir=default_location, 
-                                          filetypes=ext_list, title=title_string)    
+    filename = filedialog.askopenfilename(parent=root, initialdir=default_location,
+                                          filetypes=ext_list, title=title_string)
     # return full filename
-    return filename      
+    return filename
 
 def save_file(default_location, ext_list, default_file='', title_string=None):
     """Dialog box to save a file.  Returns full name of desired file.
@@ -141,24 +141,24 @@ def save_file(default_location, ext_list, default_file='', title_string=None):
         root.tk.call('console', 'hide')
     except:
         pass
-    
+
     # set default title string if not passed
-    if title_string is None:   
+    if title_string is None:
         title_string = 'Select a single FILE'
     if not ext_list:
         ext_list =  [('All files', '*.*')]
     if not default_location:
         default_location = os.getcwd()
-        
+
     # create dialog box for file selection
     root.update()   # helps make sure dialog box goes away after selection
-    filename = filedialog.asksaveasfilename(parent=root, initialdir=default_location, 
-                                            initialfile=default_file, filetypes=ext_list, 
+    filename = filedialog.asksaveasfilename(parent=root, initialdir=default_location,
+                                            initialfile=default_file, filetypes=ext_list,
                                             title=title_string)
     # return full filename
-    return filename    
-    
-    
+    return filename
+
+
 def get_files(default_location, ext_list, title_string=None):
     """Dialog box to browse for files.  Returns a tuple of file names.
 
@@ -173,21 +173,21 @@ def get_files(default_location, ext_list, title_string=None):
     # set up GUI elements
     root = tkinter.Tk()
     root.withdraw()
-    
+
     # set default title string if not passed
-    if title_string is None:   
+    if title_string is None:
         title_string = 'Select one or more FILE(s)'
     if not ext_list:
         ext_list =  [('All files', '*.*')]
     if not default_location:
         default_location = os.getcwd()
-        
+
     # create dialog box for file selection
     root.update()   # helps make sure dialog box goes away after selection
-    filenames = filedialog.askopenfilenames(parent=root, initialdir=default_location, 
-                                            filetypes=ext_list, multiple=True, 
+    filenames = filedialog.askopenfilenames(parent=root, initialdir=default_location,
+                                            filetypes=ext_list, multiple=True,
                                             title=title_string)
-    return filenames   
+    return filenames
 
 def get_string(title, prompt='Enter a string', initial=''):
     """Function to wrapper tkSimpleDialog.askstring function
@@ -273,7 +273,7 @@ class Peptide:
             ct_okay = True
         if noP and (suffix == 'P') and (self.net > 0) and ct_okay:   # trypsin strict
             self.net -= 1
-    
+
     def compute_net(self, enzyme):
         """Figures out the number of peptide termini consistent with the enzyme cleavage.
         Written by Phil Wilmarth, OHSU, 2008, rewritten 2017.
@@ -281,7 +281,7 @@ class Peptide:
         # valid amino acid characters
         amino_acids = set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
                            'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'Z', 'X'])
-        
+
         # get the prefix amino acid residue
         i = len(self.prefix) - 1
         while self.prefix[i] not in amino_acids:
@@ -302,11 +302,11 @@ class Peptide:
             suffix = self.suffix[i]
         else:
             suffix = 'X'
-        
+
         cterm = self.base_seq[-1]  # last amino acid in sequence
         nterm = self.base_seq[0]   # first amino acid in sequence
         print(prefix, nterm, cterm, suffix)
-        
+
         # determine number of enzymatic termini, net
         """need to support different enzymes and deal with proline.
         Seems Comet deals with premature stop codons as sequence breaks (* might be in prefix or suffix)."""
@@ -339,7 +339,7 @@ class Peptide:
     def mask_base(self):
         """Masks I and L to j in base_seq."""
         return re.sub(r'[IL]', 'j', self.base_seq)
-        
+
 def find_peptide(peptide, proteins, mask=True, verbose=True):
     """Finds peptides in protein sequences.  Returns list of match tuples.
     This version requires additional attributes for protein objects.
@@ -363,27 +363,27 @@ def find_peptide(peptide, proteins, mask=True, verbose=True):
         protein_list.append(proteins)
     else:
         print('FIND_PEPTIDE WARNING: "proteins" was not a list or Protein object.')
-        
+
     matches = []
     for p in protein_list:
         matches += p.findPeptide(peptide, mask, pad_count=1)
-    
+
     # if no matches, print warning (wrong database?)
-    if verbose and len(matches) == 0:        
+    if verbose and len(matches) == 0:
         print('FIND_PEPTIDE WARNING: "%s" not found in protein sequences.' % (peptide,))
         if len(protein_list) <= 20:
             for p in protein_list:
                 print('...', p.accession)
 
     # return the match list (empty list if no matches)
-    return matches 
+    return matches
     # end
 
 class CometParams(object):
     """Container for Comet parameters values."""
     def __init__(self):
         """Creates the attribute placeholder/defaults."""
-        
+
         # the most important attributes (initiate with defaults)
         """Do values need to be converted from strings to floats or ints?"""
         self.folder = None
@@ -405,12 +405,12 @@ class CometParams(object):
         self.max_variable_mods_in_peptide = 5
         self.static_mods = self.default_static_mods()       # dictionary
         self.enzyme_table = self.default_enzyme_table()     # dictionary
-        
+
         self.output_lines = 20
         self.expect_score = True
         self.sample_enzyme_number = 1
         self.sample_enzyme = 'Tryp'
-        
+
     def load_from_folder(self, folder):
         """Find any params files and parse comet first, sequest if no comet."""
         self.folder = folder    # location of the params file
@@ -433,15 +433,15 @@ class CometParams(object):
         else:
             print('   WARNING: no parameter files were found!')
             return
-        
+
         # parse the params file and update the attributes
         if self.which_one == 'comet':
-            self.parse_comet_params(contents) 
+            self.parse_comet_params(contents)
         else:
             self.parse_sequest_params(contents)
         self.load_attributes()
         return
-    
+
     def load_from_string(self, string):
         """Find any params files and parse comet first, sequest if no comet."""
         # parse the params file and update the attributes
@@ -452,7 +452,7 @@ class CometParams(object):
 
     def load_attributes(self):
         """Populates the generic atributes from the respective parsed params dictionaries."""
-        
+
         if self.which_one == 'comet':
             self.data_base = self.params_dict['database_name']
             self.database_path = os.path.dirname(self.data_base)
@@ -476,8 +476,8 @@ class CometParams(object):
             self.expect_score = [False, True][int(self.params_dict['print_expect_score'])]
             self.sample_enzyme_number = int(self.params_dict['sample_enzyme_number'])
             self.sample_enzyme = self.enzyme_table[self.sample_enzyme_number][0]
-                                                          
-        elif self.which_one == 'sequest':                                                          
+
+        elif self.which_one == 'sequest':
             self.data_base = self.params_dict['first_database_name']
             self.database_path = os.path.dirname(self.data_base)
             self.peptide_mass_tolerance = float(self.params_dict['peptide_mass_tolerance'])
@@ -526,7 +526,7 @@ class CometParams(object):
         keys = [k for k in self.params_dict.keys() if k.startswith('use_')]
         for k in keys:
             self.ion_series[k] = (True if self.params_dict[k] == '1' else False)
-        
+
         # make variable mods dictionary
         self.variable_mods = {}
         keys = [k for k in self.params_dict.keys() if k.startswith('variable_')]
@@ -538,7 +538,7 @@ class CometParams(object):
         keys = [k for k in self.params_dict.keys() if k.startswith('add_')]
         for k in keys:
             self.static_mods[k] = self.params_dict[k]
-                                       
+
     def parse_sequest_params(self, contents):
         """Parses SEQUEST.PARAMS files and loads params: values into a dictionary"""
         for i, line in enumerate(contents):
@@ -549,7 +549,7 @@ class CometParams(object):
                     key = line.split('=')[0].strip()
                     value = line.split('=')[1].strip()
                     self.params_dict[key] = value
-    
+
         # make Comet-style ion series dictionary
         """
         1--> 0 or 1 whether neutral losses of series A should be honoured. (1 = yes)
@@ -580,11 +580,11 @@ class CometParams(object):
         self.ion_series['use_X_ions'] = (True if values[9] > 0.0 else False)
         self.ion_series['use_Y_ions'] = (True if values[10] > 0.0 else False)
         self.ion_series['use_Z_ions'] = (True if values[11] > 0.0 else False)
-        
+
         # make variable mods dictionary
         mods = self.params_dict['diff_search_options'].split()
         self.mod_tuples = list(zip(mods[::2], mods[1::2]))
-        
+
         # term_diff_search_options parameter is C-term deltamass, then N-term deltamass
         self.mod_tuples += list(zip(self.params_dict['term_diff_search_options'].split(), ['c', 'n']))
         self.mod_tuples = [tuple(list(x) + ['0', '3', '-1', '0', '0']) for x in self.mod_tuples]
@@ -614,7 +614,7 @@ class CometParams(object):
                             ('use_Y_ions', False),
                             ('use_Z_ions', False),
                             ('use_NL_ions', False)])
-    
+
     def default_variable_mods(self):
         """Sets default variable mods."""
         return OrderedDict([('variable_mod01', ('15.9949', 'M', '0', '3', '-1', '0', '0')),
@@ -692,15 +692,15 @@ class CometParams(object):
         print('expect_score:', self.expect_score)
         print('sample_enzyme_number:', self.sample_enzyme_number)
         print('sample_enzyme:', self.sample_enzyme)
-        
+
         print('ion_series:')    # dictionary
         pprint(self.ion_series)
         print('variable_mods:')   # dictionary
         pprint(self.variable_mods)
         print('static_mods:')       # dictionary
-        pprint(self.static_mods)       # dictionary        
+        pprint(self.static_mods)       # dictionary
         return
-    
+
     # end class
 
 class PeptideInfo:
@@ -711,7 +711,7 @@ class PeptideInfo:
         self.end = end
         self.mass = mass
         self.missed = missed
-        return            
+        return
 
 class Protein:
     """Object to hold protein accession numbers, descriptions, and sequences.
@@ -727,9 +727,9 @@ class Protein:
         findPeptide: finds location of peptide in protein sequence
         coverage: calculates coverage and aa counts from peptide list
         enzymaticDigest: theroetical enzymatic digest of protein sequence
-        
+
     Written by Phil Wilmarth, OHSU, 2009, 2016.
-    
+
     Updated for new Comet mod formats -PW 10/27/2017
     Removed any parsing of accessions and descriptions methods and attributes -PW 20180711
     """
@@ -746,7 +746,7 @@ class Protein:
         self.length = 0
         self.peptides = []
         return
-    
+
     def readProtein(self, fasta_reader):
         """Gets the next FASTA protein entry from FastaReader object.
 
@@ -757,7 +757,7 @@ class Protein:
         """
         status = fasta_reader.readNextProtein(self)
         return status
-    
+
     def printProtein(self, file_obj=None, length=80):
         """Prints FASTA protein entry to file (stdout is default).
 
@@ -769,17 +769,17 @@ class Protein:
         """
         if file_obj == None:
             file_obj = sys.stdout
-        
+
         # print new accession and new descriptor on first line
         if self.description == '':
             print('>'+self.accession, file=file_obj)
         else:
             print('>'+self.accession, self.description, file=file_obj)
-        
+
         # initialize some things
         char_count = 0
         char_line = ''
-        
+
         # build up sequence line with "length" characters per line
         for char in self.sequence:
             if char_count < length:  # do not have "width" chars yet
@@ -789,7 +789,7 @@ class Protein:
                 print(char_line, file=file_obj)
                 char_line = char
                 char_count = 1
-        
+
         # print last sequence line (often less than "width" long) and return
         if len(char_line):
             print(char_line, file=file_obj)
@@ -800,26 +800,26 @@ class Protein:
 
         Usage: rev_prot = object.reverseProtein(decoy_string),
             where "object" is a Protein object, "decoy_string" is the
-            unique identifier text to add to the beginning of the 
+            unique identifier text to add to the beginning of the
             protein accesion number, and "rev_prot" is new Protein object.
         """
         # make sure decoy_string ends with an undescore
         if not decoy_string.endswith('_'):
             decoy_string = decoy_string + '_'
-        
+
         # create a new Protein instance
-        rev_prot = Protein() 
-        
+        rev_prot = Protein()
+
         # prefix the decoy_string to desired parts of accession
         if self.accession.startswith('CONT_'):
             new_acc = decoy_string + self.accession.split('|')[0]
         else:
-            new_acc = decoy_string + self.accession.replace('|', '&') # best to remove "|"        
+            new_acc = decoy_string + self.accession.replace('|', '&') # best to remove "|"
         rev_prot.accession = new_acc
-        
+
         # change the desciptions, too.
         rev_prot.description = 'REVERSED'
-        
+
         # reversed the protein sequence and return new protein object
         rev_prot.sequence = self.sequence[::-1]
         return rev_prot
@@ -828,7 +828,7 @@ class Protein:
         """Returns protein molecular weight as the sum of average aa masses.
         If "show_errs" flag set, invalid amino acid characters are reported.
         Does not add any modification delta masses (fixed or variable).
-        """        
+        """
         # start with water then add aa masses
         self.setMasses()
         bad_char = {}
@@ -838,7 +838,7 @@ class Protein:
                 molwt += self.ave_masses[aa]
             except:     # keep track of bad characters
                 bad_char[aa] = True
-        
+
         bad_char = sorted(bad_char.keys())
         if len(bad_char) > 0 and show_errs:     # report bad chars if desired
             print('   WARNING: unknown symbol(s) (%s) in %s:\n%s' %
@@ -853,7 +853,7 @@ class Protein:
                 'C':0, 'L':0, 'I':0, 'J':0, 'N':0, 'O':0, 'B':0,
                 'D':0, 'Q':0, 'K':0, 'Z':0, 'E':0, 'M':0, 'H':0,
                 'F':0, 'R':0, 'Y':0, 'W':0, 'U':0, '*':0, '-':0 }
-        
+
         # count the amino acids for all residues in sequence
         bad_char = {}
         for aa in self.sequence:
@@ -861,16 +861,16 @@ class Protein:
                 freq[aa] += 1
             except:     # keep track of bad characters
                 bad_char[aa] = True
-        
+
         bad_char = sorted(bad_char.keys())
         if len(bad_char) > 0 and show_errs: # report any bad chars, if desired
             print('   WARNING: unknown symbol(s) (%s) in %s:\n%s' %
                   (''.join(bad_char), self.accession, self.sequence))
         return freq
-    
+
     def seqlenProtein(self):
         """Calculates protein sequence length.
-        """        
+        """
         self.length = len(self.sequence)
         return self.length
 
@@ -899,7 +899,7 @@ class Protein:
         # might have C-terminal mod
         residues.append('')
         decorations.append(decoration)
-        
+
         return residues, decorations
 
     def redecorate_peptide(self, peptide, decorations):
@@ -914,10 +914,10 @@ class Protein:
         prefix, peptide, suffix = self.split_peptide(sequence)
 
         # remove the 2017 Comet style mod strings
-        peptide = re.sub(r'\[[-+]?[0-9]*(.)?[0-9]*\]', '', peptide)        
+        peptide = re.sub(r'\[[-+]?[0-9]*(.)?[0-9]*\]', '', peptide)
         # remove modification symbols: '*', '#', '@', '^', '~', '$', '%', '!', '+', 'n', 'c', '[', ']', "(', ')', '{', '}'
         peptide = re.sub(r'[*#@^~$%!+nc\[\]\{\}\(\)]', '', peptide)
-        
+
         # mask I/L if needed:
         if mask:
             return re.sub(r'[IL]', 'j', peptide)
@@ -939,7 +939,7 @@ class Protein:
         base_pep_masked = ''.join(residues)
         if mask:
             base_pep_masked = re.sub(r'[IL]', 'j', base_pep_masked)
-        
+
         # fix the protein sequence for peptide lookups (pad and mask I/L). Save the results to save time
         if (not self.sequence_masked) or (pad_count != self.pad_count):
             self.sequence_padded = ('-' * pad_count) + self.sequence + ('-' * pad_count) # add bounding symbols
@@ -948,11 +948,11 @@ class Protein:
             else:
                 self.sequence_masked = self.sequence_padded
             self.pad_count = pad_count
-        
+
         # find all matches of base_pep_masked to protein sequence (padded and masked)
         search_string = '(?=(%s))' % base_pep_masked    # need to do this to get overlapping matches (new python regex not yet ready: overlapped=True flag)
         for match in re.finditer(search_string, self.sequence_masked):
-            
+
             start = match.span()[0] # NOTE: look ahead matching does not give ending position of string (beg=end)
             end = start + len(base_pep_masked)
             start_prot, end_prot = start - self.pad_count + 1, end - self.pad_count
@@ -964,10 +964,10 @@ class Protein:
             full_seq = pre + '.' + middle + '.' + post
             """might want to create a match object instead of tuple."""
             matches.append((self.accession, start_prot, end_prot, full_seq))
-        
+
         # return the match list (empty list if no matches)
         return matches
-        
+
     def calcCoverage(self, peptide_list):
         """Calculates % coverage and aa frequency map of matched peptides.
         "peptide_list" is list of sequences with optional counts (as tuples).
@@ -989,18 +989,18 @@ class Protein:
                             freq_dict[key] = freq_dict[key] + 1
                         else:
                             freq_dict[key] = 1
-                            
+
         coverage = 100.0*float(len(freq_dict))/float(len(self.sequence))
         coverage_map = []
         for i, aa in enumerate(self.sequence):
             coverage_map.append((str(i+1), aa, freq_dict.get(str(i+1), 0)))
         return (coverage, coverage_map)
-    
+
     def enzymaticDigest(self, enzyme_regex=None, low=400.0, high=10000.0, length=6, missed=3, mass='mono'):
         """Performs a tryptic digest of a protein sequence. This does not
         do any modifications to residues except for reduction/alkylation of
         cys residues (C+57). Mass filters should be relaxed.
-        
+
         Returns a list of digested peptides.
         enzyme_regex is a compiled re object for the enzyme cleavage
             (if enzyme_regex not defined, do tryptic digest by default)
@@ -1025,7 +1025,7 @@ class Protein:
         regex = re.compile(r".(?:(?<![DE](?!P)).)*")    # Glu-C
         regex = re.compile(r".(?:(?<![FL](?!P)).)*")    # PepsinA
         regex = re.compile(r".(?:(?<![FWYL](?!P)).)*")  # chymotrypsin
-        """   
+        """
         # skip if there is no sequence to digest
         if len(self.sequence) == 0:
             return []
@@ -1033,7 +1033,7 @@ class Protein:
         # tryptic digestion is the default
         if not enzyme_regex:
             enzyme_regex = re.compile(r".(?:(?<![KR](?!P)).)*")
-        
+
         # set up masses, default is alkylated cysteine. No mechanism for other modifications yet.
         self.setMasses()
         if mass == 'ave':
@@ -1055,22 +1055,27 @@ class Protein:
             digest[i].beg, digest[i].end = match.span()
             digest[i].beg += 1
             for aa in match.group():
-                digest[i].mass += masses[aa]
-            
+                try:
+                    digest[i].mass += masses[aa]
+                except KeyError:
+                    print('...WARNING: bad amino acid character!')
+                    print('...bad character:', aa)
+                    print('...in protein:', self.accession, self.description)
+
         # test peptides and missed cleavage peptides for mass ranges and min length
         valid_digest = []
         for i in range(len(digest)):
-            
+
             # check if peptide is within the mass range and meets min length
             if (low <= digest[i].mass <= high) and (len(digest[i].seq) >= length):
                 valid_digest.append(digest[i])
-                
+
             # create and check missed cleavages
             for j in range(1, missed+1):
                 if (i+j) > len(digest)-1:
                     continue
                 temp = PeptideInfo(begin=100000)    # a peptide object for missed cleavages
-    
+
                 # calculate running sums for each number of missed cleavages
                 for k in range(j+1):
                     if (i+k) > len(digest)-1:
@@ -1081,11 +1086,11 @@ class Protein:
                     temp.mass += (digest[i+k].mass - masses['water'])
                 temp.mass += masses['water']
                 temp.missed = k
-                
+
                 # check missed cleavage peptide for valid mass range and length
                 if (low <= temp.mass <= high) and (len(temp.seq) >= length):
                     valid_digest.append(temp)
-        
+
         # return the list of digested peptides
 ##        self.peptides = valid_digest  # this saves the digest results for each protein (uses memeory)
         return valid_digest
@@ -1104,7 +1109,7 @@ class Protein:
                             'Q':128.058578, 'K':128.094963, 'Z':128.621600, 'E':129.042593, 'M':131.040485,
                             'H':137.058912, 'F':147.068414, 'R':156.101111, 'Y':163.063320, 'W':186.079313,
                             'U':150.953630, '*':  0.000000, '-':  0.000000, 'water':18.01057}
-        return                                             
+        return
     # end class
 
 class FastaReader:
@@ -1112,7 +1117,7 @@ class FastaReader:
 
     methods:
     __init__: basic constructor, no parameters.
-    
+
     readProtein: reads one FASTA entry from a file object (text or zipped)
         arguments are "next_protein" and "file_obj"
         returns True (next protein) or False (EOF or not FASTA).
@@ -1124,12 +1129,12 @@ class FastaReader:
 
         self._last_line retains the previous '>' line and
         self._valid is a dictionary of valid protein FASTA chars.
-        """        
+        """
         # attribute to save last line from previous read
         self._last_line = 'start value'
         self._file_obj = None
         self._fasta_file = fasta_file
-        
+
         # list of valid amino acid characters
         self._valid = {'X':True, 'G':True, 'A':True, 'S':True, 'P':True,\
                       'V':True, 'T':True, 'C':True, 'L':True, 'I':True,\
@@ -1137,7 +1142,7 @@ class FastaReader:
                       'Q':True, 'K':True, 'Z':True, 'E':True, 'M':True,\
                       'H':True, 'F':True, 'R':True, 'Y':True, 'W':True,\
                       'U':True, '*':True, '-':True }
-        
+
         # get file object and save as attribute
         if not os.path.exists(fasta_file):
             ext_list = [('FASTA files', '*.fasta'), ('Zipped FASTA files', '*.gz'), ('All files', '*.*')]
@@ -1167,18 +1172,18 @@ class FastaReader:
                 self._file_obj.close()
                 return(False)
             self._last_line = self._last_line.strip()
-        
+
         # get next protein's info from _last_line
         if self._last_line.startswith('>'):
             next_protein.accession = self._last_line.split()[0][1:]
             start = len(next_protein.accession)+2
             next_protein.description = self._last_line[start:]
-        
+
         # return if empty line (EOF) or non-description line
         else:
             self._file_obj.close()
-            return(False)                    
-        
+            return(False)
+
         # reset variables and read in next entry
         next_protein.sequence = ""
         line = self._last_line
@@ -1192,18 +1197,18 @@ class FastaReader:
                 testline = line.strip()
             if testline == '':
                 continue
-            
+
             # stop reading at next descriptor line (and save line)
             if line.startswith('>'):
                 self._last_line = line.strip()
-                
+
                 # report bad characters if conditions were met
                 bad_char = sorted(bad_char.keys())
                 if len(bad_char) > 0 and check_for_errs:
                     print('   WARNING: unknown symbol(s) (%s) in %s' %
                           (''.join(bad_char), next_protein.accession))
                 break
-            
+
             # add next sequence line to protein's sequence
             else:
                 line = line.rstrip()
@@ -1213,10 +1218,10 @@ class FastaReader:
                         if self._valid.get(char, False):
                             next_protein.sequence += char
                         else:
-                            bad_char[char] = True                
+                            bad_char[char] = True
                 else: # blindly adding the line is faster...
                     next_protein.sequence += line
-        
+
         # return (protein info retained in next_protein)
         return True
 
@@ -1224,7 +1229,7 @@ class FastaReader:
 
 class PAWShell(object):
     """Command line loop to define sample names. Oct. 2017 -PW"""
-    
+
     def __init__(self, folder):
         """Set attributes."""
         self.folder = folder
@@ -1233,7 +1238,7 @@ class PAWShell(object):
         self.which_sample = {}
         self._get_filtered_files()
         self.remaining = list(self.files) # so we get a copy
-        self.quit = False   # 
+        self.quit = False   #
 
     def cmdloop(self, message):
         """Main command line loop."""
@@ -1268,7 +1273,7 @@ class PAWShell(object):
             if self.quit:
                 break
 
-        # return the sample mappings                    
+        # return the sample mappings
         return self.samples, self.which_sample
 
     def do_auto(self, arg=None):
@@ -1276,15 +1281,15 @@ class PAWShell(object):
 
         Uses multi-replacement from: https://stackoverflow.com/questions/6116978/python-replace-multiple-strings.
         """
-        for txt_name in self.files:            
+        for txt_name in self.files:
             # see if project code (e.g. ABC-999) is at beginning
             project = None
             m = re.match(r'[A-Z]{3,4}[-]?[0-9]{2,4}', txt_name)
             if m:
                 project = m.group()
                 to_mask = txt_name[len(project):]
-                
-            # remove some common labels so fraction numbers get processed correctly (use regex here - see above)   
+
+            # remove some common labels so fraction numbers get processed correctly (use regex here - see above)
             remove = ['mm_', 'KCL_', 'inject_', 'FT_', '_LT', '_VE2', '_VE', '_OT', '_QE', '_SCXFrac', '_SCX',
                       'pctACN_', '%ACN_', 'cm_', 'min_', 'ug_', '_fr', '_frac', '_fx', '_TMT', '_Fxn']
             rep = {k: '_' for k in remove}
@@ -1296,7 +1301,7 @@ class PAWShell(object):
 
             # might have gel bands
             sample_name = re.sub(r'1Dband|band|_filtered.txt.gz|_filtered.txt', '', sample_name, flags=re.IGNORECASE)
-            
+
             # remove small numberic strings (less than 4 digits) and replace common separators with underscore
             done = False
             while not done:
@@ -1305,15 +1310,15 @@ class PAWShell(object):
                 if old_name == sample_name:
                     done = True
             if sample_name.endswith('_'):
-                sample_name = sample_name[:-1]            
+                sample_name = sample_name[:-1]
             if sample_name.startswith('_'):
                 sample_name = sample_name[1:]
 
             # add back the project code (if any)
             if project:
                 sample_name = project + '_' + sample_name
-            
-            # update samples dictionary (sample: list of filenames)            
+
+            # update samples dictionary (sample: list of filenames)
             self.which_sample[txt_name] = sample_name
             if sample_name in self.samples:
                 self.samples[sample_name].append(txt_name)
@@ -1352,7 +1357,7 @@ class PAWShell(object):
 ...Show: print the current samples and associated files [verbose],
 ...Done: exit from the command loop and return to processing.""")
         return
-       
+
     def do_list(self, arg=None):
         """List the files."""
         self._list()
@@ -1403,12 +1408,12 @@ class PAWShell(object):
             for i, (f, s) in enumerate(self.which_sample.items()):
                 print('  ..(%2d) %s: %s' % (i+1, f, s))
         return
-    
+
     def do_done(self, arg=None):
         """Quit the loop and return the dictionaries."""
         self.quit = True
         return
-    
+
     def _get_filtered_files(self):
         """Gets list of filtered TXT files."""
         save = os.getcwd()
@@ -1444,7 +1449,7 @@ def amino_acid_count(sequence_string, enzyme='Tryp', return_base_pep=False):
     """
     import re
     # supported enzymes are: 'Tryp', 'GluC', 'AspN', and 'LysC'
-    # 
+    #
     # This routine removes bounding amino acids, removes special characters
     # (mods), is now case sensitive, and computes number of enzymatic termini.
     # Assumes periods are used to separate bounding AAs from peptide.
@@ -1456,7 +1461,7 @@ def amino_acid_count(sequence_string, enzyme='Tryp', return_base_pep=False):
     # Added support for different enzymes, 7/6/2010 -PW
     # Supports Comet PTM format ("n" and "c" for termini), 6/9/2015 -PW
     # Simplified ntt calculations
-    
+
     # find the string between the bounding periods '.'
     parts = len(sequence_string.split('.'))
     if parts == 3: # we have bounding residues
@@ -1485,7 +1490,7 @@ def amino_acid_count(sequence_string, enzyme='Tryp', return_base_pep=False):
 ##    for c in sequence:
 ##        if c.isalpha() and c.isupper():
 ##            base_seq += c
-##    
+##
     # get the prefix and suffix amino acids
     prefix = sequence_string[start-2:start-1]
     if (prefix == "") or (start == 0):
@@ -1533,7 +1538,7 @@ def amino_acid_count(sequence_string, enzyme='Tryp', return_base_pep=False):
             ntt -= 1
     else:
         print('   amino_acid_count WARNING: unknown enzyme specified', enzyme)
-    
+
     # return length, number of tryptic termini, and (optional) base peptide sequence
     if return_base_pep:
         return (len(base_seq), ntt, base_seq)
@@ -1548,7 +1553,7 @@ def get_base_peptide_sequence(sequence, mask=True):
         peptide = sequence.split('.')[1]
     except IndexError:
         peptide = sequence
-    
+
     # remove any modification symbols and mask I/L:
     # '*', '#', '@', '^', '~', '$', '%', '!', '+', 'n', 'c', '[', ']' (Current Comet along with old style nt, ct)
     splitter = re.compile(r'[*#@^~$%!+nc\[\]]')
@@ -1569,7 +1574,7 @@ def column_keys():
                    ('* area_ *', 'AUC of reporter ion peak for each channel (probably all zero)'),
                    ('* height_ *', 'Reporter ion peak height (maximum value in narrow window) for each channel')]
     PAW_tmt_txt = OrderedDict(PAW_tmt_txt)
-    
+
     # Top-hit text files in msn_files folder
     top_hit_txt = [('** Top-hit text files (msn_files folder) **', 'Summaries of Comet top-hits (redundant by loci)'),
                    ('start', 'Beginning scan number'),
@@ -1590,7 +1595,7 @@ def column_keys():
                    ('Sp', 'Preliminary score or expectation value (depends on Comet settings)'),
                    ('[* height_ *]', '[optional] Reporter ion peak heights')]
     top_hit_txt = OrderedDict(top_hit_txt)
-    
+
     # filtered top hit text files in filtered files folder
     filtered_top_hit_txt = [('** Filtered top-hit summaries (filtered_files folder) **', 'Top hits passing score thresholds'),
                             ('start', 'Beginning scan number'),
@@ -1619,7 +1624,7 @@ def column_keys():
                             ('IndexTuple', 'Tuple with score index values'),
                             ('TestValue', 'NewDisc threshold value for peptide class')]
     filtered_top_hit_txt = OrderedDict(filtered_top_hit_txt)
-    
+
     # protein_summary table
     protein_summary = [('** Protein_summary table (results_files folder) **', 'Redundant inferred proteins summary'),
                        ('ProtGroup', 'Arbitrary integral protein group number (redundant by groups)'),
@@ -1638,7 +1643,7 @@ def column_keys():
                        ('* Corrected_ *', 'Corrected SpC (shared peptide counts fractionally split) for respective sample'),
                        ('OtherLoci', 'Union of all accessions having any common shared peptides for respective protein')]
     protein_summary = OrderedDict(protein_summary)
-    
+
     # peptide_summary table
     peptide_summary = [('** Peptide_summary table (results_files folder) **', 'Peptide summary for proteins'),
                        ('ProtGroup', 'Arbitrary protein group number (keyed to protein table)'),
@@ -1692,7 +1697,7 @@ def column_keys():
                                ('* Total_ *', 'Total SpC for respective sample'),
                                ('* Unique_ *', 'Total unique SpC for respective sample'),
                                ('* Corrected_ *', 'Corrected SpC (shared peptide counts fractionally split) for respective sample')]
-    grouped_protein_summary = OrderedDict(grouped_protein_summary)      
+    grouped_protein_summary = OrderedDict(grouped_protein_summary)
 
     # grouped_peptide_summary table
     grouped_peptide_summary = [('** Grouped_peptide_summary table (results_files folder) **', 'Peptide summary for grouped proteins'),
@@ -1718,15 +1723,15 @@ def column_keys():
             block.append(header + '\t' + description)
 
     return block
-    
 
-################## end support functions for PAW pipeline use ##########################    
+
+################## end support functions for PAW pipeline use ##########################
 
 
 ################################# support for histogram GUI stuff ######################
-    
+
 class FileLoader:
-    """Load all TXT file in folder into a pandas dataframe. 
+    """Load all TXT file in folder into a pandas dataframe.
     Returns dataframe and list of TXT info objects keyed to TxtIdx column.
     Written by Phil Wilmarth, OHSU, 2014. Extended by Billy Rathje, 2014.
     Added support for TXT file without PSR Core instrument designations 7/21/14 -PW
@@ -1743,14 +1748,14 @@ class FileLoader:
         self.params = CometParams()
         self.params.load_from_folder(folder)
         self.peptideMassTol = self.params.peptide_mass_tolerance
-        
+
         # Construct list of differential mods
         self.modStrings = self.generateModStrings()
-        
+
         self.enzyme = self.parseEnzymeInfo()
-        
+
         self.fileList = file_list
-    
+
 ##        # pick columns to use (drop ISBDisc column) and their data types
 ##        use_cols = ['start', 'end', 'Z', 'expM', 'theoM', 'SpRank', 'Xcorr', 'Sequence',
 ##                    'Loci', 'deltaCN', 'NewDeltaCN', 'NewDisc', 'ntt', 'ForR']
@@ -1758,7 +1763,7 @@ class FileLoader:
 ##                    'theoM':np.float64, 'SpRank':np.int32, 'Xcorr':np.float64, 'Sequence':'object',
 ##                    'deltaCN':np.float64, 'Loci':'object', 'NewDeltaCN':np.float64, 'NewDisc':np.float64,
 ##                    'ntt':np.int32, 'ForR':'object'}
-    
+
         # loop over files and read into pandas DataFrames (save in list)
         self.txt_info_list = []
         self.frame = pd.DataFrame()
@@ -1771,7 +1776,7 @@ class FileLoader:
             info = TxtInfo(name)
             self.txt_info_list.append(info)
             frame['TxtIdx'] = i
-            
+
             # save the frame's contents
             self.frame = pd.concat([self.frame, frame])
             print('...%s had %s lines' % (info.basename, len(frame)))
@@ -1780,13 +1785,13 @@ class FileLoader:
 
     def getFrame(self):
         return self.frame
-        
+
     def getParams(self):
         return self.params
 
     def getPeptideMassTol(self):
         return self.peptideMassTol
-                
+
     def generateModStrings(self):
         mod_list = []
         last_deltamass_seen = 0
@@ -1798,13 +1803,13 @@ class FileLoader:
             last_deltamass_seen = '%+0.4f' % float(v[0])
             mod_list.append(v[1] + last_deltamass_seen)
         return mod_list
-            
+
     def parseEnzymeInfo(self):
         if self.params.search_enzyme_number == 0:
             return False
         else:
             return True
-                                                           
+
 class Plot:
     ''' Plot is a class for individual histograms. It keeps histogram info (counts and bins) as well as
         running remainders, fdrs, etc. There are several plots for each FigureGenerator object. '''
@@ -1814,20 +1819,20 @@ class Plot:
         self.threshold = 0.0
         self.z = z
         self.ntt = ntt
-        self.data = data  
-        self.histo = pd.DataFrame()    
-        self.forward, self.reverse = self.make_histograms(data[data.ForR == 'F'].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']), 
+        self.data = data
+        self.histo = pd.DataFrame()
+        self.forward, self.reverse = self.make_histograms(data[data.ForR == 'F'].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']),
                                                           data[data.ForR == 'R'].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']))
         self.generateColumns(self.forward, self.reverse)
         self.Smforward, self.Smreverse = self.smooth(self.forward), self.smooth(self.reverse)
-    
+
     def make_histograms(self, forward, reverse):
         # Plots
         mybins = np.linspace(-8, 12, 301)
         counts, bins = np.histogram(forward['NewDisc'], bins=mybins)
         rcounts, bins = np.histogram(reverse['NewDisc'], bins=mybins)
         return counts, rcounts
-        
+
     def generateColumns(self, counts, rcounts):
         self.histo['DiscScore'] = np.linspace(-8, 12, 301)[0:300]  # This matches Phil's spreadsheets.
         self.histo['Forward'] = counts
@@ -1838,10 +1843,10 @@ class Plot:
         self.histo['SmRRReverse'] = self.runningRemainder(self.smooth(rcounts))
         self.histo['FDR'] = (self.histo['RRReverse'] / self.histo['RRForward']) * 100.0
         self.histo['SmFDR'] = ((self.histo['SmRRReverse'] / self.histo['SmRRForward']) * 100.0)
-        
+
         # Convert to float format
         self.histo.Forward = self.histo.Forward.map('{:.2f}'.format)
-        self.histo.Reverse = self.histo.Reverse.map('{:.2f}'.format)        
+        self.histo.Reverse = self.histo.Reverse.map('{:.2f}'.format)
         self.histo.SmRRForward = self.histo.SmRRForward.map('{:.2f}'.format)
         self.histo.SmRRReverse = self.histo.SmRRReverse.map('{:.2f}'.format)
         self.histo.FDR = self.histo.FDR.map('{:.2f}'.format)
@@ -1853,60 +1858,60 @@ class Plot:
         run = 0.0
         for x in np.nditer(lst):
             run += x
-            retlst.append(total - run)    
+            retlst.append(total - run)
         return np.array(retlst)
-        
+
     def fdr(self, RRForward, RRReverse):
         return (RRReverse/RRForward) * 100
-        
+
     def smooth(self, x, window_len=11, window='hanning'):
         # taken from: http://wiki.scipy.org/Cookbook/SignalSmooth
         """smooth the data using a window with requested size.
-        
+
         This method is based on the convolution of a scaled window with the signal.
-        The signal is prepared by introducing reflected copies of the signal 
+        The signal is prepared by introducing reflected copies of the signal
         (with the window size) in both ends so that transient parts are minimized
         in the begining and end part of the output signal.
-        
+
         input:
-            x: the input signal 
+            x: the input signal
             window_len: the dimension of the smoothing window; should be an odd integer
             window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
-                flat window will produce a moving average smoothing.    
+                flat window will produce a moving average smoothing.
         output:
             the smoothed signal
-            
-        example:    
+
+        example:
         t=linspace(-2,2,0.1)
         x=sin(t)+randn(len(t))*0.1
         y=smooth(x)
-        
-        see also:         
+
+        see also:
         numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
         scipy.signal.lfilter
-    
+
         TODO: the window parameter could be the window itself if an array instead of a string
         NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
-        """    
+        """
         if x.ndim != 1:
-            raise ValueError("smooth only accepts 1 dimension arrays.")  
+            raise ValueError("smooth only accepts 1 dimension arrays.")
         if x.size < window_len:
-            raise ValueError("Input vector needs to be bigger than window size.")      
+            raise ValueError("Input vector needs to be bigger than window size.")
         if window_len < 3:
-            return x      
+            return x
         if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
             raise ValueError("Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
-    
+
         s = np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]     # s is longer than x by 2*(window_len-1)
         if window == 'flat': #moving average
             w = np.ones(window_len,'d')
         else:
             w = eval('np.'+window+'(window_len)')
-    
+
         y = np.convolve(w/w.sum(),s,mode='valid')    # y is trimmed by half window width (beginning and ending are skipped)
         trim = (window_len -1)//2    # added by PW. Original returned a longer vector
-        return y[trim:-trim]   
-        
+        return y[trim:-trim]
+
 class DeltaMassPlot(Plot):
     """Do we need some mechanism to use PPM instead of Da?
     """
@@ -1919,49 +1924,49 @@ class DeltaMassPlot(Plot):
         self.histo = pd.DataFrame() # full range deltamass tables
         self.ACCURATE_MASS = ACCURATE_MASS
         self.LOW_MASS_BINS = 1000
-                                   
-        self.forwardDeltaMass, self.reverseDeltaMass =  self.make_histograms(dmData[(dmData.ForR == 'F') & (dmData.Z == self.z)].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']), 
+
+        self.forwardDeltaMass, self.reverseDeltaMass =  self.make_histograms(dmData[(dmData.ForR == 'F') & (dmData.Z == self.z)].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']),
                                                                              dmData[(dmData.ForR == 'R') & (dmData.Z == self.z)].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']),
                                                                              -self.dmRange, self.dmRange)
         self.smForwardDeltaMass, self.smReverseDeltaMass = self.smooth(self.forwardDeltaMass), self.smooth(self.reverseDeltaMass)
-        
+
         if self.dm == 0:
             self.forwardDeltaMassZero, self.reverseDeltaMassZero =  self.make_histograms(dmData[(dmData.ForR == 'F') &
                                                                                                 (dmData.Z == self.z) &
-                                                                                                (dmData.dmassDa >= -0.05) & 
-                                                                                                (dmData.dmassDa <= 0.05)].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']), 
+                                                                                                (dmData.dmassDa >= -0.05) &
+                                                                                                (dmData.dmassDa <= 0.05)].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']),
                                                                                         dmData[(dmData.ForR == 'R') &
                                                                                                 (dmData.Z == self.z) &
-                                                                                                (dmData.dmassDa >= -0.05) & 
+                                                                                                (dmData.dmassDa >= -0.05) &
                                                                                                 (dmData.dmassDa <= 0.05)].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']),
                                                                                                 -0.05, 0.05)
             self.smForwardDeltaMassZero, self.smReverseDeltaMassZero = self.smooth(self.forwardDeltaMassZero), self.smooth(self.reverseDeltaMassZero)
-        
-        if self.dm == 1:    
+
+        if self.dm == 1:
             self.forwardDeltaMassOne, self.reverseDeltaMassOne =  self.make_histograms(dmData[(dmData.ForR == 'F') &
                                                                                             (dmData.Z == self.z) &
-                                                                                            (dmData.dmassDa >= 0.90) & 
-                                                                                            (dmData.dmassDa <= 1.10)].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']), 
+                                                                                            (dmData.dmassDa >= 0.90) &
+                                                                                            (dmData.dmassDa <= 1.10)].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']),
                                                                                     dmData[(dmData.ForR == 'R') &
                                                                                             (dmData.Z == self.z) &
-                                                                                            (dmData.dmassDa >= 0.90) & 
+                                                                                            (dmData.dmassDa >= 0.90) &
                                                                                             (dmData.dmassDa <= 1.10)].drop_duplicates(['start', 'end', 'Z', 'TxtIdx']),
-                                                                                            0.90, 1.10)                                                                                           
+                                                                                            0.90, 1.10)
             self.smForwardDeltaMassOne, self.smReverseDeltaMassOne = self.smooth(self.forwardDeltaMassOne), self.smooth(self.reverseDeltaMassOne)
-            
+
         self.generateColumns()
         self.thresholdLow = None
         self.thresholdHigh = None
         if(dm == 2):
-            self.thresholds = self.findPeakWindows()         
+            self.thresholds = self.findPeakWindows()
         elif(ACCURATE_MASS):
             self.thresholdLow, self.thresholdHigh = self.findPeakWindows()
         else:
-            self.dm = 'ALL'           
-                  
+            self.dm = 'ALL'
+
         # Truncate data frame for these dm values - hard coded for now
 #        """Maybe we should make copies of the filtered frames and plot from those?
-#        """          
+#        """
         #if dm == 0 and ACCURATE_MASS:
         #    self.histo = self.histo[(self.histo.deltaMass >= -0.05) & (self.histo.deltaMass <= 0.05)]
         #    #self.zero_histo = self.histo[(self.histo.deltaMass >= -0.05) & (self.histo.deltaMass <= 0.05)].copy()
@@ -1985,7 +1990,7 @@ class DeltaMassPlot(Plot):
         counts, bins = np.histogram(forward['dmassDa'], bins=mybins)
         rcounts, bins = np.histogram(reverse['dmassDa'], bins=mybins)
         return counts, rcounts
-        
+
     def make_histograms_ppm(self, forward, reverse):
         """NOTE: ppm units are different scale than Da. Left, right, and bin width
         would need to be different. Something like -50 to +50 in 0.01 chunks for accurate mass
@@ -2002,7 +2007,7 @@ class DeltaMassPlot(Plot):
         counts, bins = np.histogram(forward['dmassPPM'], bins=self.mybins)
         rcounts, bins = np.histogram(reverse['dmassPPM'], bins=self.mybins)
         return counts, rcounts
-                   
+
     def generateColumns(self):
         """May need to add PPM support here
         """
@@ -2014,11 +2019,11 @@ class DeltaMassPlot(Plot):
         self.histo['ReverseDeltaMass'] = self.reverseDeltaMass
         self.histo['SmForwardDeltaMass'] = self.smForwardDeltaMass
         self.histo['SmReverseDeltaMass'] = self.smReverseDeltaMass
-        
+
     def findPeakWindows(self, thresh=300, width=5):
         offset = -self.dmRange
         gain = (2*self.dmRange) / (((2*self.dmRange)/0.0005)+1)   # Two times the range / number of bins
-        
+
         if(self.smoothed):
             target_histo = self.smForwardDeltaMass
             decoy_histo = self.smReverseDeltaMass
@@ -2046,7 +2051,7 @@ class DeltaMassPlot(Plot):
                 high = i
             #dm = (i + 0.5)*histo.gain + histo.offset
     ##        print('%i %0.4f %0.2f %0.2f %0.2f' % (i, dm, t, d, rel))
-    
+
         # prevent long tails by invoking a maximum asymmetry
         short = min([abs(cent-low), abs(cent-high)])
         if (cent-low) > 2*short:
@@ -2055,8 +2060,8 @@ class DeltaMassPlot(Plot):
             high = cent + 2*short
         #print('For charge %s+:' % (self.z+1,))
         net = target_histo[low:high].sum() - decoy_histo[low:high].sum()
-        #print('   cent: %s, low: %s, high: %s, net: %0.0f' % (cent, low, high, net))    
-    
+        #print('   cent: %s, low: %s, high: %s, net: %0.0f' % (cent, low, high, net))
+
         # print delta mass windows in Da
         cent = (cent+0.5)*gain + offset     # calculate at center of bin
         low = (low)*gain + offset           # calculate at left of bin
@@ -2090,7 +2095,7 @@ class TxtInfo:
         self.decoy_matches_top = None      # multi-dimensional collection of counters for decoys
         self.target_matches_scan = None     # multi-dimensional collection of counters for target matches
         self.decoy_matches_scan = None      # multi-dimensional collection of counters for decoys
-        
+
 class BRTxtInfo:
     """Container for information and stats about each TXT file.
     """
@@ -2103,7 +2108,7 @@ class BRTxtInfo:
         self.decoy_top_hits = 0         # total number of decoy top hits
         self.target_scans = 0           # total number of target scans
         self.decoy_scans = 0            # total number of decoy scans
-        
+
         self.target_matches_top = None  # multi-dimensional collection of counters for target matches
         self.decoy_matches_top = None   # multi-dimensional collection of counters for decoys
         self.target_matches_scan = None # multi-dimensional collection of counters for target matches
@@ -2115,7 +2120,7 @@ class BRTxtInfo:
         self.decoy_filtered = 0
         self.min_length = MIN_PEP_LEN   # minimum peptide length (should be passed in)
         self.maxMods = 3                # maximum number of mods per peptide (should be passed in)
- 
+
     def getStats(self, frame, dm_list, z_list, ntt_list, mod_list, masses, scores):
         """Computes several stats on numbers of target and decoy matches
         masses are the deltamass windows
@@ -2123,7 +2128,7 @@ class BRTxtInfo:
         """
         # restrict by minimunm peptide length first
         len_frame = frame[(frame.Length >= self.min_length) & (frame.NumMods <= self.maxMods)]
-        
+
         # get the global stats first
         self.target_top_hits = len(len_frame[len_frame.ForR == 'F'])
         self.decoy_top_hits = len(len_frame[len_frame.ForR == 'R'])
@@ -2131,7 +2136,7 @@ class BRTxtInfo:
         self.target_scans = len(len_frame[len_frame.ForR == 'F'].drop_duplicates(['start', 'end', 'Z']))
         self.decoy_scans = len(len_frame[len_frame.ForR == 'R'].drop_duplicates(['start', 'end', 'Z']))
         #   print(self.basename, self.target_scans, self.decoy_scans, self.target_scans - self.decoy_scans)
-    
+
         # get the peptide subclass stats
         #print(self.basename)
         for dm in range(len(dm_list)):
@@ -2144,10 +2149,10 @@ class BRTxtInfo:
                         subclass_frame = mass_frame[(mass_frame.Z == z+1) &
                                                     (mass_frame.ntt == ntt) &
                                                     (mass_frame.ModsStr == mod_list[mod])]
-                                 
+
                         s = scores[dm][z][ntt][mod]
                         threshold = s.histo.DiscScore[s.threshold]
-                            
+
                         self.target_subclass[dm][z][ntt][mod] = len(subclass_frame[(subclass_frame.ForR == 'F') &
                                                                                 (subclass_frame.NewDisc >= threshold)])
                         self.target_filtered += len(subclass_frame[(subclass_frame.ForR == 'F') &
@@ -2158,7 +2163,7 @@ class BRTxtInfo:
                                                                 (subclass_frame.NewDisc >= threshold)])
             #        print(self.target_subclass[dm][z][ntt][mod], z, ntt, mod)
             #print(self.target_filtered, self.decoy_filtered, self.target_filtered - self.decoy_filtered)
-            
+
 class FigureGenerator:
     ''' FigureGenerator operates on a set of TXT file. It generates extra calculated columns and makes several histograms
         based on instrument type and user parameters. Each FigureGenerator object should keep a list (figures) of several
@@ -2166,8 +2171,8 @@ class FigureGenerator:
         '''
     def __init__(self, files, accurateMass=True, smoothed=True, dmList=['0 Da', '1 Da', 'out'], zList=[1, 2, 3, 4],
                  nttList=[0, 1, 2], modString=' *', minLength=MIN_PEP_LEN, maxMods=2):
-        
-        
+
+
         # Main containers
         self.minLength = minLength
         self.maxMods = maxMods
@@ -2182,16 +2187,16 @@ class FigureGenerator:
         self.accurateMass = accurateMass
         self.smoothed = smoothed
         self.peptideMassTol = self.f.getPeptideMassTol()
-        
+
         self.order = [' ', '*', '#', '@', '^', '~', '$', '[', ']']
-        
+
         # Main container dimensions
         dmList, zList, nttList = self.getLists(self.accurateMass, self.f.enzyme)
-        
+
         # setup mod list
         modList = [c for c in self.f.modStrings]
         modList.insert(0, 'Unmodified')
-        
+
         # Make a list of special characters present in the dataset in addition
         # to the list of mod strings (eg. M+15.99...)
         specialCharsList = []
@@ -2204,7 +2209,7 @@ class FigureGenerator:
                 continue
             else:
                 specialCharsList.append(self.order[i])
-            
+
         #self.modDict = {}
         #for i, mod in enumerate(ModList):
         #    if mod.startswith('nterm'):
@@ -2213,7 +2218,7 @@ class FigureGenerator:
         #        modDict[']'] = mod
         #    else:
         #        modDict[self.order[i]] = mod
-        
+
         # check lists
 #        print('enzyme check:', self.f.enzyme)
         print('\ndm list:', dmList)
@@ -2221,16 +2226,16 @@ class FigureGenerator:
         print('NTT list:', nttList)
         print('Mod List:', modList)
         print('Special chars:', specialCharsList, '\n')
-        
+
         self.container = [[[[None for mod in modList] for ntt in nttList] for z in zList] for dm in dmList]
         self.dmContainer = [[None for z in zList] for dm in dmList]
-        
+
         # Add calculated columns
         self.generateCalculatedColumns(x)
-        
+
         # Make histograms
         self.generatePlots(x, dmList, zList, nttList, modList)
-        
+
         # Store these specifically for calculating stats later
         self.modList = modList
         self.specialCharsList = specialCharsList
@@ -2238,12 +2243,12 @@ class FigureGenerator:
         self.zList = zList
         self.dmList = dmList
         self.frame = x
-                
+
         # Test
         print("Calculating stats...")
         #self.get_stats_helper()
         self.getTXTFileObjectsHelper()
-                
+
     def generatePlots(self, full_frame, dmList, zList, nttList, modList):
         """Generates the histogram plot data.
         full_frame => pandas dataframe of TXT file contents
@@ -2257,7 +2262,7 @@ class FigureGenerator:
         for dm in range(len(dmList)):
             print('Loading: ', dmList[dm], '...')
             for z in zList:
-                print('\tLoading: %d+ ...' % z)                
+                print('\tLoading: %d+ ...' % z)
                 dmPlot =  DeltaMassPlot(self.smoothed, z, dm, data, self.accurateMass, self.peptideMassTol)
                 if not self.accurateMass:
                     dmPlot.thresholdLow = -self.peptideMassTol
@@ -2274,18 +2279,18 @@ class FigureGenerator:
                 #        else:
                 #            dataToHist = data[(data.dmassDa >= dmPlot.thresholdLow) & (data.dmassDa <= dmPlot.thresholdHigh) &
                 #                              (data.Z == z) & (data.ntt == ntt) & (data.ModsStr == self.order[mod])]
-                #                                
+                #
                 #        self.container[dm][z-z_offset][ntt-ntt_offset][mod] = Plot(z, ntt, dataToHist)
-                #                
+                #
                 #        self.container[dm][z-z_offset][ntt-ntt_offset][mod].dm = dmList[dm]
                 #        self.container[dm][z-z_offset][ntt-ntt_offset][mod].mod = modList[mod]
-                        
+
     def regenerateScorePlots(self):
         z_offset = min([int(z) for z in self.zList])
         ntt_offset = min([int(ntt) for ntt in self.nttList])
-        
-        data = self.frame[(self.frame.Length >= self.minLength) & (self.frame.NumMods <= self.maxMods)] 
-        
+
+        data = self.frame[(self.frame.Length >= self.minLength) & (self.frame.NumMods <= self.maxMods)]
+
         for dm in range(len(self.dmList)):
             for z in self.zList:
                 for ntt in self.nttList:
@@ -2298,16 +2303,16 @@ class FigureGenerator:
                         else:
                             dataToHist = data[(data.dmassDa >= self.dmContainer[dm][z-z_offset].thresholdLow) & (data.dmassDa <= self.dmContainer[dm][z-z_offset].thresholdHigh) &
                                               (data.Z == z) & (data.ntt == ntt) & (data.ModsStr == mod)]
-                                                
+
                         self.container[dm][z-z_offset][ntt-ntt_offset][imod] = Plot(z, ntt, dataToHist)
-                                
+
                         self.container[dm][z-z_offset][ntt-ntt_offset][imod].dm = self.dmList[dm]
                         self.container[dm][z-z_offset][ntt-ntt_offset][imod].mod = self.modList[imod]
-            
-           
-    def get_stats_helper(self): 
+
+
+    def get_stats_helper(self):
         self.get_stats(self.frame, self.f.fileList, self.dmList, self.zList, self.nttList, self.modList, [{'low':-2, 'high':2}, {'low':-2, 'high':2}, {'low':-2, 'high':2}], self.container)
-    
+
     def getLists(self, accurateMass, enzyme):
         # order:   dm, z. ntt
         nttList = []
@@ -2319,16 +2324,16 @@ class FigureGenerator:
             return ['0 Da', '1 Da', 'out'], [2, 3, 4], nttList
         else:
             return ['All'], [1, 2, 3], nttList
-    
-    def getTXTFileObjectsHelper(self): 
+
+    def getTXTFileObjectsHelper(self):
         self.getTXTFileObjects(self.frame, self.f.fileList, self.dmList, self.zList, self.nttList, self.modList, [{'low':-2, 'high':2}, {'low':-2, 'high':2}, {'low':-2, 'high':2}], self.container)
-            
+
     def getTXTFileObjects(self, frame, fileList, dmList, zList, nttList, modList, masses, container):
         for i, filename in enumerate(fileList):
             fileFrame = frame[(frame['TxtIdx'] == i)]
             t = BRTxtInfo(filename.split('.txt')[0])              # object for global stats and stats by text file
             self.txtObjects.append(t)
-      
+
     def get_stats(self, frame, fileList, dmList, zList, nttList, modList, masses, container):
         # global stats
         self.globalStats = BRTxtInfo(self.f.folder)              # object for global stats and stats by text file
@@ -2345,7 +2350,7 @@ class FigureGenerator:
         #    t.decoy_subclass = [[[[None for mod in modList] for ntt in nttList] for z in zList] for dm in dmList]
         #    self.globalStats.getStats(fileFrame, dmList, zList, nttList, modList, masses, container)
         #    self.txtStats.append(t)
-                        
+
     def debugPlot(self):
         for fig in self.container[0]:
             for fig in fig[1:]:
@@ -2359,14 +2364,14 @@ class FigureGenerator:
                 plot.figure()
 ##        plot.show() # this may be out-of-date
         plot.draw()
-    
+
     def generateCalculatedColumns(self, x):
         # generate calculated columns
-        
+
         # deltaMasses (Da and ppm))
         x['dmassDa'] = x['expM'] - x['theoM']
         x['dmassPPM'] = (1000000*(x['expM'] - x['theoM'])  / (np.sqrt(x['expM'] * (x['theoM'] ))))
-        
+
         # peptide length
         temp = x['Sequence'].str.split('.')
 
@@ -2389,21 +2394,21 @@ class FigureGenerator:
         s = ''.join([x for x in self.order if x in s])
         if not s:
             s = ' '
-        return s     # want leading space character for unmodified amino acids  
-        
+        return s     # want leading space character for unmodified amino acids
+
 class DataInfoAndFilter:
     """Container for global stats on all loaded data.
     Uses TxtInfo objects to keep stats for each TXT file.
     Has aggregate counters and totaling method. Counters
     track both before filtering and post filtering counts.
-    """    
-    def __init__(self, folder, frame, txt_info_list, dm_list, z_list, ntt_list, mod_list, 
+    """
+    def __init__(self, folder, frame, txt_info_list, dm_list, z_list, ntt_list, mod_list,
                   min_length=MIN_PEP_LEN, max_mods=2, parent_tol=2.5):
         import copy
-        
+
         # main data passed in
         self.folder = folder    # full path to TXT files
-        self.frame = frame      # pandas dataframe of TXT file contents and some extras        
+        self.frame = frame      # pandas dataframe of TXT file contents and some extras
         self.pre_filter = txt_info_list                              # list of TxtInfo objects for pre-filter stats
         self.post_filter = [copy.deepcopy(x) for x in txt_info_list] # list of TxtInfo objects for post-filter stats
         self.dm_list = dm_list      # list of delta mass window names
@@ -2411,7 +2416,7 @@ class DataInfoAndFilter:
         self.ntt_list = ntt_list    # list of number of tryptic termini (o, 1, 2)
         self.mod_list = mod_list    # full, ordered list of variable modification symbols starting with a space for unmodified residues
 
-        # some restrictions and limits        
+        # some restrictions and limits
         self.min_length = min_length        # minimum peptide length (should be passed in)
         self.max_mods = max_mods            # maximum number of mods per peptide (should be passed in)
         self.z_offset = min([int(z) for z in z_list]) # to map peptide charge to z-axis index
@@ -2419,7 +2424,7 @@ class DataInfoAndFilter:
         self.ntt_offset = min([int(ntt) for ntt in ntt_list]) # to map ntt range to index range
         self.ntt_max = max([int(ntt) for ntt in ntt_list])    # maximum ntt value
         self.parent_tol = parent_tol        # parent ion tolerance (should be passed in)
-        
+
         # data structures for counting statistics
         self.short_target_top_hits = 0      # total number of target top hits below min length
         self.short_decoy_top_hits = 0       # total number of decoy top hits below min length
@@ -2455,7 +2460,7 @@ class DataInfoAndFilter:
         """Sums up the per TXT stats for pre-filtered data
         """
         dm_list = ['All']   # we don't care about mass windows for aggregate stats
-        
+
         # initialize counters and counter containers
         self.pre_target_top_hits = 0
         self.pre_decoy_top_hits = 0
@@ -2465,7 +2470,7 @@ class DataInfoAndFilter:
         self.pre_decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in dm_list])
         self.pre_target_matches_scan = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in dm_list])
         self.pre_decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in dm_list])
-        
+
         # sum over the individual TXT file data
         for txt_info in self.pre_filter:
             self.pre_target_top_hits += txt_info.target_top_hits
@@ -2520,21 +2525,21 @@ class DataInfoAndFilter:
         for obj in self.write:
             print('...short peptide top hits: %s (%s)' % (self.short_target_top_hits, self.short_decoy_top_hits), file=obj)
             print('...short peptide scans: %s (%s)\n' % (self.short_target_scans, self.short_decoy_scans), file=obj)
-        
+
         # restrict by minimum peptide length, maximum number of mods, charge state range and ntt range first
         frame = self.frame[(self.frame.Length >= self.min_length) & (self.frame.NumMods <= self.max_mods) &
                            ((self.frame.Z >= self.z_offset) & (self.frame.Z <= self.z_max)) &
                            ((self.frame.ntt >= self.ntt_offset) & (self.frame.ntt <= self.ntt_max))]
 
         print('*** pre-filter ***:', len(self.frame), len(frame))
-        
+
         dm_list = ['all']
         for i, txt_info_obj in enumerate(self.pre_filter):
             # create multidimensional counters for each TXT file
             self.pre_filter[i].target_matches_top = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in dm_list])
-            self.pre_filter[i].decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in dm_list])  
+            self.pre_filter[i].decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in dm_list])
             self.pre_filter[i].target_matches_scan = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in dm_list])
-            self.pre_filter[i].decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in dm_list])  
+            self.pre_filter[i].decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in dm_list])
 
             # get the global stats first (this prevents scans from being overcounted; top hit ties can have different ntt or mods)
             self.pre_filter[i].target_top_hits = len(frame[(frame.TxtIdx == i) & (frame.ForR == 'F')])
@@ -2546,7 +2551,7 @@ class DataInfoAndFilter:
                 print('...%s: all top hits %s (%s), all scans %s (%s), fdr %0.2f' %
                       (y.basename, y.target_top_hits, y.decoy_top_hits, y.target_scans, y.decoy_scans,
                        100.0 * y.decoy_scans / y.target_scans), file=obj)
-    
+
             # get the peptide subclass stats
             for dm in range(len(dm_list)): # different thresholds for each mass window
                 for charge in self.z_list:    # different thresholds for each charge, z is one less than the charge state
@@ -2557,11 +2562,11 @@ class DataInfoAndFilter:
                         for mod in range(len(self.mod_list)):    # and different thresholds for each homogeneous modification state
                             subclass_frame = mass_frame[(mass_frame.TxtIdx == i) & (mass_frame.Z == int(charge)) & (mass_frame.ntt == int(ntt)) &
                                                         (mass_frame.ModsStr.map(lambda s: s[0]) == self.mod_list[mod])] # first get basic data subclass (need first char of ModsStr to get all)
-                            self.pre_filter[i].target_matches_top[dm][z][ntt_idx][mod] = len(subclass_frame[(subclass_frame.ForR == 'F')]) 
-                            self.pre_filter[i].decoy_matches_top[dm][z][ntt_idx][mod] = len(subclass_frame[(subclass_frame.ForR == 'R')])  
+                            self.pre_filter[i].target_matches_top[dm][z][ntt_idx][mod] = len(subclass_frame[(subclass_frame.ForR == 'F')])
+                            self.pre_filter[i].decoy_matches_top[dm][z][ntt_idx][mod] = len(subclass_frame[(subclass_frame.ForR == 'R')])
                             self.pre_filter[i].target_matches_scan[dm][z][ntt_idx][mod] += len(subclass_frame[(subclass_frame.ForR == 'F')].drop_duplicates(['start', 'end', 'Z']))
                             self.pre_filter[i].decoy_matches_scan[dm][z][ntt_idx][mod] += len(subclass_frame[(subclass_frame.ForR == 'R')].drop_duplicates(['start', 'end', 'Z']))
- 
+
         # get aggregate stats
         self.aggregate_pre_global_stats()
         for obj in self.write:
@@ -2611,7 +2616,7 @@ class DataInfoAndFilter:
                 shutil.copy2(os.path.join(self.folder, param), os.path.join(self.filtered_folder, param))
             except PermissionError:
                 pass
- 
+
     def filter_with_stats(self, mass_thresholds, score_thresholds):
         """Filters and computes numbers of target and decoy matches passing thresholds over the peptide subclasses
         """
@@ -2644,21 +2649,21 @@ class DataInfoAndFilter:
         print('Frame columns at start of filtering:')
         for col in self.frame.columns:
             print(col, self.frame[col].dtype)
-        
+
         # restrict by minimum peptide length first
         frame = self.frame[(self.frame.Length >= self.min_length) & (self.frame.NumMods <= self.max_mods) &
                            ((self.frame.Z >= self.z_offset) & (self.frame.Z <= self.z_max)) &
                            ((self.frame.ntt >= self.ntt_offset) & (self.frame.ntt <= self.ntt_max))].copy()
-        
+
         for i, txt_info_obj in enumerate(self.pre_filter):  # loop over all TXT file data
             filter_frame = pd.DataFrame()
-            
+
             # create multidimensional counters for each TXT file
             self.post_filter[i].target_matches_top = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in self.dm_list])
-            self.post_filter[i].decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in self.dm_list])  
+            self.post_filter[i].decoy_matches_top = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in self.dm_list])
             self.post_filter[i].target_matches_scan = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in self.dm_list])
-            self.post_filter[i].decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in self.dm_list])  
-    
+            self.post_filter[i].decoy_matches_scan = np.array([[[[0 for mod in self.mod_list] for ntt in self.ntt_list] for z in self.z_list] for dm in self.dm_list])
+
             # get the peptide subclass stats
             for dm in range(len(self.dm_list)): # different thresholds for each mass window
                 for charge in self.z_list:    # different thresholds for each charge, z is z_offset less than the charge state
@@ -2685,13 +2690,13 @@ class DataInfoAndFilter:
                             filter_frame = pd.concat([filter_frame, subclass_frame])    # save the filtered peptide subclass frame
 
                             # save some stats on the filtered subclass hits
-                            self.post_filter[i].target_matches_top[dm][z][ntt_idx][mod] = len(subclass_frame[subclass_frame.ForR == 'F']) 
+                            self.post_filter[i].target_matches_top[dm][z][ntt_idx][mod] = len(subclass_frame[subclass_frame.ForR == 'F'])
                             self.post_filter[i].decoy_matches_top[dm][z][ntt_idx][mod] = len(subclass_frame[subclass_frame.ForR == 'R'])
                             self.post_filter[i].target_matches_scan[dm][z][ntt_idx][mod] += len(subclass_frame[subclass_frame.ForR == 'F'
                                                                                                           ].drop_duplicates(['start', 'end', 'Z']))
                             self.post_filter[i].decoy_matches_scan[dm][z][ntt_idx][mod] += len(subclass_frame[subclass_frame.ForR == 'R'
                                                                                                          ].drop_duplicates(['start', 'end', 'Z']))
-                            
+
             # get the global stats last from the filtered frame
             self.post_filter[i].target_top_hits = self.post_filter[i].target_matches_top.sum()
             self.post_filter[i].decoy_top_hits = self.post_filter[i].decoy_matches_top.sum()
@@ -2809,7 +2814,7 @@ class DataInfoAndFilter:
         sqt_in.close()
         sqt_out.close()
         return
-        
+
 
     def write_ms2(self, basename, scan_list):
         """Writes a filtered MS2 file to 'path' folder
@@ -2865,12 +2870,10 @@ class DataInfoAndFilter:
         return
 
     # end class
-               
+
 class Threshold:
     """Hold low and high deltamass thresholds (Da).
     """
     def __init__(self):
         self.low = -5.0
         self.high = +5.0
-
-
