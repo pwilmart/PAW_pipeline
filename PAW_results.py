@@ -973,6 +973,7 @@ def calc_split_count(prot, proteins, all_ms2_sample, s):
 #               - Removed some out-of-date code sections. -PW
 # 5/11/2016 - Removing legacy support sections and cleaning up comment style -PW
 # 8/29/2017 - Updated for Python 3 -PW
+# 10/04/2020 - Added sample mapping from file support -PW
 #######################################################################################
 
 print('=====================================================')

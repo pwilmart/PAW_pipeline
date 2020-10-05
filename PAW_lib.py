@@ -31,6 +31,7 @@ Ph: 503-494-8200, FAX: 503-494-4729, Email: techmgmt@ohsu.edu.
 # added a sample name parsing class, -PW 10/21/2017
 # recoded older routines like "amino_acid_count" for better Comet support. -PW 10/27/2017
 # np.linspace needed an integer for last argument (float conversion in np was failing sometimes) -PW 20200201
+# added suppport for sample mapping from files in PAWShell -PW 20201005
 
 import os
 import sys
@@ -1228,12 +1229,14 @@ class FastaReader:
     # end class
 
 class PAWShell(object):
-    """Command line loop to define sample names. Oct. 2017 -PW"""
+    """Command line loop to define sample names. Oct. 2017 -PW
 
+    Added reading sample mapping from text files. -PW 20201004
+    """
     def __init__(self, folder):
         """Set attributes."""
         self.folder = folder
-        self.prompt = '\n(Auto Each Help List Pattern Reset Show Done) ? '
+        self.prompt = '\n(Auto Each Help List Map Pattern Reset Show Done) ? '
         self.samples = {}
         self.which_sample = {}
         self._get_filtered_files()
@@ -1260,6 +1263,8 @@ class PAWShell(object):
                 self.do_help(arg)
             elif cmd[0] == 'L':
                 self.do_list(arg)
+            elif cmd[0] == 'M':
+                self.do_map(arg)
             elif cmd[0] == 'P':
                 self.do_pattern(arg)
             elif cmd[0] == 'R':
@@ -1348,6 +1353,7 @@ class PAWShell(object):
 ...Each: treat each filename as a separate sample,
 ...Help: prints this message,
 ...List: lists all of the (remaining) filename(s),
+...Map: read sample mapping from tab-delimited file,
 ...Pattern pattern: glob-style search pattern to get a subset of filenames
       ("*" or "*.*" is all files,
        "*.txt" is all files that have a "txt" extension,
@@ -1361,6 +1367,40 @@ class PAWShell(object):
     def do_list(self, arg=None):
         """List the files."""
         self._list()
+        return
+
+    def do_map(self, arg=None):
+        """Read RAW to Sample mapping from file.
+
+        File is tab-delimited, 2 columns, 1st is RAW name, 2nd is sample name.
+        Columns should have headers - first line is skipped.
+        """
+        ext_list = [('Text files', '*.txt'), ('Tab-separated values', '*.tsv')] 
+        map_file = get_file(self.folder, ext_list, title_string='Select mapping file')
+
+        # open file and make the mapping
+        self.plex_map = {}
+        with open(map_file, 'rt') as fin:
+            contents = [x.strip() for x in fin.readlines()]
+            
+        for line in contents[1:]:
+            try:
+                raw, sample = line.split('\t')
+            except ValueError:
+                print('...WARNING: lines should have two strings (raw name, sample name)')
+                print('... bad line:', line)
+                continue
+            raw_base = os.path.basename(raw)
+            raw_base = os.path.splitext(raw_base)[0] + '_filtered.txt'
+            self.which_sample[raw_base] = sample
+            if sample in self.samples:
+                self.samples[sample].append(raw_base)
+            else:
+                self.samples[sample] = [raw_base]
+
+        # clear out "remaining" list
+        [self.remaining.remove(x) for x in self.which_sample.keys()]
+        self.do_show()
         return
 
     def do_pattern(self, arg=None):
