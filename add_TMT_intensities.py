@@ -328,7 +328,7 @@ class PAWProteinSummary(object):
 
         # add some dictionaries for tacking peptide status, TMT scans, etc.
         self.tmt_intensity_dict = {}    # maps TMT intensities to short DTA names (psms)
-        self.unique_peptide_dict = {}   # maps uniqueness to peptide sequences
+        self.unique_peptide_dict = {}   # dictionary of unique peptide sequences (keys)
         self.psm_lists_dict_list = []   # maps lists of short DTA names (psms) to peptide sequences
         
         self.average_int = 0.0  # within TMT Total Normalization target
@@ -380,7 +380,7 @@ class PAWProteinSummary(object):
             table_end = i + table_start
         
         # save table, prefix, and suffix lines
-        self.num_rows = table_end - table_start
+        self.num_rows = table_end - table_start + 1
         self.table = [x.rstrip() for x in contents[table_start:table_end+1]]
         self.prefix = [x.rstrip() for x in contents[:table_start-2]]
         self.suffix = [x.rstrip() for x in contents[table_end+1:]]
@@ -581,6 +581,7 @@ class PAWProteinSummary(object):
 
         # count all peptides
         peptide_dict = {}
+        shared_peptide_dict = {}
         nr_peptides = {}
 
         # open the peptide file and save the unique peptides
@@ -607,6 +608,13 @@ class PAWProteinSummary(object):
                     peptide_dict[seq] = True
                     if items[cols['Unique']] == 'TRUE':
                         self.unique_peptide_dict[seq] = True
+                    else:
+                        shared_peptide_dict[seq] = True
+
+        # see if we had any peptides that were both flagged as unique and shared
+        del_list = [k for k in self.unique_peptide_dict if k in shared_peptide_dict]
+        for k in del_list:
+            del self.unique_peptide_dict[k]
                             
         for obj in self.write:
             print('length of peptide_dict:', len(peptide_dict), file=obj)
@@ -653,7 +661,7 @@ class PAWProteinSummary(object):
                         else:
                             psm_lists_dict[seq] = [dta_short]
 
-            # psm lists will have duplicates due to redundancy
+            # psm lists will have duplicates due to peptide redundancy
             for k in psm_lists_dict:
                 nr_psm_lists_dict[k] = set(psm_lists_dict[k])
 
@@ -661,10 +669,11 @@ class PAWProteinSummary(object):
             self.psm_lists_dict_list.append(nr_psm_lists_dict)
 
             # print some summary stats
-            psm_count = sum([len(set(nr_psm_lists_dict[k])) for k in nr_psm_lists_dict])
+            psm_count = sum([len(nr_psm_lists_dict[k]) for k in nr_psm_lists_dict])
             for obj in self.write:
                 print(os.path.split(peptide_file)[1], file=obj)
-                print('..number of psms (scans):', psm_count, file=obj)
+                print('..number of distinct psms:', psm_count, file=obj)
+                print('..number of MS2 scans:', len(scans), file=obj)
             
 def make_new_prefix(protein_summary):
     """Pads the prefix for headers are in Row 5 and adds sample labels above TMT reporter ion channels."""

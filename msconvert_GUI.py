@@ -73,6 +73,9 @@ from scipy.integrate import trapz
 
 import PAW_lib
 
+# flag for computing centroids (m/z positions)
+COMPUTE_CENTROIDS = False
+
 # flag for computing peak areas (trapezoidal integrations are slow)
 COMPUTE_AREAS = False
 
@@ -432,17 +435,20 @@ class MSConvertGUI:
         """This executes MSConvert using the user-specified options. Then creates the MSn files
         from the gzipped text files.
         """
+        starting_time = time.time()
         if not self.raw_name_list:
             self.load_raw_files()
 
         # set the TMT plex
         self.set_tmt_plex()
-
+        
         # set up log file
         log_name = 'MSConvert_GUI_log.txt'
 ##        log_name = 'MSConvert_GUI_%s_log.txt' % time.time() # this add a time stamp - will have multiple log files
         log_obj = open(os.path.join(self.raw_path, log_name), mode='wt')
         self.log_obj = [None, log_obj]
+        for obj in self.log_obj:
+            print('...starting conversions at:', time.ctime(), file=obj)
 
         # build the MSConvert command options
         centroid = [[' --filter "peakPicking true 2-3"', ' --filter "peakPicking true 2"'],
@@ -529,12 +535,15 @@ class MSConvertGUI:
                     print('...WARNING: possible corrupt file:', lc_name, file=obj)
 
         # move the MSn and PAW_tmt files into separate folder
+        ending_time = time.time()
         self.progresstext.configure(text='Moving search and quant files')
         self.progressbar.update()
         self.move_files()
 
         # write some log data to console
         for obj in self.log_obj:
+            print('...Conversions ended at:', time.ctime(), file=obj)
+            print('...Conversions took', ending_time - starting_time, 'seconds', file=obj)
             print("\nThere were %s scans written to MSn files and %s reporter ion regions processed." %
                   (self.msn_total, self.reporter_total), file=obj)
 
@@ -715,11 +724,11 @@ class MSConvertGUI:
                 mz_arr_flag = False
             elif line.startswith('binary: ') and not mz_arr_flag:
                 int_list = [float(x) for x in line.split()[2:]]
-                centroids, areas, heights = self.process_tmt_data(mz_list, int_list)
+                centroids, areas, heights = self.process_tmt_data(mz_list, int_list, scan_num)
                 self.tmt_data.append(Reporter_ion(lc_name, ms2_scan, scan_num, centroids, areas, heights))
         return
 
-    def process_tmt_data(self, mz_list, int_list):
+    def process_tmt_data(self, mz_list, int_list, scan_num):
         """Computes peak centroid and integral within each TMT window.
         This will work for either MS2 reporter ions or MS3 reporter ions."""
         # initialize variables
@@ -739,11 +748,15 @@ class MSConvertGUI:
             should skip centroid calc if using instrument centroiding
             =========================================================
             """
-            try:
-                centroid = df_window['weighted intensity'].sum() / df_window['intensity'].sum()
-            except ZeroDivisionError:
-                centroid = center
-            centroids.append(centroid)
+            if COMPUTE_CENTROIDS:
+                try:
+                    centroid = df_window['weighted intensity'].sum() / df_window['intensity'].sum()
+                except ZeroDivisionError:
+                    centroid = center
+                    print('...WARNING: No Intensities for scan', scan_num)
+                centroids.append(centroid)
+            else:
+                centroids = self.zeroes
             if COMPUTE_AREAS:
                 areas.append(trapz(df_window['intensity'], df_window['m/z']))
             else:
@@ -793,7 +806,7 @@ class MSConvertGUI:
                     spectrum = Spectrum(spectra, block)
                     spectra.add(spectrum)
                     if reporter_ions:
-                        centroids, areas, heights = self.process_tmt_data(spectrum.mz_array, spectrum.int_array)
+                        centroids, areas, heights = self.process_tmt_data(spectrum.mz_array, spectrum.int_array, spectrum.scan)
                         self.tmt_data.append(Reporter_ion(lc_name, spectrum.scan, spectrum.scan, centroids, areas, heights))
                     block = []  # reset block
             if in_spec:
@@ -804,7 +817,7 @@ class MSConvertGUI:
             spectrum = Spectrum(spectra, block)
             spectra.add(spectrum)
             if reporter_ions:
-                centroids, areas, heights = self.process_tmt_data(spectrum.mz_array, spectrum.int_array)
+                centroids, areas, heights = self.process_tmt_data(spectrum.mz_array, spectrum.int_array, spectrum.scan)
                 self.tmt_data.append(Reporter_ion(lc_name, spectrum.scan, spectrum.scan, centroids, areas, heights))
 
         # write diagnostic stats from conversion

@@ -211,6 +211,7 @@ import tkinter.ttk as ttk
 import PAW_lib
 import os
 import sys
+import time
 
 class staticMods(Toplevel):
     """Creates a static modification top-level widget.
@@ -545,6 +546,8 @@ class CometGUI:
             user_selected_params['fragment_bin_offset'] = ('0.0', '# offset position to start the binning (0.0 to 1.0)')
             user_selected_params['theoretical_fragment_ions'] = ('0', '# 0=use flanking peaks, 1=M peak only')
             user_selected_params['spectrum_batch_size'] =('20000', '# max. # of spectra to search at a time; 0 to search the entire scan range in one loop')
+        if self.cleavage.get() == 1:
+            user_selected_params['num_enzyme_termini'] = ('1', '# 1 (semi-digested), 2 (fully digested, default), 8 C-term unspecific , 9 N-term unspecific')                
 
         # see if database can be found
         if not os.path.exists(user_selected_params['database_name'][0]):
@@ -633,6 +636,8 @@ class CometGUI:
         os.chdir(self.ms2_folder)
         
         step = 100/len(glob.glob('*.ms2'))  # step for progressbar
+        starting_time = time.time()
+        print('...Starting Comet searches at:', time.ctime())
         for ms2_file in glob.glob('*.ms2'):
             
             # update status bar
@@ -644,11 +649,21 @@ class CometGUI:
             # run on each MS2 file with a wait for completion
             os.system('START "Comet" /WAIT /MIN /LOW CMD /C COMET2016 ' + ms2_file)
 
+        ending_time = time.time()
+        print('...Comet searches ended at:', time.ctime())
+        print('...Searches took', ending_time - starting_time, 'seconds')
+
         # this creates top-hit TXT files from the SQT files after Comet has finished
         self.progresstext.configure(text='Searches completed. Starting TXT creation.')
 ##        self.progressbar.update()
 ##        self.progressbar.step(step)
+        starting_time = time.time()
+        print('...Starting conversions at:', time.ctime())
         sqt_converter.main(os.path.dirname(self.filename), overwrite=True)
+        ending_time = time.time()
+        print('...Conversions ended at:', time.ctime())
+        print('...Conversions took', ending_time - starting_time, 'seconds')
+        
         self.progresstext.configure(text='Conversions completed. Quit when ready...')
 
     def change_static(self):
@@ -768,15 +783,21 @@ class CometGUI:
         'Glu_C',
         'PepsinA',
         'Chymotrypsin']
-        
+
+        self.cleavage = IntVar()
+
         #Creation
         self.enzyme = StringVar()
+        self.num_termini = IntVar()
         frame, combobox = self.create_combobox(enzyme_frame, 'Search Enzyme: ', self.enzyme,
                                                self.search_enzyme_list)
         frame.pack(fill=X, expand=YES, padx=5, pady=5)
 
+        self.create_radiobuttons(enzyme_frame, 'Cleavage:', [('Fully tryptic', 0), ('Semi tryptic', 1)], self.cleavage).pack(fill=X, expand=YES)
+
         # set default
         combobox.set('Trypsin')
+        self.cleavage.set(0)        
         return
         
     def create_variable_mods_frame(self):
