@@ -924,8 +924,8 @@ class GUI:
                     for score in score:
                         s += (str(score.dm) + " , " 
                             + str(score.z) + " +, " 
-                            + str(score.ntt) + " tt, " +
-                            str(score.mod) + " mod: ")
+                            + str(score.ntt) + " tt, "
+                            + str(score.mod) + " mod: ")
                         if(score.sparseData):
                             s += str(100) + '\n'
                         else:

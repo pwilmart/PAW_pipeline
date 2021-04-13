@@ -1787,7 +1787,8 @@ class FileLoader:
         # parse the params file and get relevant settings
         self.params = CometParams()
         self.params.load_from_folder(folder)
-        self.peptideMassTol = self.params.peptide_mass_tolerance
+        if self.params.peptide_mass_units == 'Da':
+            self.peptideMassTol = self.params.peptide_mass_tolerance
 
         # Construct list of differential mods
         self.modStrings = self.generateModStrings()
@@ -2336,9 +2337,13 @@ class FigureGenerator:
                 for ntt in self.nttList:
                     for imod, mod in enumerate(self.specialCharsList):
                         if dm == 2:
-                            dataToHist = data[((data.dmassDa >= self.dmContainer[2][z-z_offset].thresholds[0][0]) & (data.dmassDa <= self.dmContainer[2][z-z_offset].thresholds[0][1]) |
-                                              (data.dmassDa >= self.dmContainer[2][z-z_offset].thresholds[1][0]) & (data.dmassDa <= self.dmContainer[2][z-z_offset].thresholds[1][1]) |
-                                              (data.dmassDa >= self.dmContainer[2][z-z_offset].thresholds[2][0]) & (data.dmassDa <= self.dmContainer[2][z-z_offset].thresholds[2][1])) &
+                            # need to compute thresholds for not in mass windows after user adjusts windows
+                            thresholds = ((-self.dmContainer[2][z-z_offset].dmRange, self.dmContainer[0][z-z_offset].thresholdLow),
+                                          (self.dmContainer[0][z-z_offset].thresholdHigh, self.dmContainer[1][z-z_offset].thresholdLow),
+                                          (self.dmContainer[1][z-z_offset].thresholdHigh, self.dmContainer[2][z-z_offset].dmRange))
+                            dataToHist = data[((data.dmassDa >= thresholds[0][0]) & (data.dmassDa <= thresholds[0][1]) |
+                                              (data.dmassDa >= thresholds[1][0]) & (data.dmassDa <= thresholds[1][1]) |
+                                              (data.dmassDa >= thresholds[2][0]) & (data.dmassDa <= thresholds[2][1])) &
                                               (data.Z == z) & (data.ntt == ntt) & (data.ModsStr == mod)]
                         else:
                             dataToHist = data[(data.dmassDa >= self.dmContainer[dm][z-z_offset].thresholdLow) & (data.dmassDa <= self.dmContainer[dm][z-z_offset].thresholdHigh) &

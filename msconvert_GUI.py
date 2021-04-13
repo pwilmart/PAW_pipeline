@@ -106,8 +106,14 @@ class Spectra:
                 if line.startswith('cvParam: ProteoWizard software'):
                     self.msconvert_version = header_block[i-1].split('version:')[1].strip()
                 if line.startswith('cvParam: instrument serial number'):
-                    self.instrument_SN = line.split('number,')[1].strip()
-                    self.instrument = header_block[i-1].split('cvParam:')[1].strip()
+                    try:
+                        self.instrument_SN = line.split('number,')[1].strip()
+                    except IndexError:
+                        self.instrument_SN = '0'
+                    try:
+                        self.instrument = header_block[i-1].split('cvParam:')[1].strip()
+                    except IndexError:
+                        self.instrument = 'unknown'
         return # nothing happens if there is no header_block
 
     def add(self, spectrum):
