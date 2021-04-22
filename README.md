@@ -117,7 +117,11 @@ Here is the way TMT quantification is supported:
 These lists demonstrate that even a basic processing pipeline will involve several steps. A robust pipeline will keep these step separate to allow greater flexibility and to allow inspection of the data in between steps for quality control.
 
 ## Pipeline Steps
-The PAW pipeline is an actual pipeline. The steps are modular and separate by design. Each step is listed below by the name of the Python script. Each step has a link to dedicated documentation pages.
+The PAW pipeline is an actual pipeline. The steps are modular and separate by design.
+
+![PAW workflow diagram(images/PAW_workflow.png)
+
+Each step is listed below by the name of the Python script. Each step has a link to dedicated documentation pages.
 
 * [`msconvert_GUI.py`](docs/msconvert_GUI.md) - Conversion of RAW files
   - also `MSConvert_GUI_guide.pptx`
