@@ -119,7 +119,7 @@ These lists demonstrate that even a basic processing pipeline will involve sever
 ## Pipeline Steps
 The PAW pipeline is an actual pipeline. The steps are modular and separate by design.
 
-![PAW workflow diagram(images/PAW_workflow.png)
+![PAW workflow diagram](images/PAW_workflow.png)
 
 Each step is listed below by the name of the Python script. Each step has a link to dedicated documentation pages.
 
