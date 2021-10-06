@@ -451,7 +451,7 @@ class MSConvertGUI:
         # set up log file
         log_name = 'MSConvert_GUI_log.txt'
 ##        log_name = 'MSConvert_GUI_%s_log.txt' % time.time() # this add a time stamp - will have multiple log files
-        log_obj = open(os.path.join(self.raw_path, log_name), mode='wt')
+        log_obj = open(os.path.join(self.raw_path, log_name), mode='at')
         self.log_obj = [None, log_obj]
         for obj in self.log_obj:
             print('...starting conversions at:', time.ctime(), file=obj)
@@ -493,7 +493,8 @@ class MSConvertGUI:
                 msconvert_name = raw_name[:-4] + '.txt.gz'
 
             # call MSConvert
-            command_line = raw_name + centroid_picked + level_picked + ' --text --gzip'
+            quoted_raw_name = '"%s"' % raw_name  # in case the path has spaces
+            command_line = quoted_raw_name + centroid_picked + level_picked + ' --text --gzip'
             if not os.path.exists(msconvert_name):
                 for obj in self.log_obj:
                     print('MSConvert ' + command_line, file=obj)

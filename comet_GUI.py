@@ -639,6 +639,7 @@ class CometGUI:
         starting_time = time.time()
         print('...Starting Comet searches at:', time.ctime())
         for ms2_file in glob.glob('*.ms2'):
+            quoted_ms2_file = '"%s"' % ms2_file # in case filenames have spaces
             
             # update status bar
             self.progresstext.configure(text='Searching: %s' % (ms2_file,))
@@ -647,7 +648,7 @@ class CometGUI:
             self.progressbar.update()
             
             # run on each MS2 file with a wait for completion
-            os.system('START "Comet" /WAIT /MIN /LOW CMD /C COMET2016 ' + ms2_file)
+            os.system('START "Comet" /WAIT /MIN /LOW CMD /C COMET2016 ' + quoted_ms2_file)
 
         ending_time = time.time()
         print('...Comet searches ended at:', time.ctime())

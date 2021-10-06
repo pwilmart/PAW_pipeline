@@ -151,11 +151,15 @@ class PAW_TMT_results(object):
         for exp in self.TMT_exps:
             print('experiment:', exp.label, exp.number)
 ##            exp.all_channels = [head for head in self.headers if ('TotInt_' in head) and (exp.label in head)] # original statement
-            # this test is more specific
+            # the test below is more specific
             exp.all_channels = [head for head in self.headers if (head.startswith('TotInt_')) and (head.endswith(exp.label))]
             exp.sample_key = {head: self.pre_headers[j] for (j, head) in enumerate(self.headers) if head in exp.all_channels}
             self.label_duplicates(exp.sample_key)
-            exp.channels = [x for x in exp.all_channels if 'UNUSED' not in exp.sample_key[x].upper()]
+            exp.channels = [x for x in exp.all_channels if
+                            'UNUSED' not in exp.sample_key[x].upper() and 'NOTUSED' not in exp.sample_key[x].upper()]
+            print('sample key:')
+            for x in exp.channels:
+                print(x, exp.sample_key[x])
             exp.plex = len(exp.channels)
         return
       
@@ -199,7 +203,7 @@ class PAW_TMT_results(object):
                 
         # trap case where there are no lines after the data
         if table_end == 0:
-            table_end = i
+            table_end = i+1     # last row was getting dropped -PW 20210812
         
         # save table length, get sample keys, save prefix and suffix lines
         self.num_rows = table_end - table_start
@@ -416,7 +420,9 @@ for obj in write:
 frame = PAW_TMT_results()               # create a container for results
 frame.load_table(results_file)          # load the results file into container
 
-frame.here = os.path.split(results_file)[0]
+frame.here = os.path.split(results_file)[0] # keeps track of path
+
+## frame.frame.to_csv(os.path.join(frame.here, 'temp_dump.txt'), sep='\t', quoting=csv.QUOTE_NONE, index=False)
 
 frame.find_study_intersection(write)         # flag proteins not seen in all TMT experiments
 frame.move_rows_to_bottom()             # move contaminants and excluded proteins to botton of table
