@@ -6,6 +6,15 @@ The first pipeline steps of converting RAW files and running Comet require Windo
 
 ---
 
+# CRITICAL MESSAGE
+## Newer Anaconda distributions break the `histo_GUI.py` script
+
+At the moment, an older Python 3.7 distribution of Anaconda still works. Changes were made to Matplotlib in recent versions that gave warnings when running the `hisot_GUI.py` script. Those have finally become errors in the most recent distributions.
+
+You can get the older Python 3.7 distribution [**>>here<<**](https://repo.anaconda.com/archive/). The file to download is `Anaconda3-5.3.1-Windows-x86_64.exe` at the bottom of the web page.
+
+---
+
 ## Downloading Anaconda
 
 The Anaconda [download link](https://www.anaconda.com/download/#windows) has options for Windows, Mac, and Linux versions, and for Python 3.6 or Python 2.7 versions (as of 2018-04-06). You should get the Python 3.6 download:
