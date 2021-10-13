@@ -1,4 +1,11 @@
-# Update 6/30/2020
+# CRITICAL MESSAGE
+## Newer Anaconda distributions break the `histo_GUI.py` script
+
+At the moment, an older Python 3.7 distribution of Anaconda still works. Changes were made to Matplotlib in recent versions that gave warnings when running the `hisot_GUI.py` script. Those have finally become errors in the most recent distributions.
+
+You can get the older Python 3.7 distribution [**>>here<<**](https://repo.anaconda.com/archive/). The file to download is `Anaconda3-5.3.1-Windows-x86_64.exe` at the bottom of the web page.
+
+## Update 6/30/2020
 Made some changes to `make_PAW_TXT_from_PD2.x.py` to support Mascot search exports and some output changes in newer PD 2.x exports. There are  also some output log information changes for some pipeline steps. Added support for real time search SPS-MS3 raw files and 16-plex TMT reagents to `msconvert_GUI.py`. Added support for 16-plex TMT reagents and high res MS2 fragment ions to `comet_GUI.py`.
 
 ## Update 8/22/2019
