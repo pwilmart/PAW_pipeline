@@ -385,6 +385,25 @@ class MSConvertGUI:
                                ('133_N', 133.1449),
                                ('133C', 133.1512),
                                ('134_N', 134.1482)]
+        elif tmt_plex == 5:     # 18-plex
+            self.tmt_tuples = [('126C', 126.1278),
+                               ('127_N', 127.1248),
+                               ('127C', 127.1311),
+                               ('128_N', 128.1281),
+                               ('128C', 128.1344),
+                               ('129_N', 129.1315),
+                               ('129C', 129.1378),
+                               ('130_N', 130.1348),
+                               ('130C', 130.1411),
+                               ('131_N', 131.1382),
+                               ('131C', 131.1445),
+                               ('132_N', 132.1415),
+                               ('132C', 132.1479),
+                               ('133_N', 133.1449),
+                               ('133C', 133.1512),
+                               ('134_N', 134.1482),
+                               ('134C', 134.1546),
+                               ('135_N', 135.1516)]
         self.tmt_labels = [x[0] for x in self.tmt_tuples]
         self.tmt_masses = [x[1] for x in self.tmt_tuples]
         self.zeroes = [0.0 for x in self.tmt_tuples]
@@ -911,7 +930,8 @@ class MSConvertGUI:
                                  [('MS2', 0), ('MS3', 1), ('MS2 TMT', 2), ('MS3 TMT', 3)],
                                  self.msn_level).pack(fill=X, expand=YES)
         self.create_radiobuttons(defaults_frame, 'TMT Reagents: ',
-                                 [('None', 0), ('6-plex', 1), ('10-plex', 2), ('11-plex', 3), ('16-plex', 4)],
+                                 [('None', 0), ('6-plex', 1), ('10-plex', 2),
+                                  ('11-plex', 3), ('16-plex', 4), ('18-plex', 5)],
                                  self.tmt_plex).pack(fill=X, expand=YES)
         self.create_radiobuttons(defaults_frame, 'Centroid MS2 data: ',
                                  [('Yes', 0), ('No', 1)], self.ms2_centroid).pack(fill=X, expand=YES)

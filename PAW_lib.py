@@ -52,6 +52,7 @@ import pandas as pd
 import numpy as np
 
 MIN_PEP_LEN = 7
+MAX_MODS_PEP = 5    # 3 is recommended
 
 # this is only used in a debugging block
 ##import matplotlib.pyplot as pyplot    # this seems incompatible with  standard IDLE (OK with Anaconda)
@@ -886,26 +887,13 @@ class Protein:
 
     def peptide_decorations(self, sequence):
         """Separate modifications from amino acid residues so that mods can be put back later."""
-        residues = []
-        decorations = []
-        char_count = 0
-        decoration = ''
-        for char in sequence:
-            if re.match('[A-Z]', char):
-                residues.append(char)
-                decorations.append(decoration)
-                decoration = ''
-            else:
-                decoration += char
-        # might have C-terminal mod
-        residues.append('')
-        decorations.append(decoration)
-
+        decorations = re.split('[A-Z]', sequence)
+        residues = re.findall('[A-Z]', sequence) + ['']   # need to pad end
         return residues, decorations
 
     def redecorate_peptide(self, peptide, decorations):
         """Redecorates a peptide sequence with mods."""
-        residues = list(peptide + '')
+        residues = list(peptide) + ['']
         return ''.join(['' + x + y for (x, y) in zip(decorations, residues)])
 
     def base_peptide_sequence(self, sequence, mask=True):
@@ -914,10 +902,8 @@ class Protein:
         # remove bounding residues (SEQUEST/Comet format: A.BCD.E)
         prefix, peptide, suffix = self.split_peptide(sequence)
 
-        # remove the 2017 Comet style mod strings
-        peptide = re.sub(r'\[[-+]?[0-9]*(.)?[0-9]*\]', '', peptide)
-        # remove modification symbols: '*', '#', '@', '^', '~', '$', '%', '!', '+', 'n', 'c', '[', ']', "(', ')', '{', '}'
-        peptide = re.sub(r'[*#@^~$%!+nc\[\]\{\}\(\)]', '', peptide)
+        # keep upper case letters
+        peptide = re.findall('[A-Z]', peptide)
 
         # mask I/L if needed:
         if mask:
@@ -1474,7 +1460,7 @@ class PAWShell(object):
         return
     # end class
 
-def amino_acid_count(sequence_string, enzyme='Tryp', return_base_pep=False):
+def amino_acid_count_old(sequence_string, enzyme='Tryp', return_base_pep=False):
     """Counts amino acids in peptides.  Returns (length, ntt) tuple.
 
     Usage: (length, ntt) = amino_acid_count(sequence_string),
@@ -1585,6 +1571,117 @@ def amino_acid_count(sequence_string, enzyme='Tryp', return_base_pep=False):
     else:
         return (len(base_seq), ntt)
 
+def amino_acid_count_old(sequence_string, enzyme='Tryp', return_base_pep=False):
+    """Counts amino acids in peptides.  Returns (length, ntt) tuple.
+
+    Usage: (length, ntt) = amino_acid_count(sequence_string),
+        where "sequence_string" is a peptide sequence with bounding residues,
+        "enzyme" is a string for the specific protease used,
+        "length" is the returned number of amino acids, and
+        "ntt" is the number of tryptic termini.
+
+    Written by Phil Wilmarth, OHSU, 2008.
+
+    THIS NEEDS TO BE REWRITTEN!!!
+    """
+    import re
+    # supported enzymes are: 'Tryp', 'GluC', 'AspN', and 'LysC'
+    #
+    # This routine removes bounding amino acids, removes special characters
+    # (mods), is now case sensitive, and computes number of enzymatic termini.
+    # Assumes periods are used to separate bounding AAs from peptide.
+    # Bounding AAs can be more than one character ("-" for N-term or C-term).
+    # Modifications are Comet/SEQUEST format: special characters, "n", and "c";
+    #   and are within the bounding periods (if present).
+    #
+    # Fixed bug in ntt caclulation, 4/30/07 -PW
+    # Added support for different enzymes, 7/6/2010 -PW
+    # Supports Comet PTM format ("n" and "c" for termini), 6/9/2015 -PW
+    # Simplified ntt calculations
+
+    # find the string between the bounding periods '.'
+    parts = len(sequence_string.split('.'))
+    if parts == 3: # we have bounding residues
+        start = sequence_string.index('.') + 1   # start is after first period
+        temp = sequence_string[::-1] # reverse string
+        end = temp.index('.')+1     # find first period in reversed string
+        end = len(sequence_string) - end     # end is past the last period
+    elif parts == 1:
+        start = 0
+        end = len(sequence_string)
+    else:
+        print('...amino_acid_count WARNING: number of "periods" was not 2 or 0', sequence_string)
+        if return_base_pep:
+            return (0, 0, "")
+        else:
+            return(0, 0)
+    sequence = sequence_string[start:end]
+
+    # remove any modification symbols:
+    # '*', '#', '@', '^', '~', '$', '%', '!', '+', 'n', 'c', '[', ']' (Current Comet along with old style nt, ct)
+    splitter = re.compile(r'[*#@^~$%!+nc\[\]]')
+    base_seq = ''.join(splitter.split(sequence))
+
+##    # remove any special characters from the sequence string
+##    base_seq = ''
+##    for c in sequence:
+##        if c.isalpha() and c.isupper():
+##            base_seq += c
+##
+    # get the prefix and suffix amino acids
+    prefix = sequence_string[start-2:start-1]
+    if (prefix == "") or (start == 0):
+        prefix = "X"    # no bounding residue info so unknown AA
+    cterm = base_seq[-1]  # last amino acid in sequence
+    nterm = base_seq[0]   # first amino acid in sequence
+    suffix = sequence_string[end+1:end+2]
+    if suffix == "":
+        suffix = "X"    # no bounding residue info so unknown AA
+
+    # determine number of enzymatic termini, ntt
+    """need to support all enzymes and deal with proline
+    Seems Comet deals with premature stop codons as sequence breaks (* in prefix or suffix)
+    """
+    ntt = 0
+    cterm_flag = False
+    if enzyme.upper() == 'TRYP':  # cleaves at c-side of K, R
+        if (prefix in 'KR-*'):
+            ntt += 1
+        if (cterm in 'KR') or (suffix in '-*'):
+            ntt += 1
+            cterm_flag = True
+        if suffix == 'P' and cterm_flag and ntt > 0:   # trypsin strict???
+            ntt -= 1
+    elif enzyme.upper() == 'GLUC':  # cleaves at c-side of D, E
+        if prefix in 'DE-*':
+            ntt += 1
+        if (cterm in 'DE') or (suffix in '-*'):
+            ntt += 1
+            cterm_flag = True
+        if suffix == 'P' and cterm_flag and ntt > 0:   # trypsin strict???
+            ntt -= 1
+    elif enzyme.upper() == 'ASPN': # cleaves at n-side of D
+        if (prefix in '-*') or (nterm == 'D'):
+            ntt += 1
+        if suffix in 'D-*':
+            ntt += 1
+    elif enzyme.upper() == 'LYSC':
+        if (prefix in 'K-*'):
+            ntt += 1
+        if (cterm in 'K') or (suffix in '-*'):
+            ntt += 1
+            cterm_flag = True
+        if suffix == 'P' and cterm_flag and ntt > 0:   # trypsin strict???
+            ntt -= 1
+    else:
+        print('   amino_acid_count WARNING: unknown enzyme specified', enzyme)
+
+    # return length, number of tryptic termini, and (optional) base peptide sequence
+    if return_base_pep:
+        return (len(base_seq), ntt, base_seq)
+    else:
+        return (len(base_seq), ntt)
+    
 def get_base_peptide_sequence(sequence, mask=True):
     """Returns the amino acid sequence from SEQUEST peptide sequences
     """
@@ -2160,7 +2257,7 @@ class BRTxtInfo:
         self.target_filtered = 0
         self.decoy_filtered = 0
         self.min_length = MIN_PEP_LEN   # minimum peptide length (should be passed in)
-        self.maxMods = 3                # maximum number of mods per peptide (should be passed in)
+        self.maxMods = MAX_MODS_PEP     # maximum number of mods per peptide (should be passed in)
 
     def getStats(self, frame, dm_list, z_list, ntt_list, mod_list, masses, scores):
         """Computes several stats on numbers of target and decoy matches
@@ -2211,7 +2308,7 @@ class FigureGenerator:
         Plot objects corresponding to individual histograms. This list is passed to the GUI object for display.
         '''
     def __init__(self, files, accurateMass=True, smoothed=True, dmList=['0 Da', '1 Da', 'out'], zList=[1, 2, 3, 4],
-                 nttList=[0, 1, 2], modString=' *', minLength=MIN_PEP_LEN, maxMods=2):
+                 nttList=[0, 1, 2], modString=' *', minLength=MIN_PEP_LEN, maxMods=MAX_MODS_PEP):
 
 
         # Main containers

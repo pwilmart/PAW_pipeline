@@ -251,7 +251,7 @@ class staticMods(Toplevel):
         box = Frame(self)
         w1 = Button(box, text='TMT 6/10/11', width=10, command=self.TMT_229)
         w1.pack(side=LEFT, padx=5, pady=5)
-        w2 = Button(box, text='TMT 16', width=10, command=self.TMT_304)
+        w2 = Button(box, text='TMT 16/18', width=10, command=self.TMT_304)
         w2.pack(side=LEFT, padx=5, pady=5)
 
         box.pack()

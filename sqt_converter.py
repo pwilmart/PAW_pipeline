@@ -360,6 +360,11 @@ def lookup_peptide_sequences(out_list, already_seen, params):
 
                 # make sure matches are non-redundant and preserve order
                 all_matches = list(OrderedDict([(key, None) for key in all_matches]).keys())
+
+                #### check that returned peptides match starting peptide
+                for m in all_matches:
+                    if m[3].split('.')[1] != match.sequence.split('.')[1]:
+                        print('scan:', out.beg, match.sequence, 'does not match', m[3])
                 
                 """This is where premature stop codon peptides get rejected - modifiy amino_acid_count function?"""
                 filtered_matches = [t for t in all_matches if PAW_lib.amino_acid_count(t[3])[1] >= minimum_termini]
@@ -797,7 +802,7 @@ def convert_sqt_files(sqt_list, params):
         except:
             pass
         
-    return
+    return outs
 
 #############################
 # MAIN program starts here:
@@ -876,7 +881,7 @@ if __name__ == '__main__':
             params.zipflag = False
 
         # convert all of the SQT files
-        convert_sqt_files(sqt_list, params)
+        outs = convert_sqt_files(sqt_list, params)
 
 # end
         
