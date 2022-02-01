@@ -59,12 +59,18 @@ VERSION = 'v1.0.1'
 TMT6 = ['TotInt_126', 'TotInt_127', 'TotInt_128',
         'TotInt_129', 'TotInt_130N', 'TotInt_131']
 TMT10 = ['TotInt_126C', 'TotInt_127N', 'TotInt_127C', 'TotInt_128N', 'TotInt_128C',
-       'TotInt_129N', 'TotInt_129C', 'TotInt_130N', 'TotInt_130C', 'TotInt_131N']
+         'TotInt_129N', 'TotInt_129C', 'TotInt_130N', 'TotInt_130C', 'TotInt_131N']
 TMT11 = ['TotInt_126C', 'TotInt_127N', 'TotInt_127C', 'TotInt_128N', 'TotInt_128C',
-       'TotInt_129N', 'TotInt_129C', 'TotInt_130N', 'TotInt_130C', 'TotInt_131N', 'TotInt_131C']
+         'TotInt_129N', 'TotInt_129C', 'TotInt_130N', 'TotInt_130C', 'TotInt_131N',
+         'TotInt_131C']
 TMT16 = ['TotInt_126C', 'TotInt_127N', 'TotInt_127C', 'TotInt_128N', 'TotInt_128C',
          'TotInt_129N', 'TotInt_129C', 'TotInt_130N', 'TotInt_130C', 'TotInt_131N',
-         'TotInt_131C', 'TotInt_132N', 'TotInt_132C', 'TotInt_133N', 'TotInt_133C', 'TotInt_134N']
+         'TotInt_131C', 'TotInt_132N', 'TotInt_132C', 'TotInt_133N', 'TotInt_133C',
+         'TotInt_134N']
+TMT18 = ['TotInt_126C', 'TotInt_127N', 'TotInt_127C', 'TotInt_128N', 'TotInt_128C',
+         'TotInt_129N', 'TotInt_129C', 'TotInt_130N', 'TotInt_130C', 'TotInt_131N',
+         'TotInt_131C', 'TotInt_132N', 'TotInt_132C', 'TotInt_133N', 'TotInt_133C',
+         'TotInt_134N', 'TotInt_134C', 'TotInt_135N']
 
 def base_peptide_sequence(sequence, mask=False):
     """Returns the peptide amino acid residues from SEQUEST peptide strings
@@ -754,6 +760,8 @@ elif protein_summary.number_channels == 11:
     TMT = TMT11
 elif protein_summary.number_channels == 16:
     TMT = TMT16
+elif protein_summary.number_channels == 18:
+    TMT = TMT18
 new_file = protein_summary.protein_file.replace('summary_9', 'summary_TMT_9')
 if new_file == protein_summary.protein_file:
     print('error creating new protein file name')
