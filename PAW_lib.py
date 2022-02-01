@@ -1460,7 +1460,7 @@ class PAWShell(object):
         return
     # end class
 
-def amino_acid_count_old(sequence_string, enzyme='Tryp', return_base_pep=False):
+def amino_acid_count(sequence_string, enzyme='Tryp', return_base_pep=False):
     """Counts amino acids in peptides.  Returns (length, ntt) tuple.
 
     Usage: (length, ntt) = amino_acid_count(sequence_string),
@@ -1571,7 +1571,7 @@ def amino_acid_count_old(sequence_string, enzyme='Tryp', return_base_pep=False):
     else:
         return (len(base_seq), ntt)
 
-def amino_acid_count_old(sequence_string, enzyme='Tryp', return_base_pep=False):
+def amino_acid_count_new(sequence_string, enzyme='Tryp', return_base_pep=False):
     """Counts amino acids in peptides.  Returns (length, ntt) tuple.
 
     Usage: (length, ntt) = amino_acid_count(sequence_string),
