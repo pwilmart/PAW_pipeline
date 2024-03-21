@@ -4,7 +4,7 @@ This script takes the filtered top hit files and makes a parsimonious list of id
 
 > Nesvizhskii, A.I. and Aebersold, R., 2005. Interpretation of shotgun proteomic data the protein inference problem. Molecular & cellular proteomics, 4(10), pp.1419-1440.
 
-Multiple fractions per biological sample and multiple biological samples per experiment are supported. Protein inference is performed experiment-wide to provide robust results. Optional [extended parsimony logic](https://digitalcommons.ohsu.edu/etd/3855/) is also implemented to group highly homologous proteins and maximize the quantitative information content of peptides. Final protein and peptide reports are complete, carefully curated tab-delimited text files.
+Multiple fractions per biological sample and multiple biological samples per experiment are supported. Protein inference is performed experiment-wide to provide robust results. Optional [extended parsimony logic](https://digitalcollections.ohsu.edu/record/3031?ln=en&p=Madhira&v=pdf) is also implemented to group highly homologous proteins and maximize the quantitative information content of peptides. Final protein and peptide reports are complete, carefully curated tab-delimited text files.
 
 ### Step-by-step Example, continued
 
